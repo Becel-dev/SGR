@@ -78,7 +78,7 @@ export default function RiskDetailPage({ params }: { params: { id: string } }) {
                             <DetailItem label="Probabilidade Inerente" value={risk.probabilidadeInerente} />
                             <DetailItem label="Impacto Inerente" value={risk.impactoInerente} />
                         </div>
-                         <DetailItem label="Nível de Risco Inerente" value={<Badge variant={riskLevelVariantMap[risk.nivelDeRiscoInerente]}>{risk.nivelDeRiscoInerente}</Badge>} />
+                         <DetailItem label="Nível de Risco Inerente" value={<Badge variant={riskLevelVariantMap[risk.nivelDeRiscoInerente] || 'default'}>{risk.nivelDeRiscoInerente}</Badge>} />
                         <DetailItem label="Estratégia de Resposta" value={risk.estrategia} />
                         <DetailItem label="Descrição do Controle" value={risk.descricaoDoControle} />
                          <div className="grid grid-cols-2 gap-4">
@@ -100,8 +100,8 @@ export default function RiskDetailPage({ params }: { params: { id: string } }) {
                             <DetailItem label="Probabilidade Residual" value={risk.probabilidadeResidual} />
                             <DetailItem label="Impacto Residual" value={risk.impactoResidual} />
                         </div>
-                        <DetailItem label="Nível de Risco Residual" value={<Badge variant={riskLevelVariantMap[risk.nivelDeRiscoResidual]}>{risk.nivelDeRiscoResidual}</Badge>} />
-                        <DetailItem label="Status" value={<Badge variant={statusVariantMap[risk.statusDoRisco]}>{risk.statusDoRisco}</Badge>} />
+                        <DetailItem label="Nível de Risco Residual" value={<Badge variant={riskLevelVariantMap[risk.nivelDeRiscoResidual] || 'default'}>{risk.nivelDeRiscoResidual}</Badge>} />
+                        <DetailItem label="Status" value={<Badge variant={statusVariantMap[risk.statusDoRisco] || 'default'}>{risk.statusDoRisco}</Badge>} />
                         <DetailItem label="Responsável" value={risk.responsavelPeloRisco} />
                         <DetailItem label="Última Revisão" value={risk.dataDaUltimaRevisao} />
                         <DetailItem label="Próxima Revisão" value={risk.dataDaProximaRevisao} />

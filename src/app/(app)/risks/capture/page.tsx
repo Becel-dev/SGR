@@ -28,9 +28,11 @@ import {
 } from '@/components/ui/popover';
 import { Calendar as CalendarIcon, Siren } from 'lucide-react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 
 export default function CaptureRiskPage() {
+    const router = useRouter();
     const [identificationDate, setIdentificationDate] = useState<Date>();
     const [lastReviewDate, setLastReviewDate] = useState<Date>();
     const [nextReviewDate, setNextReviewDate] = useState<Date>();
@@ -324,7 +326,7 @@ export default function CaptureRiskPage() {
         </form>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
-        <Button variant="outline">Cancelar</Button>
+        <Button variant="outline" onClick={() => router.push('/risks')}>Cancelar</Button>
         <Button>Salvar Risco</Button>
       </CardFooter>
     </Card>
