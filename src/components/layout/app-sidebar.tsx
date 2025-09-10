@@ -29,6 +29,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarMenuBadge,
+  SidebarTrigger,
+  SidebarRail,
 } from '@/components/ui/sidebar';
 import { useUser } from '@/hooks/use-user';
 import {
@@ -37,12 +39,13 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Button } from '../ui/button';
+import { Separator } from '../ui/separator';
 
 const navigationItems = [
   { href: '/dashboard', icon: AreaChart, label: 'Painéis', badge: '' },
   { href: '/risks', icon: Siren, label: 'Captura de Riscos', badge: '' },
   { href: '/controls', icon: Shield, label: 'Governança de Controles', badge: '' },
-  { href: '/kpis', icon: GanttChartSquare, label: "Gestão de KPI's", badge: '' },
+  { href: "/kpis", icon: GanttChartSquare, label: "Gestão de KPI's", badge: '' },
   { href: '/escalation', icon: Rss, label: 'Escalonamento', badge: '' },
   { href: '/bowtie', icon: GitFork, label: 'Visualização Bowtie', badge: '' },
   { href: '/reports/generate', icon: Bot, label: 'Gerador de Relatório IA', badge: '' },
@@ -59,13 +62,18 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
-      <SidebarHeader>
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="flex items-center justify-between p-2">
         <div className="flex items-center gap-2">
-            <Shield className="w-8 h-8 text-primary-foreground" />
+            <Shield className="w-8 h-8 text-sidebar-primary" />
             <h1 className="text-xl font-bold text-primary-foreground">SGR: Sistema de Gestão de Riscos</h1>
         </div>
+        <SidebarTrigger asChild>
+          <Button variant="ghost" size="icon" className="md:hidden" />
+        </SidebarTrigger>
       </SidebarHeader>
+      <SidebarRail />
+      <Separator className="my-2" />
       <SidebarContent>
         <SidebarMenu>
           {navigationItems.map((item) => {
@@ -79,6 +87,7 @@ export function AppSidebar() {
                   isActive={isNavItemActive(item.href)}
                   icon={item.icon}
                   className="w-full justify-start"
+                  tooltip={item.label}
                 >
                   <Link href={item.href}>
                     {item.label}
@@ -93,10 +102,10 @@ export function AppSidebar() {
       <SidebarFooter>
          <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton icon={Settings}>Configurações</SidebarMenuButton>
+                <SidebarMenuButton icon={Settings} tooltip="Configurações">Configurações</SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-                <SidebarMenuButton icon={LifeBuoy}>Ajuda</SidebarMenuButton>
+                <SidebarMenuButton icon={LifeBuoy} tooltip="Ajuda">Ajuda</SidebarMenuButton>
             </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
