@@ -20,18 +20,22 @@ const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive"
 };
 
 // Helper function to format date consistently
-const formatDate = (dateString: string) => {
+const formatDate = (dateString: string | undefined) => {
     if (!dateString) return '-';
     // Dates in mock are YYYY-MM-DD. We want to display as DD/MM/YYYY.
     const [year, month, day] = dateString.split('-');
     if (year && month && day) {
         return `${day}/${month}/${year}`;
     }
-    // Fallback for other formats, though might not be consistent
-    const date = new Date(dateString);
-    const userTimezoneOffset = date.getTimezoneOffset() * 60000;
-    const correctedDate = new Date(date.getTime() + userTimezoneOffset);
-    return correctedDate.toLocaleDateString('pt-BR');
+    
+    try {
+        const date = new Date(dateString);
+         // Adjust for timezone issues by treating date as UTC
+        const utcDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+        return utcDate.toLocaleDateString('pt-BR');
+    } catch(e) {
+        return dateString; // fallback to original string if format is unexpected
+    }
 }
 
 export default function ControlsPage() {
@@ -111,6 +115,7 @@ export default function ControlsPage() {
                     <Button variant="ghost" size="icon" asChild>
                       <Link href={`/controls/${control.id}`}>
                         <ArrowRight className="h-4 w-4" />
+                        <span className="sr-only">Ver Detalhes</span>
                       </Link>
                     </Button>
                   </TableCell>
