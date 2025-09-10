@@ -117,7 +117,7 @@ export default function CaptureControlPage() {
                     <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {lastCheckDate ? <span>{lastCheckDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
+                        {lastCheckDate ? <span>{lastCheckDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span> : <span>Selecione uma data</span>}
                     </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={lastCheckDate} onSelect={setLastCheckDate} initialFocus/></PopoverContent>
@@ -130,7 +130,7 @@ export default function CaptureControlPage() {
                     <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {nextCheckDate ? <span>{nextCheckDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
+                        {nextCheckDate ? <span>{nextCheckDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span> : <span>Selecione uma data</span>}
                     </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={nextCheckDate} onSelect={setNextCheckDate} /></PopoverContent>
@@ -153,7 +153,7 @@ export default function CaptureControlPage() {
                         <PopoverTrigger asChild>
                         <Button variant="outline" className="w-full justify-start text-left font-normal">
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {creationDate ? <span>{creationDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
+                            {creationDate ? <span>{creationDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span> : <span>Selecione uma data</span>}
                         </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={creationDate} onSelect={setCreationDate} initialFocus/></PopoverContent>

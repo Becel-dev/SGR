@@ -71,12 +71,6 @@ export type Risk = {
   // Treatment
   estrategia: string; // AÇÃO column
   descricaoDoControle: string;
-  naturezaDoControle: string;
-  tipoDeControle: string;
-  classificacaoDoControle: string;
-  frequencia: string;
-  eficaciaDoControle: 'Ineficaz' | 'Pouco Eficaz' | 'Eficaz' | 'Muito Eficaz' | '';
-  documentacaoControle: string;
   
   // Residual Risk
   probabilidadeResidual: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo' | '';
@@ -84,26 +78,12 @@ export type Risk = {
   nivelDeRiscoResidual: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | ''; // Calculated
   
   // Management and Monitoring
-  apetiteAoRisco: string;
   statusDoRisco: 'Aberto' | 'Em Tratamento' | 'Fechado' | 'Mitigado' | '';
   planoDeAcao: string;
   responsavelPeloRisco: string; // Responsável
   dataDaUltimaRevisao: string;
   dataDaProximaRevisao: string;
   
-  // KRI
-  kri: string;
-  indicadorRisco: string;
-  limiteApetite: number;
-  limiteTolerancia: number;
-  limiteCapacidade: number;
-  medicaoAtual: number;
-  
-  // Financial Analysis
-  custoDoRisco: number;
-  beneficioDoControle: number;
-  valorExposto: number;
-
   // New fields from image
   topRiskAssociado: string;
   categoriaMP: string;
@@ -133,7 +113,6 @@ export type Risk = {
   pilarESG: string;
   indicador: string;
   subtema: string;
-  categoriaRisco: string;
   tronco: string;
   englobado: string;
   fatorDeRisco: string;

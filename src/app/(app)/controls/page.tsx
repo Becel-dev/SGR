@@ -22,8 +22,13 @@ const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive"
 // Helper function to format date consistently
 const formatDate = (dateString: string) => {
     if (!dateString) return '-';
+    // Dates in mock are YYYY-MM-DD. We want to display as DD/MM/YYYY.
+    const [year, month, day] = dateString.split('-');
+    if (year && month && day) {
+        return `${day}/${month}/${year}`;
+    }
+    // Fallback for other formats, though might not be consistent
     const date = new Date(dateString);
-    // Adjust for timezone offset to prevent date changes
     const userTimezoneOffset = date.getTimezoneOffset() * 60000;
     const correctedDate = new Date(date.getTime() + userTimezoneOffset);
     return correctedDate.toLocaleDateString('pt-BR');

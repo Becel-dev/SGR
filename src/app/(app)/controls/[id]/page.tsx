@@ -52,8 +52,6 @@ export default function EditControlPage() {
     const [nextCheckDate, setNextCheckDate] = useState<Date | undefined>();
 
     useEffect(() => {
-        // In a real app, you'd fetch this data. Here, we find it in the mock data.
-        // The ID from the URL is a string, but our mock data uses a number.
         const foundControl = controlsData.find(c => c.id.toString() === id);
         if (foundControl) {
             setControl(foundControl);
@@ -171,7 +169,7 @@ export default function EditControlPage() {
                     <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {lastCheckDate ? <span>{lastCheckDate.toLocaleDateString()}</span> : <span>Selecione</span>}
+                        {lastCheckDate ? <span>{lastCheckDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span> : <span>Selecione</span>}
                     </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -186,7 +184,7 @@ export default function EditControlPage() {
                     <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {nextCheckDate ? <span>{nextCheckDate.toLocaleDateString()}</span> : <span>Selecione</span>}
+                        {nextCheckDate ? <span>{nextCheckDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span> : <span>Selecione</span>}
                     </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -212,7 +210,7 @@ export default function EditControlPage() {
                         <PopoverTrigger asChild>
                         <Button variant="outline" className="w-full justify-start text-left font-normal">
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                             {creationDate ? <span>{creationDate.toLocaleDateString()}</span> : <span>Selecione</span>}
+                             {creationDate ? <span>{creationDate.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span> : <span>Selecione</span>}
                         </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
