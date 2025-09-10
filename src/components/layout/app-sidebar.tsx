@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -72,16 +73,17 @@ export function AppSidebar() {
             }
             return (
               <SidebarMenuItem key={item.label}>
-                <Link href={item.href} legacyBehavior passHref>
-                  <SidebarMenuButton
-                    isActive={isNavItemActive(item.href)}
-                    icon={item.icon}
-                    className="w-full justify-start"
-                  >
+                <SidebarMenuButton
+                  asChild
+                  isActive={isNavItemActive(item.href)}
+                  icon={item.icon}
+                  className="w-full justify-start"
+                >
+                  <Link href={item.href}>
                     {item.label}
                     {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
-                  </SidebarMenuButton>
-                </Link>
+                  </Link>
+                </SidebarMenuButton>
               </SidebarMenuItem>
             );
           })}

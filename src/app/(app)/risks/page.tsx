@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -58,14 +59,16 @@ export default function RisksPage() {
                     </DropdownMenuCheckboxItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-                <Link href="/risks/capture" passHref>
-                    <Button size="sm" className="h-8 gap-1">
+                
+                    <Button size="sm" className="h-8 gap-1" asChild>
+                      <Link href="/risks/capture">
                         <PlusCircle className="h-3.5 w-3.5" />
                         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                         Novo Risco
                         </span>
+                      </Link>
                     </Button>
-                </Link>
+                
             </div>
         </div>
       </CardHeader>
