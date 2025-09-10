@@ -1,4 +1,4 @@
-import type { Risk, RecentActivity } from './types';
+import type { Risk, RecentActivity, BowtieData } from './types';
 
 export const kpiData = {
   compliance: {
@@ -113,3 +113,30 @@ export const risksData: Risk[] = [
         lastUpdate: '2024-07-29',
     },
 ];
+
+export const bowtieData: BowtieData = {
+    event: {
+        label: "Descarrilamento",
+        description: "Saída do trem dos trilhos na via principal.",
+    },
+    threats: [
+        { label: "Excesso de Velocidade", description: "Operação acima da VMA do trecho." },
+        { label: "Falha de Material Rodante", description: "Ex: rolamento, truque, rodeiro." },
+        { label: "Defeito na Via", description: "Ex: trilho quebrado, fixação." },
+    ],
+    preventiveControls: [
+        { label: "ATC/ATS", description: "Controle de velocidade embarcado." },
+        { label: "Manutenção Preditiva", description: "Inspeção e troca de componentes." },
+        { label: "Inspeção de Via", description: "Ultrassom, veículo de controle." },
+    ],
+    consequences: [
+        { label: "Danos à Carga", description: "Avaria ou perda total da carga." },
+        { label: "Impacto Ambiental", description: "Vazamento de produtos perigosos." },
+        { label: "Interdição da Via", description: "Bloqueio da linha para reparos." },
+    ],
+    mitigatoryControls: [
+        { label: "Plano de Emergência", description: "Ação rápida para contenção de danos." },
+        { label: "Kits de Mitigação", description: "Materiais para contenção de vazamentos." },
+        { label: "Equipe de Restabelecimento", description: "Equipe para liberar a via rapidamente." },
+    ]
+};

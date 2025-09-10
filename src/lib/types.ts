@@ -35,3 +35,16 @@ export type RecentActivity = {
   target: string;
   timestamp: string;
 };
+
+export type BowtieNodeData = {
+    label: string;
+    description: string;
+};
+
+export type BowtieData = {
+    event: BowtieNodeData;
+    threats: BowtieNodeData[];
+    preventiveControls: BowtieNodeData[];
+    consequences: BowtieNodeData[];
+    mitigatoryControls: BowtieNodeData[];
+};
