@@ -53,21 +53,23 @@ export type Risk = {
   gerencia: string;
   diretoria: string;
   processo: string;
-  risco: string;
+  risco: string; // Title
   descricaoDoRisco: string;
   dataDeIdentificacao: string;
-  origemDoRisco: string;
+  origemDoRisco: string; // ORIGEM column
   causaRaizDoRisco: string;
   consequenciaDoRisco: string;
-  categoriaDoRisco: string;
-  tipoDeRisco: string;
+  categoriaDoRisco: string; // Categoria
+  tipoDeRisco: string; // TIPO ER
   processoAfetado: string;
   
-  probabilidadeInerente: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo' | '';
-  impactoInerente: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico' | '';
-  nivelDeRiscoInerente: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | '';
+  // Inherent Risk
+  probabilidadeInerente: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo' | ''; // PROB
+  impactoInerente: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico' | ''; // IMP
+  nivelDeRiscoInerente: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | ''; // Calculated
   
-  estrategia: string;
+  // Treatment
+  estrategia: string; // AÇÃO column
   descricaoDoControle: string;
   naturezaDoControle: string;
   tipoDeControle: string;
@@ -75,18 +77,21 @@ export type Risk = {
   frequencia: string;
   eficaciaDoControle: 'Ineficaz' | 'Pouco Eficaz' | 'Eficaz' | 'Muito Eficaz' | '';
   documentacaoControle: string;
-
+  
+  // Residual Risk
   probabilidadeResidual: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo' | '';
   impactoResidual: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico' | '';
-  nivelDeRiscoResidual: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | '';
-
+  nivelDeRiscoResidual: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | ''; // Calculated
+  
+  // Management and Monitoring
   apetiteAoRisco: string;
   statusDoRisco: 'Aberto' | 'Em Tratamento' | 'Fechado' | 'Mitigado' | '';
   planoDeAcao: string;
-  responsavelPeloRisco: string;
+  responsavelPeloRisco: string; // Responsável
   dataDaUltimaRevisao: string;
   dataDaProximaRevisao: string;
-
+  
+  // KRI
   kri: string;
   indicadorRisco: string;
   limiteApetite: number;
@@ -94,9 +99,51 @@ export type Risk = {
   limiteCapacidade: number;
   medicaoAtual: number;
   
+  // Financial Analysis
   custoDoRisco: number;
   beneficioDoControle: number;
   valorExposto: number;
+
+  // New fields from image
+  topRiskAssociado: string;
+  categoriaMP: string;
+  orig: number;
+  prob: number;
+  ctrl: number;
+  tempo: number;
+  facil: number;
+  elev: number;
+  ier: number;
+  filho: string;
+  v: number;
+  d: number;
+  g: number;
+  u: number;
+  t_score: number; // Renamed from "t" to avoid conflict
+  i_score: number; // Renamed from "i" to avoid conflict
+  oredsX: number;
+  t_rating: number; // from the second 'T' column
+  riscosAceitaveis: string;
+  riscosNaoAceitaveis: string;
+  riscosMix: string;
+  statusControle: string;
+  urlDoCC: string;
+  possuiCC: string;
+  pilar: string;
+  pilarESG: string;
+  indicador: string;
+  subtema: string;
+  categoriaRisco: string;
+  tronco: string;
+  englobado: string;
+  fatorDeRisco: string;
+  horizonte: string;
+  ge: string;
+  gr: string;
+  observacao: string;
+  dataDaAvaliacao: string;
+  contexto: string;
+  bowtie: string;
 };
 
 
