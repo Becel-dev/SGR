@@ -43,20 +43,22 @@ const Section = ({ title, children, icon: Icon }: { title: string, children: Rea
 export default function ControlDetailPage() {
     const params = useParams();
     const { id } = params;
-    const [control, setControl] = useState<Control | null>(null);
+    const [control, setControl] = useState<Control | undefined>(undefined);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (id) {
             const foundControl = controlsData.find(c => c.id.toString() === id);
-            setControl(foundControl || null);
+            setControl(foundControl);
         }
+        setLoading(false);
     }, [id]);
 
+    if (loading) {
+        return <div>Carregando...</div>;
+    }
+
     if (!control) {
-        // Wait for the control to be loaded
-        if (control === null && !id) {
-            return <div>Carregando...</div>;
-        }
         return notFound();
     }
 
