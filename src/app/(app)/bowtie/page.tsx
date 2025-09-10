@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import { BowtieDiagram } from "@/components/bowtie/bowtie-diagram";
 import { initialBowtieData as diagrams, risksData, getEmptyBowtie } from "@/lib/mock-data";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { BowtieData, Risk } from "@/lib/types";
 import {
   Select,
@@ -25,11 +26,29 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { useSearchParams } from "next/navigation";
 
 
 export default function BowtiePage() {
   const [bowtieDiagrams, setBowtieDiagrams] = useState<BowtieData[]>(diagrams);
-  const [selectedDiagramId, setSelectedDiagramId] = useState<string>(diagrams[0]?.id || '');
+  const [selectedDiagramId, setSelectedDiagramId] = useState<string>('');
+  
+  const searchParams = useSearchParams();
+  const riskIdFromQuery = searchParams.get('riskId');
+
+  useEffect(() => {
+    let diagramToSelect: BowtieData | undefined;
+    if (riskIdFromQuery) {
+        diagramToSelect = bowtieDiagrams.find(d => d.riskId === riskIdFromQuery);
+    } 
+    
+    if (diagramToSelect) {
+        setSelectedDiagramId(diagramToSelect.id);
+    } else if (bowtieDiagrams.length > 0) {
+        setSelectedDiagramId(bowtieDiagrams[0].id);
+    }
+  }, [riskIdFromQuery, bowtieDiagrams]);
+
 
   const handleUpdate = (updatedData: BowtieData) => {
     setBowtieDiagrams(prevDiagrams => 
@@ -58,10 +77,11 @@ export default function BowtiePage() {
   };
 
   const handleDeleteDiagram = (diagramId: string) => {
-    setBowtieDiagrams(prev => prev.filter(d => d.id !== diagramId));
+    const remainingDiagrams = bowtieDiagrams.filter(d => d.id !== diagramId);
+    setBowtieDiagrams(remainingDiagrams);
     // Select the first diagram if the deleted one was selected
     if (selectedDiagramId === diagramId) {
-      setSelectedDiagramId(bowtieDiagrams[0]?.id || '');
+      setSelectedDiagramId(remainingDiagrams[0]?.id || '');
     }
   }
 
@@ -150,7 +170,10 @@ export default function BowtiePage() {
       ) : (
         <div className="flex items-center justify-center h-96 border-2 border-dashed rounded-lg">
           <p className="text-muted-foreground">
-            Nenhum diagrama selecionado. Escolha um na lista acima ou crie um novo.
+            {riskIdFromQuery 
+                ? 'Nenhum diagrama encontrado para o risco selecionado.'
+                : 'Nenhum diagrama selecionado. Escolha um na lista acima ou crie um novo.'
+            }
           </p>
         </div>
       )}

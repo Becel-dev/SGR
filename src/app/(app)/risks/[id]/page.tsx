@@ -3,13 +3,13 @@
 'use client'
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { controlsData, risksData } from "@/lib/mock-data";
+import { controlsData, initialBowtieData, risksData } from "@/lib/mock-data";
 import { notFound, useParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Siren, DollarSign, Target, Shield, Activity, BarChart3, Briefcase, Users, CircleHelp, ClipboardList, TrendingUp, PlusCircle, ArrowRight } from "lucide-react";
+import { ArrowLeft, Siren, DollarSign, Target, Shield, Activity, BarChart3, Briefcase, Users, CircleHelp, ClipboardList, TrendingUp, PlusCircle, ArrowRight, GitFork } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Control } from "@/lib/types";
+import type { Control, Risk } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
@@ -93,6 +93,8 @@ export default function RiskDetailPage() {
     if (!risk) {
         return notFound();
     }
+    
+    const hasBowtie = risk.bowtie === 'Realizado' || risk.bowtie === 'Sim';
 
     return (
         <Card>
@@ -248,13 +250,23 @@ export default function RiskDetailPage() {
                 )}
 
             </CardContent>
-            <CardFooter className="flex justify-between">
-                <Button asChild>
-                    <Link href={`/controls/capture?riskId=${risk.id}`}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Adicionar Controle
-                    </Link>
-                </Button>
+            <CardFooter className="flex justify-between flex-wrap gap-2">
+                <div className="flex gap-2 flex-wrap">
+                     <Button asChild>
+                        <Link href={`/controls/capture?riskId=${risk.id}`}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Adicionar Controle
+                        </Link>
+                    </Button>
+                    {hasBowtie && (
+                        <Button asChild variant="outline">
+                            <Link href={`/bowtie?riskId=${risk.id}`}>
+                                <GitFork className="mr-2 h-4 w-4" />
+                                Ver Bowtie
+                            </Link>
+                        </Button>
+                    )}
+                </div>
                  <Button asChild>
                     <Link href={`/risks/capture?id=${risk.id}`}>Editar Risco</Link>
                 </Button>
