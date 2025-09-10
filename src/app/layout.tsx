@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { UserProvider } from '@/components/auth/user-provider';
 
 export const metadata: Metadata = {
-  title: 'Rumo Risk Manager',
+  title: 'SGR: Sistema de Gestão de Riscos',
   description: 'Portal de Gestão de Riscos',
 };
 

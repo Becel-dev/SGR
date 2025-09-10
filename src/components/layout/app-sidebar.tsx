@@ -63,7 +63,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <div className="flex items-center gap-2">
             <Shield className="w-8 h-8 text-primary-foreground" />
-            <h1 className="text-xl font-bold text-primary-foreground">Rumo Risk</h1>
+            <h1 className="text-xl font-bold text-primary-foreground">SGR</h1>
         </div>
       </SidebarHeader>
       <SidebarContent>
