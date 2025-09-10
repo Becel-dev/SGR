@@ -18,15 +18,33 @@ export type Kpi = {
 };
 
 export type Control = {
-  id: string;
   criadoEm: string;
-  controle: string;
-  gerenciaResponsavel: 'Operação' | 'Tecnologia' | 'Ambiental' | 'GesMun' | 'Compliance' | 'Regulatório' | 'Suprimentos' | 'Jurídico' | 'Comercial' | 'DHO' | 'Expansão' | 'Financeiro' | 'SMS' | 'RH';
-  natureza: 'Manual' | 'Sistêmico' | 'Semi-Sistêmico';
-  tipo: 'Preventivo' | 'Detectivo' | 'Corretivo';
-  frequencia: 'Diário' | 'Semanal' | 'Mensal' | 'Trimestral' | 'Semestral' | 'Anual' | 'Sob Demanda';
-  status: 'Ativo' | 'Inativo';
-  riscosAssociados: string[]; // Array of Risk IDs
+  id: number;
+  codigoMUE: string;
+  titulo: string;
+  idRiscoMUE: number;
+  descricaoMUE: string;
+  nomeControle: string;
+  tipo: 'Preventivo' | 'Mitigatório';
+  classificacao: 'Procedimento' | 'Equipamento' | string; // string to allow other values
+  status: 'Implementação Futura' | 'Implementado com Pendência' | 'Não Implementado' | 'Implementado' | string;
+  donoControle: string;
+  emailDono: string;
+  area: 'OPERAÇÃO' | 'MANUTENÇÃO' | 'SEGURANÇA' | string;
+  dataUltimaVerificacao: string;
+  frequenciaMeses: number;
+  proximaVerificacao: string;
+  validacao: 'DENTRO DO PRAZO' | 'ATRASADO' | string;
+  onePager: string;
+  evidencia: string;
+  criadoPor: string;
+  modificadoEm: string;
+  modificadoPor: string;
+  preenchimentoKPI: string;
+  gerenciaRisco: string;
+  topRiskAssociado: string;
+  idRiscos: number; // Duplicated? Appears to be the same as idRiscoMUE
+  criticidade: 'Sim' | 'Não';
 };
 
 

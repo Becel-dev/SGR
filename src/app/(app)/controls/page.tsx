@@ -13,12 +13,15 @@ import { Input } from "@/components/ui/input";
 import type { Control } from "@/lib/types";
 
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
-    'Ativo': 'default',
-    'Inativo': 'secondary',
+    'Implementado': 'default',
+    'Implementado com Pendência': 'secondary',
+    'Implementação Futura': 'outline',
+    'Não Implementado': 'destructive',
 };
 
 // Helper function to format date consistently
 const formatDate = (dateString: string) => {
+    if (!dateString) return '-';
     const date = new Date(dateString);
     // Adjust for timezone offset to prevent date changes
     const userTimezoneOffset = date.getTimezoneOffset() * 60000;
@@ -31,14 +34,8 @@ export default function ControlsPage() {
   
   const filteredControls = controlsData.filter((control: Control) => {
     const term = searchTerm.toLowerCase();
-    return (
-      control.controle.toLowerCase().includes(term) ||
-      control.id.toLowerCase().includes(term) ||
-      control.gerenciaResponsavel.toLowerCase().includes(term) ||
-      control.status.toLowerCase().includes(term) ||
-      control.tipo.toLowerCase().includes(term) ||
-      control.natureza.toLowerCase().includes(term) ||
-      control.frequencia.toLowerCase().includes(term)
+    return Object.values(control).some(value => 
+      String(value).toLowerCase().includes(term)
     );
   });
 
@@ -84,13 +81,12 @@ export default function ControlsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>ID</TableHead>
-                <TableHead>Controle</TableHead>
-                <TableHead>Gerência Responsável</TableHead>
-                <TableHead>Natureza</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Frequência</TableHead>
+                <TableHead>Título</TableHead>
+                <TableHead>Nome do Controle</TableHead>
+                <TableHead>Área</TableHead>
+                <TableHead>Dono do Controle</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Criado Em</TableHead>
+                <TableHead>Próxima Verificação</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -98,15 +94,14 @@ export default function ControlsPage() {
               {filteredControls.map(control => (
                 <TableRow key={control.id}>
                   <TableCell className="font-mono">{control.id}</TableCell>
-                  <TableCell className="font-medium">{control.controle}</TableCell>
-                  <TableCell>{control.gerenciaResponsavel}</TableCell>
-                  <TableCell>{control.natureza}</TableCell>
-                  <TableCell>{control.tipo}</TableCell>
-                  <TableCell>{control.frequencia}</TableCell>
+                  <TableCell className="font-medium">{control.titulo}</TableCell>
+                  <TableCell>{control.nomeControle}</TableCell>
+                  <TableCell>{control.area}</TableCell>
+                  <TableCell>{control.donoControle}</TableCell>
                   <TableCell>
-                    <Badge variant={statusVariantMap[control.status]}>{control.status}</Badge>
+                    <Badge variant={statusVariantMap[control.status] || 'default'}>{control.status}</Badge>
                   </TableCell>
-                  <TableCell>{formatDate(control.criadoEm)}</TableCell>
+                  <TableCell>{formatDate(control.proximaVerificacao)}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" asChild>
                       <Link href={`/controls/${control.id}`}>
