@@ -1,13 +1,18 @@
 
+'use client';
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ListFilter, PlusCircle, Siren, ArrowRight } from "lucide-react";
+import { ListFilter, PlusCircle, Siren, ArrowRight, Search } from "lucide-react";
 import { risksData } from "@/lib/mock-data";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import type { Risk } from "@/lib/types";
 
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
     'Aberto': 'secondary',
@@ -24,10 +29,17 @@ const riskLevelVariantMap: { [key: string]: "default" | "secondary" | "destructi
 };
 
 export default function RisksPage() {
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  const filteredRisks = risksData.filter((risk: Risk) => {
+    const values = Object.values(risk).join(" ").toLowerCase();
+    return values.includes(searchTerm.toLowerCase());
+  });
+
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
                 <CardTitle className="flex items-center gap-2">
                     <Siren />
@@ -37,10 +49,20 @@ export default function RisksPage() {
                     Visualize, filtre e gerencie todos os riscos reportados.
                 </CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="relative flex-1 sm:flex-grow-0">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        type="search"
+                        placeholder="Buscar riscos..."
+                        className="pl-8 w-full sm:w-[200px] lg:w-[300px]"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 gap-1">
+                    <Button variant="outline" size="sm" className="h-9 gap-1">
                         <ListFilter className="h-3.5 w-3.5" />
                         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                         Filtro
@@ -56,7 +78,7 @@ export default function RisksPage() {
                     </DropdownMenuContent>
                 </DropdownMenu>
                 
-                <Button size="sm" className="h-8 gap-1" asChild>
+                <Button size="sm" className="h-9 gap-1" asChild>
                   <Link href="/risks/capture">
                     <PlusCircle className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
@@ -64,7 +86,6 @@ export default function RisksPage() {
                     </span>
                   </Link>
                 </Button>
-                
             </div>
         </div>
       </CardHeader>
@@ -83,7 +104,7 @@ export default function RisksPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {risksData.map(risk => (
+              {filteredRisks.map(risk => (
                 <TableRow key={risk.id}>
                   <TableCell className="font-medium">{risk.risco}</TableCell>
                   <TableCell>
@@ -112,6 +133,11 @@ export default function RisksPage() {
             </TableBody>
           </Table>
         </div>
+         {filteredRisks.length === 0 && (
+          <div className="text-center p-8 text-muted-foreground">
+            Nenhum risco encontrado para &quot;{searchTerm}&quot;.
+          </div>
+        )}
       </CardContent>
     </Card>
   );
