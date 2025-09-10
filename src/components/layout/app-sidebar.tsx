@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -50,7 +51,7 @@ export function AppSidebar() {
             <span className="">SGR: Sistema de Gestão de Riscos</span>
           </Link>
         </div>
-        <div className="flex-1">
+        <div className="flex-1 overflow-auto">
           <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
             {navigationItems.map((item) => {
               if (item.roles && !hasRole(item.roles as any)) {
