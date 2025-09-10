@@ -15,13 +15,16 @@ import type { Kpi } from "@/lib/types";
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
     'Em dia': 'default',
     'Atrasado': 'destructive',
+    'Pendente': 'secondary',
 };
 
 const formatDate = (dateString: string | undefined) => {
     if (!dateString) return '-';
+    // Handle YYYY-MM-DD and other potential formats
     try {
         const date = new Date(dateString);
-        const utcDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+        // Add timeZone to handle potential off-by-one day errors
+        const utcDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12);
         return utcDate.toLocaleDateString('pt-BR');
     } catch(e) {
         return dateString;

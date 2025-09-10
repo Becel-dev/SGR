@@ -26,10 +26,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar as CalendarIcon, GanttChartSquare } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { controlsData } from '@/lib/mock-data';
+import { controlsData, kpisData } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
+import type { Kpi } from '@/lib/types';
 
 const Field = ({ label, children, className }: {label: string, children: React.ReactNode, className?: string}) => (
     <div className={cn("space-y-2", className)}>
@@ -41,12 +42,30 @@ const Field = ({ label, children, className }: {label: string, children: React.R
 export default function CaptureKpiPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const kpiId = searchParams.get('id');
     const controlIdFromQuery = searchParams.get('controlId');
+    const isEditing = !!kpiId;
 
+    const [kpi, setKpi] = useState<Kpi | undefined>(undefined);
     const [lastInformedDate, setLastInformedDate] = useState<Date>();
     const [nextDeadlineDate, setNextDeadlineDate] = useState<Date>();
-    
     const [selectedControlId, setSelectedControlId] = useState<string | undefined>(controlIdFromQuery || undefined);
+    
+    useEffect(() => {
+        if(isEditing) {
+            const foundKpi = kpisData.find(k => k.id === kpiId);
+            setKpi(foundKpi);
+            if (foundKpi) {
+                setSelectedControlId(foundKpi.controlId.toString());
+                if (foundKpi.ultimoKpiInformado) {
+                    setLastInformedDate(new Date(foundKpi.ultimoKpiInformado));
+                }
+                if (foundKpi.prazoProximoRegistro) {
+                    setNextDeadlineDate(new Date(foundKpi.prazoProximoRegistro));
+                }
+            }
+        }
+    }, [kpiId, isEditing]);
 
     const selectedControl = useMemo(() => {
         return controlsData.find(c => c.id.toString() === selectedControlId);
@@ -55,25 +74,28 @@ export default function CaptureKpiPage() {
     const handleControlChange = (value: string) => {
         setSelectedControlId(value);
     }
-    
+
+    const title = isEditing ? `Edição de KPI: ${kpi?.id}` : 'Cadastro de Novo KPI';
+    const description = isEditing ? 'Atualize os campos abaixo para editar o KPI.' : 'Preencha os campos abaixo para registrar um novo KPI para um controle.';
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <GanttChartSquare />
-            Cadastro de Novo KPI
+            {title}
         </CardTitle>
         <CardDescription>
-          Preencha os campos abaixo para registrar um novo KPI para um controle.
+          {description}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-6">
            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <Field label="ID do KPI"><Input name="id" placeholder="Gerado automaticamente" disabled /></Field>
+                <Field label="ID do KPI"><Input name="id" defaultValue={kpi?.id} placeholder="Gerado automaticamente" disabled /></Field>
                 
                 <Field label="Controle Associado" className="sm:col-span-2">
-                     <Select onValueChange={handleControlChange} defaultValue={controlIdFromQuery || undefined}>
+                     <Select onValueChange={handleControlChange} value={selectedControlId} defaultValue={selectedControlId}>
                         <SelectTrigger>
                             <SelectValue placeholder="Selecione um controle..." />
                         </SelectTrigger>
@@ -88,7 +110,7 @@ export default function CaptureKpiPage() {
                 </Field>
                 
                 <Field label="Status">
-                     <Select name="status" defaultValue="Em dia">
+                     <Select name="status" defaultValue={kpi?.status || "Pendente"}>
                         <SelectTrigger><SelectValue/></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="Em dia">Em dia</SelectItem>
@@ -100,10 +122,10 @@ export default function CaptureKpiPage() {
 
                 {selectedControl && (
                     <>
-                        <Field label="Responsável"><Input name="responsavel" value={selectedControl.donoControle} disabled /></Field>
-                        <Field label="E-mail do Responsável"><Input name="email" value={selectedControl.emailDono} disabled /></Field>
-                        <Field label="Frequência de Verificação"><Input name="frequencia" value={selectedControl.frequenciaMeses ? `${selectedControl.frequenciaMeses} Meses` : 'Não definida'} disabled /></Field>
-                        <Field label="Dias Pendentes"><Input name="diasPendentes" type="number" defaultValue={0} /></Field>
+                        <Field label="Responsável"><Input name="responsavel" defaultValue={kpi?.responsavel || selectedControl.donoControle} /></Field>
+                        <Field label="E-mail do Responsável"><Input name="email" defaultValue={kpi?.emailResponsavel || selectedControl.emailDono} /></Field>
+                        <Field label="Frequência de Verificação"><Input name="frequencia" defaultValue={kpi?.frequencia || (selectedControl.frequenciaMeses ? `${selectedControl.frequenciaMeses} Meses` : 'Não definida')} /></Field>
+                        <Field label="Dias Pendentes"><Input name="diasPendentes" type="number" defaultValue={kpi?.diasPendentes || 0} /></Field>
                     </>
                 )}
 

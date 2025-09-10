@@ -16,7 +16,7 @@ export type Kpi = {
   ultimoKpiInformado?: string;
   prazoProximoRegistro: string;
   diasPendentes: number;
-  status: string;
+  status: 'Em dia' | 'Atrasado' | 'Pendente';
   responsavel: string;
   emailResponsavel: string;
 };

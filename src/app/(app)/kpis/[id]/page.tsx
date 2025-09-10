@@ -48,7 +48,19 @@ const Section = ({ title, children, icon: Icon }: { title: string, children: Rea
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
     'Em dia': 'default',
     'Atrasado': 'destructive',
+    'Pendente': 'secondary',
 };
+
+const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'N/A';
+    try {
+        const date = new Date(dateString);
+        const utcDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12);
+        return utcDate.toLocaleDateString('pt-BR');
+    } catch(e) {
+        return dateString;
+    }
+}
 
 export default function KpiDetailPage() {
     const params = useParams();
@@ -108,8 +120,8 @@ export default function KpiDetailPage() {
         </Section>
         
         <Section title="Prazos e Registros" icon={Calendar}>
-            <DetailItem label="Último KPI Informado" value={kpi.ultimoKpiInformado ? new Date(kpi.ultimoKpiInformado).toLocaleDateString('pt-BR') : 'N/A'} />
-            <DetailItem label="Prazo para Próximo Registro" value={new Date(kpi.prazoProximoRegistro).toLocaleDateString('pt-BR')} />
+            <DetailItem label="Último KPI Informado" value={formatDate(kpi.ultimoKpiInformado)} />
+            <DetailItem label="Prazo para Próximo Registro" value={formatDate(kpi.prazoProximoRegistro)} />
         </Section>
         
         <Section title="Responsabilidade" icon={User}>
