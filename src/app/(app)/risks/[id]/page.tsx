@@ -258,11 +258,18 @@ export default function RiskDetailPage() {
                             Adicionar Controle
                         </Link>
                     </Button>
-                    {hasBowtie && (
+                    {hasBowtie ? (
                         <Button asChild variant="outline">
                             <Link href={`/bowtie?riskId=${risk.id}`}>
                                 <GitFork className="mr-2 h-4 w-4" />
                                 Ver Bowtie
+                            </Link>
+                        </Button>
+                    ) : (
+                         <Button asChild variant="outline">
+                            <Link href={`/bowtie?riskId=${risk.id}&create=true`}>
+                                <GitFork className="mr-2 h-4 w-4" />
+                                Criar Bowtie
                             </Link>
                         </Button>
                     )}

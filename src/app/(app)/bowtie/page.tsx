@@ -35,11 +35,28 @@ export default function BowtiePage() {
   
   const searchParams = useSearchParams();
   const riskIdFromQuery = searchParams.get('riskId');
+  const createNewFromQuery = searchParams.get('create') === 'true';
 
   useEffect(() => {
     let diagramToSelect: BowtieData | undefined;
+
     if (riskIdFromQuery) {
         diagramToSelect = bowtieDiagrams.find(d => d.riskId === riskIdFromQuery);
+        
+        // If diagram not found but create flag is true, create a new one
+        if (!diagramToSelect && createNewFromQuery) {
+            const riskForNewDiagram = risksData.find(r => r.id === riskIdFromQuery);
+            if(riskForNewDiagram) {
+                const newDiagram = getEmptyBowtie(riskForNewDiagram);
+                // Add to state and set it as selected
+                setBowtieDiagrams(prev => {
+                    // Avoid adding duplicates if already exists
+                    if (prev.some(d => d.id === newDiagram.id)) return prev;
+                    return [...prev, newDiagram];
+                });
+                diagramToSelect = newDiagram;
+            }
+        }
     } 
     
     if (diagramToSelect) {
@@ -47,7 +64,7 @@ export default function BowtiePage() {
     } else if (bowtieDiagrams.length > 0) {
         setSelectedDiagramId(bowtieDiagrams[0].id);
     }
-  }, [riskIdFromQuery, bowtieDiagrams]);
+  }, [riskIdFromQuery, createNewFromQuery, bowtieDiagrams]);
 
 
   const handleUpdate = (updatedData: BowtieData) => {
