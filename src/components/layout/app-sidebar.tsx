@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -20,6 +21,9 @@ import { useUser } from '@/hooks/use-user';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useSidebar } from '@/hooks/use-sidebar';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
+
 
 const navigationItems = [
   { href: '/dashboard', icon: AreaChart, label: 'Painéis' },
@@ -33,53 +37,84 @@ const navigationItems = [
   { href: '/administration', icon: Users, label: 'Administração', roles: ['admin'] },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
   const pathname = usePathname();
   const { hasRole } = useUser();
+  const { isCollapsed } = useSidebar();
 
   const isNavItemActive = (href: string) => {
     // For dashboard, we want an exact match. For others, we want to match the parent path.
     return href === '/dashboard' ? pathname === href : pathname.startsWith(href);
   };
-
-  return (
-    <div className="hidden border-r bg-sidebar text-sidebar-foreground md:block">
-      <div className="flex h-full max-h-screen flex-col gap-2">
+  
+  const SidebarContent = () => (
+     <div className="flex h-full max-h-screen flex-col gap-2">
         <div className="flex h-14 items-center border-b border-sidebar-border px-4 lg:h-[60px] lg:px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold text-sidebar-foreground">
             <Shield className="h-6 w-6 text-sidebar-primary" />
-            <span className="">SGR: Sistema de Gestão de Riscos</span>
+            <span className={cn('transition-opacity duration-300', isCollapsed && !isMobile ? 'opacity-0 w-0' : 'opacity-100')}>SGR</span>
           </Link>
         </div>
         <div className="flex-1 overflow-auto">
-          <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-            {navigationItems.map((item) => {
-              if (item.roles && !hasRole(item.roles as any)) {
-                return null;
-              }
-              const isActive = isNavItemActive(item.href);
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                    isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground'
-                  )}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
+          <TooltipProvider delayDuration={0}>
+            <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+              {navigationItems.map((item) => {
+                if (item.roles && !hasRole(item.roles as any)) {
+                  return null;
+                }
+                const isActive = isNavItemActive(item.href);
+                const linkContent = (
+                   <div
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                      isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground',
+                       isCollapsed && !isMobile ? 'justify-center' : ''
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span className={cn('transition-all duration-300', isCollapsed && !isMobile ? 'w-0 opacity-0' : 'w-auto opacity-100')}>
+                      {item.label}
+                    </span>
+                  </div>
+                );
+
+                return (
+                  <Tooltip key={item.label}>
+                    <TooltipTrigger asChild>
+                      <Link href={item.href}>
+                         {linkContent}
+                      </Link>
+                    </TooltipTrigger>
+                    {isCollapsed && !isMobile && (
+                      <TooltipContent side="right">
+                        <p>{item.label}</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                );
+              })}
+            </nav>
+          </TooltipProvider>
         </div>
-        <div className="mt-auto p-4">
+        <div className={cn("mt-auto p-4", isCollapsed && !isMobile ? "px-2" : "")}>
            <Button variant="secondary" size="sm" className="w-full">
-              Ajuda & Suporte
+              <LifeBuoy className={cn("h-4 w-4", isCollapsed && !isMobile ? "" : "mr-2")}/>
+              <span className={cn(isCollapsed && !isMobile ? 'w-0 opacity-0' : 'opacity-100')}>Ajuda</span>
             </Button>
         </div>
       </div>
+  );
+
+  if (isMobile) {
+    return <SidebarContent />;
+  }
+
+  return (
+    <div className={cn(
+        "hidden md:block border-r bg-sidebar text-sidebar-foreground transition-[width] duration-300 ease-in-out",
+        isCollapsed ? "w-16" : "w-64"
+    )}>
+        <SidebarContent />
     </div>
   );
 }
