@@ -86,7 +86,7 @@ export default function CaptureRiskPage() {
         <form className="space-y-4">
           
           <Section title="Identificação e Contexto" icon={Briefcase} defaultOpen>
-            <Field label="ID"><Input name="id" placeholder="Ex: R016" /></Field>
+            <Field label="ID"><Input name="id" placeholder="Ex: 1" /></Field>
             <Field label="Risco (Título)" className="sm:col-span-2"><Input name="risco" placeholder="Título resumido do risco" /></Field>
             <Field label="Responsável"><Input name="responsavelPeloRisco" /></Field>
             <Field label="Descrição do Risco" className="sm:col-span-4"><Textarea name="descricaoDoRisco" rows={3} placeholder="Descreva o risco em detalhes" /></Field>
@@ -115,6 +115,7 @@ export default function CaptureRiskPage() {
                         <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="Técnico">Técnico</SelectItem>
+                            <SelectItem value="Negócio">Negócio</SelectItem>
                             <SelectItem value="Externo">Externo</SelectItem>
                             <SelectItem value="Interno">Interno</SelectItem>
                             <SelectItem value="Regulatório">Regulatório</SelectItem>
@@ -248,8 +249,7 @@ export default function CaptureRiskPage() {
             </Section>
 
             <Section title="Pontuações e Classificações (Interno)" icon={CircleHelp}>
-                <Field label="IMP"><Input name="impactoNumerico" type="number" /></Field>
-                <Field label="ORIG"><Input name="orig" type="number" /></Field>
+                <Field label="Impacto (orig)" className="text-muted-foreground"><Input name="orig" type="number" /></Field>
                 <Field label="PROB"><Input name="prob" type="number" /></Field>
                 <Field label="CTRL"><Input name="ctrl" type="number" /></Field>
                 <Field label="TEMPO"><Input name="tempo" type="number" /></Field>

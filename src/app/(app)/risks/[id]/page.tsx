@@ -150,8 +150,7 @@ export default function RiskDetailPage({ params }: { params: { id: string } }) {
                 </Section>
                 
                 <Section title="Pontuações e Classificações (Interno)" icon={CircleHelp}>
-                    <DetailItem label="IMP" value={risk.impactoInerente} />
-                    <DetailItem label="ORIG" value={risk.orig} />
+                    <DetailItem label="IMP (orig)" value={risk.orig} />
                     <DetailItem label="PROB" value={risk.prob} />
                     <DetailItem label="CTRL" value={risk.ctrl} />
                     <DetailItem label="TEMPO" value={risk.tempo} />
