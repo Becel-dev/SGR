@@ -26,16 +26,19 @@ const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive"
 const DetailItem = ({ label, value, className, isBadge = false }: { label: string, value: React.ReactNode, className?: string, isBadge?: boolean }) => {
     if (!value && value !== 0) return null;
 
-    let displayValue = value;
+    let displayValue: React.ReactNode = value;
+    let ValueWrapper: 'p' | 'div' = 'p';
+
     if(isBadge && typeof value === 'string') {
         const badgeVariant = (riskLevelVariantMap[value] || statusVariantMap[value] || 'default');
-        displayValue = <Badge variant={badgeVariant}>{value}</Badge>
+        displayValue = <Badge variant={badgeVariant}>{value}</Badge>;
+        ValueWrapper = 'div'; // Use div for badge to avoid p-in-p error
     }
 
     return (
         <div className={className}>
             <p className="text-sm font-medium text-muted-foreground">{label}</p>
-            <p className="text-base break-words">{displayValue}</p>
+            <ValueWrapper className="text-base break-words">{displayValue}</ValueWrapper>
         </div>
     );
 };
