@@ -90,8 +90,10 @@ export function AppSidebar() {
                   tooltip={item.label}
                 >
                   <Link href={item.href}>
-                    {item.label}
-                    {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
+                    <span>
+                      {item.label}
+                      {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
+                    </span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
