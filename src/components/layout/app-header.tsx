@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Menu, Search } from 'lucide-react';
@@ -26,17 +27,10 @@ export function AppHeader() {
           variant="outline"
           size="icon"
           className="shrink-0 md:hidden"
-          asChild
+          onClick={toggleSidebar}
         >
-          <Sheet>
-            <SheetTrigger>
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle navigation menu</span>
-            </SheetTrigger>
-             <SheetContent side="left" className="flex flex-col p-0">
-                <AppSidebar isMobile />
-            </SheetContent>
-          </Sheet>
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle navigation menu</span>
         </Button>
       
        <Button
