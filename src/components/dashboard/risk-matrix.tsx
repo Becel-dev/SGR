@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 const probabilityLevels = ["Raro", "Improvável", "Possível", "Provável", "Quase Certo"];
 const impactLevels = ["Insignificante", "Menor", "Moderado", "Maior", "Catastrófico"];
 
+// Using Tailwind full class names to avoid purging issues.
 const matrixColors = [
     ["bg-green-200", "bg-green-300", "bg-yellow-200", "bg-yellow-300", "bg-orange-300"],
     ["bg-green-300", "bg-yellow-200", "bg-yellow-300", "bg-orange-300", "bg-orange-400"],
@@ -12,14 +13,13 @@ const matrixColors = [
     ["bg-orange-300", "bg-orange-400", "bg-red-400", "bg-red-500", "bg-red-600"],
 ];
 
-// Mock data for number of risks in each cell
 const riskCounts = [
     [5, 3, 2, 1, 0],
     [2, 8, 5, 3, 1],
     [1, 4, 12, 7, 2],
     [0, 2, 6, 10, 4],
     [0, 1, 2, 3, 3],
-].reverse(); // Reverse to match visual layout (higher prob at top)
+].reverse();
 
 
 export function RiskMatrix() {
@@ -30,12 +30,12 @@ export function RiskMatrix() {
         <CardDescription>Distribuição de riscos por probabilidade e impacto.</CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto">
-        <div className="flex">
-          <div className="flex items-center -rotate-90 whitespace-nowrap -ml-8 mr-2">
+        <div className="flex items-start">
+          <div className="flex h-[300px] items-center -rotate-90 whitespace-nowrap -ml-8 mr-2">
             <span className="font-semibold text-sm text-muted-foreground">Probabilidade</span>
           </div>
           <div className="w-full">
-            <Table className="min-w-[600px]">
+            <Table className="min-w-[500px]">
                 <TableHeader>
                     <TableRow className="hover:bg-transparent">
                         <TableHead className="w-24 border-r"></TableHead>
