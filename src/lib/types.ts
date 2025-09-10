@@ -1,5 +1,4 @@
 
-
 export type Role = 'admin' | 'moderator' | 'editor' | 'viewer';
 
 export type User = {
@@ -58,21 +57,36 @@ export type RecentActivity = {
   timestamp: string;
 };
 
-export type BowtieNodeData = {
-    id: string;
-    label: string;
-    description: string;
-    color: string;
+// Bowtie V2 Types
+export type BowtieBarrierNode = {
+  id: string;
+  title: string;
+  responsible: string;
+  effectiveness: 'Eficaz' | 'Pouco Eficaz' | 'Ineficaz';
+  status: 'Implementado' | 'Não Implementado' | 'Pendente';
 };
 
-export type BowtieSide = "threats" | "preventiveControls" | "consequences" | "mitigatoryControls";
+export type BowtieThreat = {
+  id: string;
+  title: string;
+  barriers: BowtieBarrierNode[];
+};
+
+export type BowtieConsequence = {
+  id: string;
+  title: string;
+  barriers: BowtieBarrierNode[];
+};
+
+export type BowtieTopEvent = {
+  title: string;
+  description: string;
+};
 
 export type BowtieData = {
-    id: string;
-    riskId: string;
-    event: Omit<BowtieNodeData, 'id'> & { color: string };
-    threats: BowtieNodeData[];
-    preventiveControls: BowtieNodeData[];
-    consequences: BowtieNodeData[];
-    mitigatoryControls: BowtieNodeData[];
+  id: string;
+  riskId: string;
+  topEvent: BowtieTopEvent;
+  threats: BowtieThreat[];
+  consequences: BowtieConsequence[];
 };

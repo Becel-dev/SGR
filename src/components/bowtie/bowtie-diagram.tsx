@@ -4,8 +4,8 @@
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { BowtieData, BowtieNodeData, BowtieSide } from "@/lib/types";
-import { ArrowRight, ChevronRight, GitFork, Shield, Siren, Zap, Edit, Trash2, PlusCircle, Palette } from "lucide-react";
+import type { BowtieData, BowtieBarrierNode, BowtieThreat, BowtieConsequence, BowtieTopEvent } from "@/lib/types";
+import { ArrowRight, ChevronRight, GitFork, Shield, Siren, Zap, Edit, Trash2, PlusCircle, Palette, AlertTriangle } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -26,260 +26,451 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
-const nodeIcons: { [key in BowtieSide]: React.ReactNode } = {
-    threats: <Zap size={20} />,
-    preventiveControls: <Shield size={20} />,
-    consequences: <ArrowRight size={20} />,
-    mitigatoryControls: <Shield size={20} />,
+
+const statusColors: Record<BowtieBarrierNode['status'], string> = {
+  'Implementado': 'bg-green-200 text-green-800',
+  'Pendente': 'bg-yellow-200 text-yellow-800',
+  'Não Implementado': 'bg-red-200 text-red-800',
 };
 
-const defaultColors: { [key in BowtieSide]: string } = {
-    threats: "#FECACA", // red-200
-    preventiveControls: "#DBEAFE", // blue-200
-    consequences: "#FED7AA", // orange-200
-    mitigatoryControls: "#D1FAE5", // green-200
+const effectivenessColors: Record<BowtieBarrierNode['effectiveness'], string> = {
+    'Eficaz': 'bg-gray-200 text-gray-800',
+    'Pouco Eficaz': 'bg-gray-400 text-white',
+    'Ineficaz': 'bg-gray-600 text-white',
 };
 
-type BowtieNodeProps = {
-    node: BowtieNodeData;
-    onUpdate: (updatedNode: BowtieNodeData) => void;
-    onDelete: () => void;
-    className?: string;
-    icon?: React.ReactNode;
-};
-
-const EditableBowtieNode = ({ node, onUpdate, onDelete, className, icon }: BowtieNodeProps) => {
-    const [label, setLabel] = React.useState(node.label);
-    const [description, setDescription] = React.useState(node.description);
-    const [color, setColor] = React.useState(node.color);
-    const [isOpen, setIsOpen] = React.useState(false);
+// --- Editor Popovers ---
+const BarrierEditor = ({ barrier, onUpdate, trigger }: { barrier: BowtieBarrierNode, onUpdate: (updatedBarrier: BowtieBarrierNode) => void, trigger: React.ReactNode }) => {
+    const [title, setTitle] = React.useState(barrier.title);
+    const [responsible, setResponsible] = React.useState(barrier.responsible);
+    const [effectiveness, setEffectiveness] = React.useState(barrier.effectiveness);
+    const [status, setStatus] = React.useState(barrier.status);
 
     const handleSave = () => {
-        onUpdate({ ...node, label, description, color });
-        setIsOpen(false);
+        onUpdate({ ...barrier, title, responsible, effectiveness, status });
     };
 
     return (
-        <Card className={cn("w-64 h-28 flex flex-col justify-center shadow-lg relative group/node", className)} style={{ backgroundColor: node.color }}>
-            <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                    {icon && <div className="text-primary">{icon}</div>}
-                    <div className="flex-1 overflow-hidden">
-                        <p className="font-semibold text-sm truncate whitespace-nowrap">{node.label}</p>
-                        <p className="text-xs text-muted-foreground truncate whitespace-nowrap">{node.description}</p>
+         <Popover>
+            <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+            <PopoverContent className="w-80">
+                <div className="grid gap-4">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Editar Barreira</h4>
                     </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="b-title">Título</Label>
+                        <Input id="b-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                        <Label htmlFor="b-resp">Responsável</Label>
+                        <Input id="b-resp" value={responsible} onChange={(e) => setResponsible(e.target.value)} />
+                        <Label htmlFor="b-eff">Eficácia</Label>
+                        <Select value={effectiveness} onValueChange={(v: BowtieBarrierNode['effectiveness']) => setEffectiveness(v)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Eficaz">Eficaz</SelectItem>
+                                <SelectItem value="Pouco Eficaz">Pouco Eficaz</SelectItem>
+                                <SelectItem value="Ineficaz">Ineficaz</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Label htmlFor="b-status">Status</Label>
+                        <Select value={status} onValueChange={(v: BowtieBarrierNode['status']) => setStatus(v)}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Implementado">Implementado</SelectItem>
+                                <SelectItem value="Pendente">Pendente</SelectItem>
+                                <SelectItem value="Não Implementado">Não Implementado</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <Button onClick={handleSave}>Salvar</Button>
                 </div>
-            </CardContent>
-
-            <div className="absolute top-1 right-1 flex items-center opacity-0 group-hover/node:opacity-100 transition-opacity">
-                <Popover open={isOpen} onOpenChange={setIsOpen}>
-                    <PopoverTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <Edit className="h-4 w-4" />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80" side="bottom" align="center">
-                        <div className="grid gap-4">
-                            <div className="space-y-2">
-                                <h4 className="font-medium leading-none">Editar Nó</h4>
-                                <p className="text-sm text-muted-foreground">Altere as informações abaixo.</p>
-                            </div>
-                            <div className="grid gap-2">
-                                <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="label">Título</Label>
-                                    <Input id="label" value={label} onChange={(e) => setLabel(e.target.value)} className="col-span-2 h-8" />
-                                </div>
-                                <div className="grid grid-cols-3 items-start gap-4">
-                                    <Label htmlFor="description">Descrição</Label>
-                                    <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} className="col-span-2 min-h-[60px]" />
-                                </div>
-                                <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="color">Cor</Label>
-                                    <Input id="color" type="color" value={color} onChange={(e) => setColor(e.target.value)} className="col-span-2 h-8 p-1" />
-                                </div>
-                            </div>
-                            <Button onClick={handleSave}>Salvar</Button>
-                        </div>
-                    </PopoverContent>
-                </Popover>
-
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Tem certeza que deseja excluir o nó "{node.label}"? Essa ação não pode ser desfeita.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={onDelete}>Excluir</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            </div>
-        </Card>
+            </PopoverContent>
+        </Popover>
     );
 };
 
-const AddNodeButton = ({ onAdd }: { onAdd: () => void }) => (
-    <Button variant="outline" size="sm" className="h-28 w-28 border-dashed" onClick={onAdd}>
-        <PlusCircle className="h-6 w-6 text-muted-foreground" />
-    </Button>
-);
+const ThreatConsequenceEditor = ({ item, onUpdate, trigger }: { item: {id: string, title: string}, onUpdate: (updatedItem: {id: string, title: string}) => void, trigger: React.ReactNode }) => {
+    const [title, setTitle] = React.useState(item.title);
 
-const Line = ({ hasArrow = false }: { hasArrow?: boolean }) => (
-    <div className="relative flex-1 h-0.5 bg-border mx-2">
-        {hasArrow && <ChevronRight className="absolute right-0 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />}
+    const handleSave = () => {
+        onUpdate({ ...item, title });
+    };
+
+    return (
+         <Popover>
+            <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+            <PopoverContent className="w-80">
+                <div className="grid gap-4">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Editar Item</h4>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="t-title">Título</Label>
+                        <Input id="t-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                    </div>
+                    <Button onClick={handleSave}>Salvar</Button>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+};
+
+// --- Node Components ---
+const BarrierNode = ({ barrier, onUpdate, onDelete }: { barrier: BowtieBarrierNode; onUpdate: (updatedBarrier: BowtieBarrierNode) => void; onDelete: () => void; }) => (
+    <div className="relative group/barrier">
+        <div className="w-48 bg-white border border-gray-300 rounded-md shadow-sm flex flex-col text-sm">
+            <div className="p-2 border-b font-semibold text-center flex items-center justify-center gap-2">
+                <Shield size={14} className="text-green-600" />
+                <span className='truncate'>{barrier.title}</span>
+            </div>
+            <div className={`p-1.5 border-b text-center truncate ${effectivenessColors[barrier.effectiveness]}`}>
+                {barrier.responsible}
+            </div>
+            <div className={`p-1.5 border-b text-center truncate ${effectivenessColors[barrier.effectiveness]}`}>
+                {barrier.effectiveness}
+            </div>
+            <div className={`p-1.5 rounded-b-md text-center truncate ${statusColors[barrier.status]}`}>
+                {barrier.status}
+            </div>
+        </div>
+        <div className="absolute top-1 right-1 flex items-center opacity-0 group-hover/barrier:opacity-100 transition-opacity">
+            <BarrierEditor barrier={barrier} onUpdate={onUpdate} trigger={
+                 <Button variant="ghost" size="icon" className="h-6 w-6"><Edit className="h-3 w-3" /></Button>
+            } />
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive"><Trash2 className="h-3 w-3" /></Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader><AlertDialogTitle>Excluir Barreira?</AlertDialogTitle></AlertDialogHeader>
+                    <AlertDialogDescription>Tem certeza que deseja excluir a barreira "{barrier.title}"?</AlertDialogDescription>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={onDelete}>Excluir</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
     </div>
 );
 
-export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, onUpdate: (data: BowtieData) => void, onDelete: (id: string) => void }) => {
+const ThreatNode = ({ threat, onUpdate, onDelete }: { threat: BowtieThreat; onUpdate: (updatedThreat: BowtieThreat) => void; onDelete: () => void; }) => (
+    <div className="relative group/threat">
+        <div className="w-48 h-24 bg-orange-400 text-white rounded-md shadow-md flex items-center justify-center p-2 text-center font-semibold">
+            {threat.title}
+        </div>
+        <div className="absolute top-1 right-1 flex items-center opacity-0 group-hover/threat:opacity-100 transition-opacity">
+            <ThreatConsequenceEditor item={threat} onUpdate={(item) => onUpdate({...threat, title: item.title})} trigger={
+                 <Button variant="ghost" size="icon" className="h-6 w-6 text-white hover:text-white"><Edit className="h-3 w-3" /></Button>
+            } />
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-white hover:text-white"><Trash2 className="h-3 w-3" /></Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader><AlertDialogTitle>Excluir Ameaça?</AlertDialogTitle></AlertDialogHeader>
+                    <AlertDialogDescription>Tem certeza que deseja excluir a ameaça "{threat.title}" e todas as suas barreiras?</AlertDialogDescription>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={onDelete}>Excluir</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
+    </div>
+);
 
-    const handleNodeUpdate = (side: BowtieSide | 'event', index: number, updatedNode: BowtieNodeData | BowtieData['event']) => {
-        const newData = JSON.parse(JSON.stringify(data));
-        if (side === 'event') {
-            newData.event = updatedNode;
-        } else {
-            (newData as any)[side][index] = updatedNode;
-        }
-        onUpdate(newData);
-    };
+const ConsequenceNode = ({ consequence, onUpdate, onDelete }: { consequence: BowtieConsequence; onUpdate: (updatedConsequence: BowtieConsequence) => void; onDelete: () => void; }) => (
+     <div className="relative group/consequence">
+        <div className="w-48 h-24 bg-red-500 text-white rounded-md shadow-md flex items-center justify-center p-2 text-center font-semibold">
+            {consequence.title}
+        </div>
+         <div className="absolute top-1 right-1 flex items-center opacity-0 group-hover/consequence:opacity-100 transition-opacity">
+             <ThreatConsequenceEditor item={consequence} onUpdate={(item) => onUpdate({...consequence, title: item.title})} trigger={
+                 <Button variant="ghost" size="icon" className="h-6 w-6 text-white hover:text-white"><Edit className="h-3 w-3" /></Button>
+            } />
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                     <Button variant="ghost" size="icon" className="h-6 w-6 text-white hover:text-white"><Trash2 className="h-3 w-3" /></Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader><AlertDialogTitle>Excluir Consequência?</AlertDialogTitle></AlertDialogHeader>
+                    <AlertDialogDescription>Tem certeza que deseja excluir a consequência "{consequence.title}" e todas as suas barreiras?</AlertDialogDescription>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={onDelete}>Excluir</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
+    </div>
+);
 
-    const handleAddNode = (side: BowtieSide) => {
-        const newData = JSON.parse(JSON.stringify(data));
-        const newId = `${side.slice(0,1).toUpperCase()}${newData[side].length + 1}`;
-        const newNode: BowtieNodeData = { id: newId, label: 'Novo Item', description: 'Clique para editar', color: defaultColors[side] };
+const TopEventNode = ({ topEvent, onUpdate }: { topEvent: BowtieTopEvent; onUpdate: (updatedEvent: BowtieTopEvent) => void; }) => {
+     const [title, setTitle] = React.useState(topEvent.title);
+     const [description, setDescription] = React.useState(topEvent.description);
 
-        if (side === 'threats' || side === 'preventiveControls') {
-             newData.threats.push(side === 'threats' ? newNode : { id: newId.replace("T", "TH"), label: 'Nova Ameaça', description: '...', color: defaultColors.threats });
-             newData.preventiveControls.push(side === 'preventiveControls' ? newNode : { id: newId.replace("P", "PC"), label: 'Novo Controle', description: '...', color: defaultColors.preventiveControls });
-        } else {
-             newData.consequences.push(side === 'consequences' ? newNode : { id: newId.replace("C", "CO"), label: 'Nova Consequência', description: '...', color: defaultColors.consequences });
-             newData.mitigatoryControls.push(side === 'mitigatoryControls' ? newNode : { id: newId.replace("M", "MC"), label: 'Novo Controle', description: '...', color: defaultColors.mitigatoryControls });
-        }
-        onUpdate(newData);
-    };
-
-    const handleDeleteNode = (side: BowtieSide, index: number) => {
-        const newData = JSON.parse(JSON.stringify(data));
-        if (side === 'threats' || side === 'preventiveControls') {
-            newData.threats.splice(index, 1);
-            newData.preventiveControls.splice(index, 1);
-        } else {
-            newData.consequences.splice(index, 1);
-            newData.mitigatoryControls.splice(index, 1);
-        }
-        onUpdate(newData);
-    };
+     const handleSave = () => onUpdate({ title, description });
 
     return (
-        <Card className="overflow-x-auto">
-            <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                    <div className='flex items-center gap-2'>
-                        <GitFork />
-                        Visualização Bowtie
+        <Popover>
+            <PopoverTrigger asChild>
+                <div className="w-56 h-32 bg-green-100 border-2 border-green-600 rounded-lg shadow-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-green-400">
+                    <div className="w-full bg-green-600 p-1 text-white font-bold text-sm flex items-center justify-center gap-1 rounded-t-md">
+                        <AlertTriangle size={16} />
+                        Evento de Topo
                     </div>
-                     <div className='flex items-center gap-4'>
-                        <p className='text-sm font-normal text-muted-foreground'>Passe o mouse sobre um nó para editar ou excluir.</p>
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive-outline">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Excluir Diagrama
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                <AlertDialogTitle>Excluir Diagrama Bowtie?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Esta ação não pode ser desfeita. Isso excluirá permanentemente o diagrama Bowtie para o risco "{data.event.label}".
-                                </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
+                    <div className="p-2 flex-grow flex flex-col justify-center">
+                        <p className="font-bold text-base text-green-800">{topEvent.title}</p>
+                        <p className="text-xs text-gray-600 mt-1">{topEvent.description}</p>
+                    </div>
+                </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+                 <div className="grid gap-4">
+                    <div className="space-y-2"><h4 className="font-medium leading-none">Editar Evento de Topo</h4></div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="te-title">Título</Label>
+                        <Input id="te-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                        <Label htmlFor="te-desc">Descrição</Label>
+                        <Textarea id="te-desc" value={description} onChange={(e) => setDescription(e.target.value)} />
+                    </div>
+                    <Button onClick={handleSave}>Salvar</Button>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+};
+
+
+const AddNodeButton = ({ onClick, children }: { onClick: () => void; children: React.ReactNode }) => (
+    <Button variant="outline" className="h-24 w-48 border-dashed" onClick={onClick}>
+        <div className="flex flex-col items-center gap-2">
+            <PlusCircle className="h-6 w-6 text-muted-foreground" />
+            <span className="text-xs">{children}</span>
+        </div>
+    </Button>
+);
+
+const Line = ({ position }: { position: 'start' | 'middle' | 'end' }) => (
+    <div className="flex-1 flex items-center">
+        <div className={cn("w-1/2 h-px", position === 'start' ? 'bg-transparent' : 'bg-gray-300')}></div>
+        <div className="w-px h-full bg-gray-300"></div>
+        <div className={cn("w-1/2 h-px", position === 'end' ? 'bg-transparent' : 'bg-gray-300')}></div>
+    </div>
+);
+
+
+export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, onUpdate: (data: BowtieData) => void, onDelete: (id: string) => void }) => {
+
+    const handleUpdate = (updates: Partial<BowtieData>) => {
+        onUpdate({ ...data, ...updates });
+    };
+
+    const addThreat = () => {
+        const newThreat: BowtieThreat = { id: `T${Date.now()}`, title: 'Nova Ameaça', barriers: [] };
+        handleUpdate({ threats: [...data.threats, newThreat] });
+    };
+
+    const addConsequence = () => {
+        const newConsequence: BowtieConsequence = { id: `C${Date.now()}`, title: 'Nova Consequência', barriers: [] };
+        handleUpdate({ consequences: [...data.consequences, newConsequence] });
+    };
+    
+    const addBarrier = (side: 'threat' | 'consequence', ownerId: string) => {
+        const newBarrier: BowtieBarrierNode = { id: `B${Date.now()}`, title: 'Nova Barreira', responsible: 'Indefinido', effectiveness: 'Eficaz', status: 'Pendente' };
+        if (side === 'threat') {
+            const updatedThreats = data.threats.map(t => t.id === ownerId ? { ...t, barriers: [...t.barriers, newBarrier] } : t);
+            handleUpdate({ threats: updatedThreats });
+        } else {
+            const updatedConsequences = data.consequences.map(c => c.id === ownerId ? { ...c, barriers: [...c.barriers, newBarrier] } : c);
+            handleUpdate({ consequences: updatedConsequences });
+        }
+    };
+    
+    const updateThreat = (updatedThreat: BowtieThreat) => {
+        const updatedThreats = data.threats.map(t => t.id === updatedThreat.id ? updatedThreat : t);
+        handleUpdate({ threats: updatedThreats });
+    };
+    
+    const updateConsequence = (updatedConsequence: BowtieConsequence) => {
+        const updatedConsequences = data.consequences.map(c => c.id === updatedConsequence.id ? updatedConsequence : c);
+        handleUpdate({ consequences: updatedConsequences });
+    };
+
+    const updateBarrier = (ownerId: string, updatedBarrier: BowtieBarrierNode, side: 'threat' | 'consequence') => {
+        if(side === 'threat') {
+            const updatedThreats = data.threats.map(t => {
+                if (t.id === ownerId) {
+                    return {...t, barriers: t.barriers.map(b => b.id === updatedBarrier.id ? updatedBarrier : b)}
+                }
+                return t;
+            });
+            handleUpdate({ threats: updatedThreats });
+        } else {
+            const updatedConsequences = data.consequences.map(c => {
+                if(c.id === ownerId) {
+                    return {...c, barriers: c.barriers.map(b => b.id === updatedBarrier.id ? updatedBarrier : b)}
+                }
+                return c;
+            });
+            handleUpdate({ consequences: updatedConsequences });
+        }
+    };
+    
+    const deleteThreat = (threatId: string) => {
+        handleUpdate({ threats: data.threats.filter(t => t.id !== threatId) });
+    };
+
+    const deleteConsequence = (consequenceId: string) => {
+        handleUpdate({ consequences: data.consequences.filter(c => c.id !== consequenceId) });
+    };
+
+    const deleteBarrier = (ownerId: string, barrierId: string, side: 'threat' | 'consequence') => {
+        if(side === 'threat') {
+            const updatedThreats = data.threats.map(t => {
+                if (t.id === ownerId) {
+                    return {...t, barriers: t.barriers.filter(b => b.id !== barrierId)}
+                }
+                return t;
+            });
+            handleUpdate({ threats: updatedThreats });
+        } else {
+            const updatedConsequences = data.consequences.map(c => {
+                if(c.id === ownerId) {
+                    return {...c, barriers: c.barriers.filter(b => b.id !== barrierId)}
+                }
+                return c;
+            });
+            handleUpdate({ consequences: updatedConsequences });
+        }
+    };
+
+
+    const maxPreventiveBarriers = Math.max(1, ...data.threats.map(t => t.barriers.length));
+    const maxMitigatoryBarriers = Math.max(1, ...data.consequences.map(c => c.barriers.length));
+    
+    const DiagramHeader = ({ title, color, columns, side }: { title: string; color: string; columns?: number; side: 'left' | 'right' }) => (
+        <div className={`flex items-center ${side === 'right' ? 'flex-row-reverse' : ''}`}>
+             <div className={`w-48 px-3 py-1 text-center font-semibold text-sm text-white rounded ${color}`}>
+                {title}
+            </div>
+            {Array.from({ length: columns || 0 }).map((_, i) => (
+                <React.Fragment key={i}>
+                    <div className="flex-1 h-px bg-gray-300 mx-4"></div>
+                    <div className={`w-48 px-3 py-1 text-center font-semibold text-sm text-gray-600 bg-gray-200 rounded`}>
+                       {side === 'left' ? 'Barreira Preventiva' : 'Barreira Mitigatória'}
+                    </div>
+                </React.Fragment>
+            ))}
+        </div>
+    );
+
+    return (
+        <Card className="overflow-x-auto p-4">
+            <CardHeader className='pb-2'>
+                <div className='flex justify-between items-center'>
+                    <CardTitle className="flex items-center gap-2"><GitFork /> Visualização Bowtie</CardTitle>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive-outline"><Trash2 className="mr-2 h-4 w-4" /> Excluir Diagrama</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader><AlertDialogTitle>Excluir Diagrama Bowtie?</AlertDialogTitle></AlertDialogHeader>
+                            <AlertDialogDescription>Esta ação excluirá permanentemente o diagrama Bowtie para o risco "{data.topEvent.title}".</AlertDialogDescription>
+                            <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => onDelete(data.id)} className="bg-destructive hover:bg-destructive/90">
-                                    Sim, excluir
-                                </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </div>
-                </CardTitle>
-                <CardDescription>{data.event.label}: {data.event.description}</CardDescription>
+                                <AlertDialogAction onClick={() => onDelete(data.id)} className="bg-destructive hover:bg-destructive/90">Sim, excluir</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
             </CardHeader>
-            <CardContent className="p-6">
-                <div className="flex items-center justify-center min-w-[1400px] py-8">
-                    {/* Left Side */}
-                    <div className="flex flex-col items-end justify-center w-2/5 space-y-4 pr-4">
-                        {data.threats.map((threat, index) => (
-                            <div key={threat.id} className="flex items-center w-full">
-                                <EditableBowtieNode node={threat} onUpdate={(n) => handleNodeUpdate('threats', index, n)} onDelete={() => handleDeleteNode('threats', index)} icon={nodeIcons.threats} />
-                                <Line hasArrow />
-                                <EditableBowtieNode node={data.preventiveControls[index]} onUpdate={(n) => handleNodeUpdate('preventiveControls', index, n)} onDelete={() => handleDeleteNode('preventiveControls', index)} icon={nodeIcons.preventiveControls} />
+            <CardContent className="p-4 pt-2">
+                <div className="flex justify-center mb-4">
+                    <div className="w-56 text-center">
+                        <div className="px-3 py-1 font-semibold text-sm text-white rounded bg-green-600">Evento de Topo</div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-x-4">
+                    {/* Left Side Header */}
+                    <DiagramHeader title="Ameaça" color="bg-orange-400" columns={maxPreventiveBarriers} side="left" />
+                    
+                    {/* Spacer */}
+                    <div></div> 
+                    
+                    {/* Right Side Header */}
+                    <DiagramHeader title="Consequência" color="bg-red-500" columns={maxMitigatoryBarriers} side="right" />
+                </div>
+                
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-4 min-w-[1800px] mt-4">
+                    {/* Left side threats and barriers */}
+                    <div className="flex flex-col gap-4">
+                        {data.threats.map((threat) => (
+                            <div key={threat.id} className="flex items-center">
+                                <ThreatNode threat={threat} onUpdate={updateThreat} onDelete={() => deleteThreat(threat.id)} />
+                                <div className="flex-1 h-px bg-gray-300 mx-4"></div>
+                                {threat.barriers.map(barrier => (
+                                    <React.Fragment key={barrier.id}>
+                                        <BarrierNode barrier={barrier} onUpdate={(b) => updateBarrier(threat.id, b, 'threat')} onDelete={() => deleteBarrier(threat.id, barrier.id, 'threat')} />
+                                        <div className="flex-1 h-px bg-gray-300 mx-4"></div>
+                                    </React.Fragment>
+                                ))}
+                                {/* Fill empty barrier slots */}
+                                {Array.from({ length: maxPreventiveBarriers - threat.barriers.length }).map((_, i) => (
+                                   <React.Fragment key={i}>
+                                        <div className="w-48 h-24" /> {/* Placeholder */}
+                                        <div className="flex-1 h-px bg-transparent mx-4"></div>
+                                   </React.Fragment>
+                                ))}
+                                <Button size="icon" variant="ghost" onClick={() => addBarrier('threat', threat.id)}><PlusCircle className="h-5 w-5"/></Button>
                             </div>
                         ))}
-                         <div className="flex items-center w-full">
-                            <AddNodeButton onAdd={() => handleAddNode('threats')} />
-                            <div className="flex-1 h-0.5 bg-transparent mx-2" />
-                            <AddNodeButton onAdd={() => handleAddNode('preventiveControls')} />
+                         <div className='flex items-center'>
+                            <AddNodeButton onClick={addThreat}>Adicionar Ameaça</AddNodeButton>
                         </div>
                     </div>
 
-                    {/* Center: Event */}
-                    <div className="flex items-center justify-center flex-shrink-0 px-4">
-                        <div className="flex items-center">
-                            <Line hasArrow />
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Card className="w-72 h-36 flex flex-col items-center justify-center text-center shadow-xl border-2 border-primary cursor-pointer hover:border-primary/70" style={{backgroundColor: data.event.color}}>
-                                        <CardHeader className="p-2"> <Siren className="h-8 w-8 text-primary mx-auto" /> </CardHeader>
-                                        <CardContent className="p-2">
-                                            <p className="font-bold text-base text-primary">{data.event.label}</p>
-                                            <p className="text-xs text-muted-foreground mt-1">{data.event.description}</p>
-                                        </CardContent>
-                                    </Card>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-80">
-                                <div className="grid gap-4">
-                                        <div className="space-y-2">
-                                            <h4 className="font-medium leading-none">Editar Evento Central</h4>
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="event-label">Título do Evento</Label>
-                                            <Input id="event-label" value={data.event.label} onChange={(e) => handleNodeUpdate('event', 0, { ...data.event, label: e.target.value })} />
-                                            <Label htmlFor="event-desc">Descrição do Evento</Label>
-                                            <Textarea id="event-desc" value={data.event.description} onChange={(e) => handleNodeUpdate('event', 0, { ...data.event, description: e.target.value })} />
-                                            <Label htmlFor="event-color">Cor</Label>
-                                            <Input id="event-color" type="color" value={data.event.color} onChange={(e) => handleNodeUpdate('event', 0, { ...data.event, color: e.target.value })} className="p-1" />
-                                        </div>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
-                            <Line hasArrow />
-                        </div>
+                    {/* Center Top Event */}
+                    <div className="flex flex-col items-center justify-center self-stretch">
+                         <Line position='start' />
+                         <TopEventNode topEvent={data.topEvent} onUpdate={(te) => handleUpdate({ topEvent: te })} />
+                         <Line position='end' />
                     </div>
 
-                    {/* Right Side */}
-                    <div className="flex flex-col items-start justify-center w-2/5 space-y-4 pl-4">
-                        {data.consequences.map((consequence, index) => (
-                            <div key={consequence.id} className="flex items-center w-full">
-                                <EditableBowtieNode node={data.mitigatoryControls[index]} onUpdate={(n) => handleNodeUpdate('mitigatoryControls', index, n)} onDelete={() => handleDeleteNode('mitigatoryControls', index)} icon={nodeIcons.mitigatoryControls}/>
-                                <Line hasArrow />
-                                <EditableBowtieNode node={consequence} onUpdate={(n) => handleNodeUpdate('consequences', index, n)} onDelete={() => handleDeleteNode('consequences', index)} icon={nodeIcons.consequences} />
+                    {/* Right side consequences and barriers */}
+                    <div className="flex flex-col gap-4">
+                       {data.consequences.map((consequence) => (
+                            <div key={consequence.id} className="flex items-center flex-row-reverse">
+                                <ConsequenceNode consequence={consequence} onUpdate={updateConsequence} onDelete={() => deleteConsequence(consequence.id)} />
+                                <div className="flex-1 h-px bg-gray-300 mx-4"></div>
+                                {consequence.barriers.map(barrier => (
+                                    <React.Fragment key={barrier.id}>
+                                        <BarrierNode barrier={barrier} onUpdate={(b) => updateBarrier(consequence.id, b, 'consequence')} onDelete={() => deleteBarrier(consequence.id, barrier.id, 'consequence')} />
+                                        <div className="flex-1 h-px bg-gray-300 mx-4"></div>
+                                    </React.Fragment>
+                                ))}
+                                {/* Fill empty barrier slots */}
+                                {Array.from({ length: maxMitigatoryBarriers - consequence.barriers.length }).map((_, i) => (
+                                   <React.Fragment key={i}>
+                                        <div className="w-48 h-24" /> {/* Placeholder */}
+                                        <div className="flex-1 h-px bg-transparent mx-4"></div>
+                                   </React.Fragment>
+                                ))}
+                                 <Button size="icon" variant="ghost" onClick={() => addBarrier('consequence', consequence.id)}><PlusCircle className="h-5 w-5"/></Button>
                             </div>
                         ))}
-                         <div className="flex items-center w-full">
-                            <AddNodeButton onAdd={() => handleAddNode('mitigatoryControls')} />
-                            <div className="flex-1 h-0.5 bg-transparent mx-2" />
-                            <AddNodeButton onAdd={() => handleAddNode('consequences')} />
+                        <div className='flex items-center flex-row-reverse'>
+                            <AddNodeButton onClick={addConsequence}>Adicionar Consequência</AddNodeButton>
                         </div>
                     </div>
                 </div>
@@ -287,5 +478,3 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
         </Card>
     );
 };
-
-    
