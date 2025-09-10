@@ -65,9 +65,9 @@ const EditableBowtieNode = ({ node, onUpdate, onDelete, className, icon }: Bowti
             <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                     {icon && <div className="text-primary">{icon}</div>}
-                    <div className="flex-1">
-                        <p className="font-semibold text-sm truncate">{node.label}</p>
-                        <p className="text-xs text-muted-foreground truncate">{node.description}</p>
+                    <div className="flex-1 overflow-hidden">
+                        <p className="font-semibold text-sm truncate whitespace-nowrap">{node.label}</p>
+                        <p className="text-xs text-muted-foreground truncate whitespace-nowrap">{node.description}</p>
                     </div>
                 </div>
             </CardContent>
@@ -287,3 +287,5 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
         </Card>
     );
 };
+
+    
