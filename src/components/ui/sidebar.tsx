@@ -569,7 +569,7 @@ const SidebarMenuButton = React.forwardRef<
         {...props}
       >
         {Icon && <Icon />}
-        <span>{children}</span>
+        {children}
       </Comp>
     )
 
