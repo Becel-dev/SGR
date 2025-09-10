@@ -17,12 +17,29 @@ export type Kpi = {
 
 export type Risk = {
   id: string;
-  title: string;
-  status: 'Aprovado' | 'Em Revisão' | 'Rascunho';
-  criticality: 'Crítico' | 'Alto' | 'Médio' | 'Baixo';
-  area: string;
+  risk: string;
+  description: string;
+  identificationDate: string;
+  riskSource: 'Interna' | 'Externa';
+  primaryCause: string;
+  consequence: string;
+  riskType: 'Estratégico' | 'Financeiro' | 'Operacional' | 'Conformidade';
+  responsibleArea: string;
+  impactedProcess: string;
+  inherentLikelihood: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo';
+  inherentImpact: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico';
+  inherentRiskLevel: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
+  responseStrategy: 'Mitigar' | 'Aceitar' | 'Transferir' | 'Evitar';
+  controlDescription: string;
+  controlType: 'Preventivo' | 'Detectivo' | 'Corretivo';
+  controlEffectiveness: 'Ineficaz' | 'Pouco Eficaz' | 'Eficaz' | 'Muito Eficaz';
+  residualLikelihood: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo';
+  residualImpact: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico';
+  residualRiskLevel: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
+  status: 'Aberto' | 'Em Tratamento' | 'Fechado' | 'Mitigado';
   responsible: string;
-  lastUpdate: string;
+  lastReviewDate: string;
+  nextReviewDate: string;
 };
 
 export type RecentActivity = {
