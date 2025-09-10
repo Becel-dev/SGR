@@ -66,7 +66,7 @@ export function AppSidebar() {
       <SidebarHeader className="flex items-center justify-between p-2">
         <div className="flex items-center gap-2">
             <Shield className="w-8 h-8 text-sidebar-primary" />
-            <span className="text-xl font-bold text-primary-foreground group-data-[collapsible=icon]:hidden">
+            <span className="text-xl font-bold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
               SGR: Sistema de Gestão de Riscos
             </span>
         </div>
@@ -90,10 +90,8 @@ export function AppSidebar() {
                   tooltip={item.label}
                 >
                   <Link href={item.href}>
-                    <span>
-                      {item.label}
-                      {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
-                    </span>
+                    {item.label}
+                    {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
