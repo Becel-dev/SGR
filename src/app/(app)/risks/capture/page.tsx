@@ -30,6 +30,7 @@ import {
 import { Calendar as CalendarIcon, DollarSign, Siren, Target } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 const Section = ({ title, children, icon: Icon }: { title: string, children: React.ReactNode, icon?: React.ElementType }) => (
     <div className="space-y-6 rounded-lg border p-4 pt-2">
