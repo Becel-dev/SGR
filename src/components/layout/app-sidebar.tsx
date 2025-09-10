@@ -66,7 +66,9 @@ export function AppSidebar() {
       <SidebarHeader className="flex items-center justify-between p-2">
         <div className="flex items-center gap-2">
             <Shield className="w-8 h-8 text-sidebar-primary" />
-            <h1 className="text-xl font-bold text-primary-foreground">SGR: Sistema de Gestão de Riscos</h1>
+            <span className="text-xl font-bold text-primary-foreground group-data-[collapsible=icon]:hidden">
+              SGR: Sistema de Gestão de Riscos
+            </span>
         </div>
         <SidebarTrigger className="md:hidden" />
       </SidebarHeader>
