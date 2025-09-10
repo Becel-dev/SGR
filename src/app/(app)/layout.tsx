@@ -11,7 +11,7 @@ export default function AppLayout({
       <AppSidebar />
       <div className="flex flex-col">
         <AppHeader />
-        <main className="flex-1 overflow-y-auto bg-muted/40 p-4 pt-2 md:p-6 md:pt-2">
+        <main className="flex flex-1 flex-col gap-4 overflow-auto bg-muted/40 p-4 lg:gap-6 lg:p-6">
           {children}
         </main>
       </div>
