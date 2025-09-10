@@ -4,10 +4,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ListFilter, PlusCircle, Siren, ArrowRight, Search } from "lucide-react";
+import { PlusCircle, Siren, ArrowRight, Search } from "lucide-react";
 import { risksData } from "@/lib/mock-data";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -67,23 +66,6 @@ export default function RisksPage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9 gap-1">
-                        <ListFilter className="h-3.5 w-3.5" />
-                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                        Filtro
-                        </span>
-                    </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Filtrar por</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuCheckboxItem checked>Status</DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem>Nível de Risco</DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem>Gerência</DropdownMenuCheckboxItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
                 
                 <Button size="sm" className="h-9 gap-1" asChild>
                   <Link href="/risks/capture">
