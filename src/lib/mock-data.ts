@@ -523,30 +523,108 @@ export const statusBreakdownChartData = [
   { name: 'Fechado', value: statusCounts['Fechado'], fill: 'hsl(var(--muted-foreground))' },
 ];
 
-
-export const bowtieData: BowtieData = {
+const emptyBowtie: BowtieData = {
+    id: 'new',
+    riskId: 'new',
     event: {
-        label: "Descarrilamento em Curva",
-        description: "Saída do trem dos trilhos em uma curva de raio reduzido.",
+        label: "Novo Evento de Risco",
+        description: "Descreva o evento central do risco aqui.",
+        color: "#FBBF24"
     },
-    threats: [
-        { label: "Velocidade Inadequada", description: "Operação acima da velocidade máxima do trecho." },
-        { label: "Desgaste Excessivo do Trilho", description: "Componente da via permanente fora das tolerâncias." },
-        { label: "Falha de Material Rodante", description: "Quebra de componente do vagão ou locomotiva." },
-    ],
-    preventiveControls: [
-        { label: "Controle de Velocidade (ATC)", description: "Sistema embarcado que limita a velocidade." },
-        { label: "Inspeção de Via Ultrassônica", description: "Detecção de defeitos internos nos trilhos." },
-        { label: "Manutenção Preditiva da Frota", description: "Análise de dados para prever falhas em componentes." },
-    ],
-    consequences: [
-        { label: "Danos à Carga e Ativos", description: "Avaria ou perda total da carga e do material rodante." },
-        { label: "Impacto Ambiental", description: "Vazamento de produtos perigosos transportados." },
-        { label: "Interdição da Via", description: "Bloqueio da linha para reparos, causando atrasos." },
-    ],
-    mitigatoryControls: [
-        { label: "Plano de Atendimento a Emergências", description: "Acionamento rápido de equipes para contenção." },
-        { label: "Kits de Mitigação Ambiental", description: "Materiais para contenção de vazamentos e proteção." },
-        { label: "Equipe de Restabelecimento", description: "Equipe especializada para liberar a via rapidamente." },
-    ]
+    threats: [],
+    preventiveControls: [],
+    consequences: [],
+    mitigatoryControls: [],
+};
+
+
+export const initialBowtieData: BowtieData[] = [
+    {
+        id: 'B001',
+        riskId: 'R001',
+        event: {
+            label: "Descarrilamento em Curva",
+            description: "Saída do trem dos trilhos em uma curva de raio reduzido.",
+            color: "#FBBF24"
+        },
+        threats: [
+            { id: "T1", label: "Velocidade Inadequada", description: "Operação acima da velocidade máxima do trecho.", color: "#FECACA" },
+            { id: "T2", label: "Desgaste Excessivo do Trilho", description: "Componente da via permanente fora das tolerâncias.", color: "#FECACA" },
+            { id: "T3", label: "Falha de Material Rodante", description: "Quebra de componente do vagão ou locomotiva.", color: "#FECACA" },
+        ],
+        preventiveControls: [
+            { id: "PC1", label: "Controle de Velocidade (ATC)", description: "Sistema embarcado que limita a velocidade.", color: "#DBEAFE" },
+            { id: "PC2", label: "Inspeção de Via Ultrassônica", description: "Detecção de defeitos internos nos trilhos.", color: "#DBEAFE" },
+            { id: "PC3", label: "Manutenção Preditiva da Frota", description: "Análise de dados para prever falhas em componentes.", color: "#DBEAFE" },
+        ],
+        consequences: [
+            { id: "C1", label: "Danos à Carga e Ativos", description: "Avaria ou perda total da carga e do material rodante.", color: "#FED7AA" },
+            { id: "C2", label: "Impacto Ambiental", description: "Vazamento de produtos perigosos transportados.", color: "#FED7AA" },
+            { id: "C3", label: "Interdição da Via", description: "Bloqueio da linha para reparos, causando atrasos.", color: "#FED7AA" },
+        ],
+        mitigatoryControls: [
+            { id: "MC1", label: "Plano de Atendimento a Emergências", description: "Acionamento rápido de equipes para contenção.", color: "#D1FAE5" },
+            { id: "MC2", label: "Kits de Mitigação Ambiental", description: "Materiais para contenção de vazamentos e proteção.", color: "#D1FAE5" },
+            { id: "MC3", label: "Equipe de Restabelecimento", description: "Equipe especializada para liberar a via rapidamente.", color: "#D1FAE5" },
+        ]
+    },
+    {
+        id: 'B004',
+        riskId: 'R004',
+        event: {
+            label: "Vazamento de Carga Perigosa",
+            description: "Derramamento de produto químico com potencial de contaminação.",
+            color: "#FBBF24"
+        },
+        threats: [
+            { id: "T1", label: "Avaria no Vagão-Tanque", description: "Dano estrutural causado por colisão ou fadiga.", color: "#FECACA" },
+            { id: "T2", label: "Falha na Válvula de Descarga", description: "Vedação incorreta ou defeito na válvula.", color: "#FECACA" },
+        ],
+        preventiveControls: [
+            { id: "PC1", label: "Inspeção Rigorosa de Vagões", description: "Verificação periódica da integridade dos tanques.", color: "#DBEAFE" },
+            { id: "PC2", label: "Certificação de Equipamentos", description: "Uso de válvulas e componentes certificados.", color: "#DBEAFE" },
+        ],
+        consequences: [
+            { id: "C1", label: "Contaminação do Solo e Água", description: "Infiltração do produto no meio ambiente.", color: "#FED7AA" },
+            { id: "C2", label: "Multas e Sanções Ambientais", description: "Penalidades aplicadas por órgãos reguladores.", color: "#FED7AA" },
+            { id: "C3", label: "Dano à Imagem Corporativa", description: "Repercussão negativa na mídia e comunidade.", color: "#FED7AA" },
+        ],
+        mitigatoryControls: [
+            { id: "MC1", label: "Plano de Emergência (PAE)", description: "Procedimentos claros para contenção rápida.", color: "#D1FAE5" },
+            { id: "MC2", label: "Equipes de Resposta a Emergência", description: "Pessoal treinado e equipado para atuar.", color: "#D1FAE5" },
+            { id: "MC3", label: "Comunicação com a Comunidade", description: "Plano de comunicação para partes interessadas.", color: "#D1FAE5" },
+        ]
+    }
+];
+
+export const getEmptyBowtie = (risk?: Risk): BowtieData => {
+    const newId = `B${Math.random().toString(36).substr(2, 9)}`;
+    if (risk) {
+        return {
+            id: newId,
+            riskId: risk.id,
+            event: {
+                label: risk.risco,
+                description: risk.descricaoDoRisco,
+                color: "#FBBF24"
+            },
+            threats: [],
+            preventiveControls: [],
+            consequences: [],
+            mitigatoryControls: [],
+        }
+    }
+    return {
+        id: newId,
+        riskId: 'new_risk',
+        event: {
+            label: "Novo Evento de Risco",
+            description: "Descreva o evento central do risco aqui.",
+            color: "#FBBF24"
+        },
+        threats: [],
+        preventiveControls: [],
+        consequences: [],
+        mitigatoryControls: [],
+    };
 };

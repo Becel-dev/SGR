@@ -1,4 +1,5 @@
 
+
 export type Role = 'admin' | 'moderator' | 'editor' | 'viewer';
 
 export type User = {
@@ -58,12 +59,18 @@ export type RecentActivity = {
 };
 
 export type BowtieNodeData = {
+    id: string;
     label: string;
     description: string;
+    color: string;
 };
 
+export type BowtieSide = "threats" | "preventiveControls" | "consequences" | "mitigatoryControls";
+
 export type BowtieData = {
-    event: BowtieNodeData;
+    id: string;
+    riskId: string;
+    event: Omit<BowtieNodeData, 'id'> & { color: string };
     threats: BowtieNodeData[];
     preventiveControls: BowtieNodeData[];
     consequences: BowtieNodeData[];
