@@ -65,13 +65,13 @@ export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
                 const linkContent = (
                    <div
                     className={cn(
-                      'flex items-center rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                      'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                       isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground',
                        isCollapsed && !isMobile ? 'justify-center' : ''
                     )}
                   >
                     <item.icon className="h-4 w-4" />
-                    <span className={cn('transition-all duration-300 ml-3', isCollapsed && !isMobile ? 'w-0 opacity-0 ml-0' : 'w-auto opacity-100')}>
+                    <span className={cn('transition-all duration-300', isCollapsed && !isMobile ? 'w-0 opacity-0' : 'w-auto opacity-100')}>
                       {item.label}
                     </span>
                   </div>
