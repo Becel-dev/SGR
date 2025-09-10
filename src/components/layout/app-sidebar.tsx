@@ -96,12 +96,6 @@ export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
             </nav>
           </TooltipProvider>
         </div>
-        <div className={cn("mt-auto p-4", isCollapsed && !isMobile ? "px-2" : "")}>
-           <Button variant="secondary" size="sm" className="w-full">
-              <LifeBuoy className={cn("h-4 w-4", isCollapsed && !isMobile ? "" : "mr-2")}/>
-              <span className={cn(isCollapsed && !isMobile ? 'w-0 opacity-0' : 'opacity-100')}>Ajuda</span>
-            </Button>
-        </div>
       </div>
   );
 
