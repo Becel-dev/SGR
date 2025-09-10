@@ -32,8 +32,15 @@ export default function RisksPage() {
   const [searchTerm, setSearchTerm] = useState("");
   
   const filteredRisks = risksData.filter((risk: Risk) => {
-    const values = Object.values(risk).join(" ").toLowerCase();
-    return values.includes(searchTerm.toLowerCase());
+    const term = searchTerm.toLowerCase();
+    return (
+      risk.risco.toLowerCase().includes(term) ||
+      risk.id.toLowerCase().includes(term) ||
+      risk.gerencia.toLowerCase().includes(term) ||
+      risk.responsavelPeloRisco.toLowerCase().includes(term) ||
+      risk.statusDoRisco.toLowerCase().includes(term) ||
+      risk.nivelDeRiscoResidual.toLowerCase().includes(term)
+    );
   });
 
   return (
