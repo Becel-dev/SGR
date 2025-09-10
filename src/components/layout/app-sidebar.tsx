@@ -71,7 +71,7 @@ export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
                     )}
                   >
                     <item.icon className="h-4 w-4" />
-                    <span className={cn('transition-all duration-300', isCollapsed && !isMobile ? 'w-0 opacity-0' : 'w-auto opacity-100')}>
+                    <span className={cn('transition-all duration-300', isCollapsed && !isMobile ? 'hidden' : 'w-auto opacity-100')}>
                       {item.label}
                     </span>
                   </div>
