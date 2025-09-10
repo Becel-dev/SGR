@@ -11,7 +11,7 @@ export type User = {
 
 export type Kpi = {
   id: string;
-  name: string;
+  name:string;
   value: number;
   target: number;
   period: string;
@@ -25,16 +25,16 @@ export type Control = {
   idRiscoMUE: number;
   descricaoMUE: string;
   nomeControle: string;
-  tipo: 'Preventivo' | 'Mitigatório';
-  classificacao: 'Procedimento' | 'Equipamento' | string; // string to allow other values
-  status: 'Implementação Futura' | 'Implementado com Pendência' | 'Não Implementado' | 'Implementado' | string;
+  tipo: string;
+  classificacao: string;
+  status: string;
   donoControle: string;
   emailDono: string;
-  area: 'OPERAÇÃO' | 'MANUTENÇÃO' | 'SEGURANÇA' | string;
+  area: string;
   dataUltimaVerificacao: string;
   frequenciaMeses: number;
   proximaVerificacao: string;
-  validacao: 'DENTRO DO PRAZO' | 'ATRASADO' | string;
+  validacao: string;
   onePager: string;
   evidencia: string;
   criadoPor: string;
@@ -43,40 +43,62 @@ export type Control = {
   preenchimentoKPI: string;
   gerenciaRisco: string;
   topRiskAssociado: string;
-  idRiscos: number; // Duplicated? Appears to be the same as idRiscoMUE
-  criticidade: 'Sim' | 'Não';
+  idRiscos: number;
+  criticidade: string;
 };
 
 
 export type Risk = {
   id: string;
-  gerencia: 'Operação' | 'Tecnologia' | 'Ambiental' | 'GesMun' | 'Compliance' | 'Regulatório' | 'Suprimentos' | 'Jurídico' | 'Comercial' | 'DHO' | 'Expansão' | 'Financeiro' | 'SMS' | 'RH';
+  gerencia: string;
+  diretoria: string;
+  processo: string;
   risco: string;
   descricaoDoRisco: string;
   dataDeIdentificacao: string;
-  origemDoRisco: 'Interna' | 'Externa';
+  origemDoRisco: string;
   causaRaizDoRisco: string;
   consequenciaDoRisco: string;
-  tipoDeRisco: 'Estratégico' | 'Financeiro' | 'Operacional' | 'Conformidade' | 'Ambiental' | 'Regulatório' | 'Legal' | 'Imagem';
+  categoriaDoRisco: string;
+  tipoDeRisco: string;
   processoAfetado: string;
-  probabilidadeInerente: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo';
-  impactoInerente: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico';
-  nivelDeRiscoInerente: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
-  estrategia: 'Mitigar' | 'Aceitar' | 'Transferir' | 'Evitar';
+  
+  probabilidadeInerente: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo' | '';
+  impactoInerente: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico' | '';
+  nivelDeRiscoInerente: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | '';
+  
+  estrategia: string;
   descricaoDoControle: string;
-  naturezaDoControle: 'Manual' | 'Sistêmico' | 'Semi-Sistêmico';
-  tipoDeControle: 'Preventivo' | 'Detectivo' | 'Corretivo';
-  classificacaoDoControle: 'Chave' | 'Não Chave';
-  frequencia: 'Diário' | 'Semanal' | 'Mensal' | 'Trimestral' | 'Semestral' | 'Anual';
-  eficaciaDoControle: 'Ineficaz' | 'Pouco Eficaz' | 'Eficaz' | 'Muito Eficaz';
-  probabilidadeResidual: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo';
-  impactoResidual: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico';
-  nivelDeRiscoResidual: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
-  statusDoRisco: 'Aberto' | 'Em Tratamento' | 'Fechado' | 'Mitigado';
+  naturezaDoControle: string;
+  tipoDeControle: string;
+  classificacaoDoControle: string;
+  frequencia: string;
+  eficaciaDoControle: 'Ineficaz' | 'Pouco Eficaz' | 'Eficaz' | 'Muito Eficaz' | '';
+  documentacaoControle: string;
+
+  probabilidadeResidual: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo' | '';
+  impactoResidual: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico' | '';
+  nivelDeRiscoResidual: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | '';
+
+  apetiteAoRisco: string;
+  statusDoRisco: 'Aberto' | 'Em Tratamento' | 'Fechado' | 'Mitigado' | '';
+  planoDeAcao: string;
   responsavelPeloRisco: string;
   dataDaUltimaRevisao: string;
   dataDaProximaRevisao: string;
+
+  kri: string;
+  indicadorRisco: string;
+  limiteApetite: number;
+  limiteTolerancia: number;
+  limiteCapacidade: number;
+  medicaoAtual: number;
+  
+  custoDoRisco: number;
+  beneficioDoControle: number;
+  valorExposto: number;
 };
+
 
 export type RecentActivity = {
   id: string;

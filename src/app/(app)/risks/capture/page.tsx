@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import {
@@ -26,10 +27,28 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Calendar as CalendarIcon, Siren } from 'lucide-react';
+import { Calendar as CalendarIcon, DollarSign, Siren, Target } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+const Section = ({ title, children, icon: Icon }: { title: string, children: React.ReactNode, icon?: React.ElementType }) => (
+    <div className="space-y-6 rounded-lg border p-4 pt-2">
+       <h3 className="font-semibold text-lg flex items-center gap-2 border-b -mx-4 px-4 py-2 bg-muted/50">
+           {Icon && <Icon className="h-5 w-5 text-primary" />}
+           {title}
+       </h3>
+       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+           {children}
+       </div>
+   </div>
+)
+
+const Field = ({ label, children, className }: {label: string, children: React.ReactNode, className?: string}) => (
+    <div className={cn("space-y-2", className)}>
+        <Label htmlFor={label}>{label}</Label>
+        {children}
+    </div>
+)
 
 export default function CaptureRiskPage() {
     const router = useRouter();
@@ -48,288 +67,152 @@ export default function CaptureRiskPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="grid grid-cols-1 gap-x-6 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
-          {/* Column 1 */}
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="id">ID do Risco</Label>
-              <Input id="id" name="id" placeholder="Ex: R016" />
-            </div>
-            <div>
-              <Label htmlFor="gerencia">Gerência</Label>
-              <Select name="gerencia">
-                <SelectTrigger id="gerencia"><SelectValue placeholder="Selecione a gerência" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Operação">Operação</SelectItem>
-                  <SelectItem value="Tecnologia">Tecnologia</SelectItem>
-                  <SelectItem value="Ambiental">Ambiental</SelectItem>
-                  <SelectItem value="GesMun">GesMun</SelectItem>
-                  <SelectItem value="Compliance">Compliance</SelectItem>
-                  <SelectItem value="Regulatório">Regulatório</SelectItem>
-                  <SelectItem value="Suprimentos">Suprimentos</SelectItem>
-                  <SelectItem value="Jurídico">Jurídico</SelectItem>
-                  <SelectItem value="Comercial">Comercial</SelectItem>
-                  <SelectItem value="DHO">DHO</SelectItem>
-                  <SelectItem value="Expansão">Expansão</SelectItem>
-                  <SelectItem value="Financeiro">Financeiro</SelectItem>
-                  <SelectItem value="SMS">SMS</SelectItem>
-                  <SelectItem value="RH">RH</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-             <div>
-              <Label htmlFor="risk-title">Risco</Label>
-              <Input id="risk-title" name="risco" placeholder="Título resumido do risco" />
-            </div>
-            <div>
-              <Label htmlFor="risk-description">Descrição do Risco</Label>
-              <Textarea id="risk-description" name="descricaoDoRisco" rows={4} placeholder="Descreva o risco em detalhes" />
-            </div>
-            <div>
-                <Label htmlFor="identification-date">Data de Identificação</Label>
-                <Popover>
+        <form className="space-y-8">
+          
+          <Section title="Identificação e Contexto">
+            <Field label="ID"><Input id="ID" name="id" placeholder="Ex: R016" /></Field>
+            <Field label="Gerência"><Input id="Gerência" name="gerencia" /></Field>
+            <Field label="Diretoria"><Input id="Diretoria" name="diretoria" /></Field>
+            <Field label="Processo"><Input id="Processo" name="processo" /></Field>
+            <Field label="Risco (Título)" className="sm:col-span-2"><Input id="Risco (Título)" name="risco" placeholder="Título resumido do risco" /></Field>
+            <Field label="Descrição do Risco" className="sm:col-span-3"><Textarea id="Descrição do Risco" name="descricaoDoRisco" rows={4} placeholder="Descreva o risco em detalhes" /></Field>
+            <Field label="Data de Identificação">
+                 <Popover>
                     <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {identificationDate ? <span>{identificationDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
                     </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={identificationDate} onSelect={setIdentificationDate} initialFocus/>
-                    </PopoverContent>
+                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={identificationDate} onSelect={setIdentificationDate} initialFocus/></PopoverContent>
                 </Popover>
-            </div>
-            <div>
-              <Label htmlFor="risk-source">Origem do Risco</Label>
-              <Select name="origemDoRisco">
-                <SelectTrigger id="risk-source"><SelectValue placeholder="Selecione a origem" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Interna">Interna</SelectItem>
-                  <SelectItem value="Externa">Externa</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-             <div>
-              <Label htmlFor="primary-cause">Causa Raiz do Risco</Label>
-              <Textarea id="primary-cause" name="causaRaizDoRisco" rows={3} placeholder="Descreva a causa principal" />
-            </div>
-            <div>
-              <Label htmlFor="consequence">Consequência do Risco</Label>
-              <Textarea id="consequence" name="consequenciaDoRisco" rows={3} placeholder="Descreva a principal consequência" />
-            </div>
-            <div>
-              <Label htmlFor="risk-type">Tipo de Risco</Label>
-              <Select name="tipoDeRisco">
-                <SelectTrigger id="risk-type"><SelectValue placeholder="Selecione o tipo" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Estratégico">Estratégico</SelectItem>
-                  <SelectItem value="Financeiro">Financeiro</SelectItem>
-                  <SelectItem value="Operacional">Operacional</SelectItem>
-                  <SelectItem value="Conformidade">Conformidade</SelectItem>
-                  <SelectItem value="Ambiental">Ambiental</SelectItem>
-                  <SelectItem value="Regulatório">Regulatório</SelectItem>
-                  <SelectItem value="Legal">Legal</SelectItem>
-                  <SelectItem value="Imagem">Imagem</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="impacted-process">Processo Afetado</Label>
-              <Input id="impacted-process" name="processoAfetado" placeholder="Ex: Operação Ferroviária" />
-            </div>
-          </div>
+            </Field>
+            <Field label="Origem do Risco">
+                <Select name="origemDoRisco">
+                    <SelectTrigger id="origemDoRisco"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent><SelectItem value="Interna">Interna</SelectItem><SelectItem value="Externa">Externa</SelectItem></SelectContent>
+                </Select>
+            </Field>
+            <Field label="Processo Afetado"><Input id="Processo Afetado" name="processoAfetado" /></Field>
+            <Field label="Causa Raiz" className="sm:col-span-3"><Textarea id="Causa Raiz" name="causaRaizDoRisco" rows={3} placeholder="Descreva a causa principal" /></Field>
+            <Field label="Consequência" className="sm:col-span-3"><Textarea id="Consequência" name="consequenciaDoRisco" rows={3} placeholder="Descreva a principal consequência" /></Field>
+            <Field label="Categoria do Risco"><Input id="Categoria do Risco" name="categoriaDoRisco" /></Field>
+            <Field label="Tipo de Risco"><Input id="Tipo de Risco" name="tipoDeRisco" /></Field>
+          </Section>
 
-          {/* Column 2 */}
-          <div className="space-y-6">
-            <div className="rounded-md border p-4 space-y-4">
-                <p className="font-medium text-sm">Risco Inerente</p>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label htmlFor="inherent-likelihood">Probabilidade</Label>
-                        <Select name="probabilidadeInerente">
-                        <SelectTrigger id="inherent-likelihood"><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <Section title="Análise de Risco Inerente">
+                <Field label="Probabilidade Inerente">
+                    <Select name="probabilidadeInerente"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Raro">Raro</SelectItem>
-                            <SelectItem value="Improvável">Improvável</SelectItem>
-                            <SelectItem value="Possível">Possível</SelectItem>
-                            <SelectItem value="Provável">Provável</SelectItem>
-                            <SelectItem value="Quase Certo">Quase Certo</SelectItem>
-                        </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
-                        <Label htmlFor="inherent-impact">Impacto</Label>
-                        <Select name="impactoInerente">
-                        <SelectTrigger id="inherent-impact"><SelectValue placeholder="Selecione" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Insignificante">Insignificante</SelectItem>
-                            <SelectItem value="Menor">Menor</SelectItem>
-                            <SelectItem value="Moderado">Moderado</SelectItem>
-                            <SelectItem value="Maior">Maior</SelectItem>
-                            <SelectItem value="Catastrófico">Catastrófico</SelectItem>
-                        </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-            </div>
-            <div>
-              <Label htmlFor="response-strategy">Estratégia de Resposta</Label>
-              <Select name="estrategia">
-                <SelectTrigger id="response-strategy"><SelectValue placeholder="Selecione a estratégia" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Mitigar">Mitigar</SelectItem>
-                  <SelectItem value="Aceitar">Aceitar</SelectItem>
-                  <SelectItem value="Transferir">Transferir</SelectItem>
-                  <SelectItem value="Evitar">Evitar</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="control-description">Descrição do Controle</Label>
-              <Textarea id="control-description" name="descricaoDoControle" rows={3} placeholder="Descreva o controle aplicado" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <Label htmlFor="control-nature">Natureza do Controle</Label>
-                    <Select name="naturezaDoControle">
-                        <SelectTrigger id="control-nature"><SelectValue placeholder="Selecione" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Manual">Manual</SelectItem>
-                            <SelectItem value="Sistêmico">Sistêmico</SelectItem>
-                            <SelectItem value="Semi-Sistêmico">Semi-Sistêmico</SelectItem>
+                            <SelectItem value="Raro">Raro</SelectItem><SelectItem value="Improvável">Improvável</SelectItem><SelectItem value="Possível">Possível</SelectItem>
+                            <SelectItem value="Provável">Provável</SelectItem><SelectItem value="Quase Certo">Quase Certo</SelectItem>
                         </SelectContent>
                     </Select>
-                </div>
-                <div>
-                    <Label htmlFor="control-type">Tipo de Controle</Label>
-                    <Select name="tipoDeControle">
-                        <SelectTrigger id="control-type"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                </Field>
+                <Field label="Impacto Inerente">
+                    <Select name="impactoInerente"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Preventivo">Preventivo</SelectItem>
-                            <SelectItem value="Detectivo">Detectivo</SelectItem>
-                            <SelectItem value="Corretivo">Corretivo</SelectItem>
+                            <SelectItem value="Insignificante">Insignificante</SelectItem><SelectItem value="Menor">Menor</SelectItem><SelectItem value="Moderado">Moderado</SelectItem>
+                            <SelectItem value="Maior">Maior</SelectItem><SelectItem value="Catastrófico">Catastrófico</SelectItem>
                         </SelectContent>
                     </Select>
-                </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <Label htmlFor="control-classification">Classificação</Label>
-                    <Select name="classificacaoDoControle">
-                        <SelectTrigger id="control-classification"><SelectValue placeholder="Selecione" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Chave">Chave</SelectItem>
-                            <SelectItem value="Não Chave">Não Chave</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div>
-                    <Label htmlFor="control-frequency">Frequência</Label>
-                    <Select name="frequencia">
-                        <SelectTrigger id="control-frequency"><SelectValue placeholder="Selecione" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Diário">Diário</SelectItem>
-                            <SelectItem value="Semanal">Semanal</SelectItem>
-                            <SelectItem value="Mensal">Mensal</SelectItem>
-                            <SelectItem value="Trimestral">Trimestral</SelectItem>
-                            <SelectItem value="Semestral">Semestral</SelectItem>
-                            <SelectItem value="Anual">Anual</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-            <div>
-                <Label htmlFor="control-effectiveness">Eficácia do Controle</Label>
-                <Select name="eficaciaDoControle">
-                    <SelectTrigger id="control-effectiveness"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                </Field>
+                <Field label="Nível de Risco Inerente (Calculado)">
+                    <Input id="Nível de Risco Inerente" name="nivelDeRiscoInerente" disabled />
+                </Field>
+          </Section>
+
+          <Section title="Controles e Tratamento">
+            <Field label="Estratégia de Resposta"><Input id="Estratégia de Resposta" name="estrategia" /></Field>
+            <Field label="Descrição do Controle" className="sm:col-span-2"><Textarea id="Descrição do Controle" name="descricaoDoControle" placeholder="Descreva o controle aplicado" /></Field>
+            <Field label="Natureza do Controle"><Input id="Natureza do Controle" name="naturezaDoControle" /></Field>
+            <Field label="Tipo de Controle"><Input id="Tipo de Controle" name="tipoDeControle" /></Field>
+            <Field label="Classificação do Controle"><Input id="Classificação do Controle" name="classificacaoDoControle" /></Field>
+            <Field label="Frequência do Controle"><Input id="Frequência do Controle" name="frequencia" /></Field>
+            <Field label="Eficácia do Controle">
+                 <Select name="eficaciaDoControle"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="Ineficaz">Ineficaz</SelectItem>
-                        <SelectItem value="Pouco Eficaz">Pouco Eficaz</SelectItem>
-                        <SelectItem value="Eficaz">Eficaz</SelectItem>
-                        <SelectItem value="Muito Eficaz">Muito Eficaz</SelectItem>
+                        <SelectItem value="Ineficaz">Ineficaz</SelectItem><SelectItem value="Pouco Eficaz">Pouco Eficaz</SelectItem>
+                        <SelectItem value="Eficaz">Eficaz</SelectItem><SelectItem value="Muito Eficaz">Muito Eficaz</SelectItem>
                     </SelectContent>
                 </Select>
-            </div>
-          </div>
-          
-          {/* Column 3 */}
-          <div className="space-y-6">
-            <div className="rounded-md border p-4 space-y-4">
-                <p className="font-medium text-sm">Risco Residual</p>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label htmlFor="residual-likelihood">Probabilidade</Label>
-                        <Select name="probabilidadeResidual">
-                        <SelectTrigger id="residual-likelihood"><SelectValue placeholder="Selecione" /></SelectTrigger>
+            </Field>
+            <Field label="Documentação do Controle"><Input id="Documentação do Controle" name="documentacaoControle" /></Field>
+          </Section>
+
+          <Section title="Análise de Risco Residual">
+                <Field label="Probabilidade Residual">
+                    <Select name="probabilidadeResidual"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Raro">Raro</SelectItem>
-                            <SelectItem value="Improvável">Improvável</SelectItem>
-                            <SelectItem value="Possível">Possível</SelectItem>
-                            <SelectItem value="Provável">Provável</SelectItem>
-                            <SelectItem value="Quase Certo">Quase Certo</SelectItem>
+                            <SelectItem value="Raro">Raro</SelectItem><SelectItem value="Improvável">Improvável</SelectItem><SelectItem value="Possível">Possível</SelectItem>
+                            <SelectItem value="Provável">Provável</SelectItem><SelectItem value="Quase Certo">Quase Certo</SelectItem>
                         </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
-                        <Label htmlFor="residual-impact">Impacto</Label>
-                        <Select name="impactoResidual">
-                        <SelectTrigger id="residual-impact"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    </Select>
+                </Field>
+                <Field label="Impacto Residual">
+                    <Select name="impactoResidual"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Insignificante">Insignificante</SelectItem>
-                            <SelectItem value="Menor">Menor</SelectItem>
-                            <SelectItem value="Moderado">Moderado</SelectItem>
-                            <SelectItem value="Maior">Maior</SelectItem>
-                            <SelectItem value="Catastrófico">Catastrófico</SelectItem>
+                            <SelectItem value="Insignificante">Insignificante</SelectItem><SelectItem value="Menor">Menor</SelectItem><SelectItem value="Moderado">Moderado</SelectItem>
+                            <SelectItem value="Maior">Maior</SelectItem><SelectItem value="Catastrófico">Catastrófico</SelectItem>
                         </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-            </div>
-            <div>
-              <Label htmlFor="status">Status do Risco</Label>
-              <Select name="statusDoRisco">
-                <SelectTrigger id="status"><SelectValue placeholder="Selecione o status" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Aberto">Aberto</SelectItem>
-                  <SelectItem value="Em Tratamento">Em Tratamento</SelectItem>
-                  <SelectItem value="Fechado">Fechado</SelectItem>
-                  <SelectItem value="Mitigado">Mitigado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="responsible">Responsável pelo Risco</Label>
-              <Input id="responsible" name="responsavelPeloRisco" placeholder="Nome do responsável" />
-            </div>
-             <div>
-                <Label htmlFor="last-review-date">Data da Última Revisão</Label>
-                 <Popover>
+                    </Select>
+                </Field>
+                <Field label="Nível de Risco Residual (Calculado)">
+                    <Input id="Nível de Risco Residual" name="nivelDeRiscoResidual" disabled />
+                </Field>
+          </Section>
+
+          <Section title="Gestão e Monitoramento">
+            <Field label="Responsável pelo Risco"><Input id="Responsável pelo Risco" name="responsavelPeloRisco" /></Field>
+            <Field label="Plano de Ação"><Input id="Plano de Ação" name="planoDeAcao" /></Field>
+            <Field label="Status do Risco">
+                <Select name="statusDoRisco"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Aberto">Aberto</SelectItem><SelectItem value="Em Tratamento">Em Tratamento</SelectItem>
+                        <SelectItem value="Fechado">Fechado</SelectItem><SelectItem value="Mitigado">Mitigado</SelectItem>
+                    </SelectContent>
+                </Select>
+            </Field>
+            <Field label="Apetite ao Risco"><Input id="Apetite ao Risco" name="apetiteAoRisco" /></Field>
+            <Field label="Data da Última Revisão">
+                <Popover>
                     <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {lastReviewDate ? <span>{lastReviewDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
                     </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={lastReviewDate} onSelect={setLastReviewDate} />
-                    </PopoverContent>
+                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={lastReviewDate} onSelect={setLastReviewDate} /></PopoverContent>
                 </Popover>
-            </div>
-            <div>
-            <Label htmlFor="next-review-date">Próxima Revisão Prevista</Label>
-            <Popover>
-                <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {nextReviewDate ? <span>{nextReviewDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
-                </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={nextReviewDate} onSelect={setNextReviewDate}/>
-                </PopoverContent>
-            </Popover>
-            </div>
-          </div>
+            </Field>
+            <Field label="Próxima Revisão">
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {nextReviewDate ? <span>{nextReviewDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={nextReviewDate} onSelect={setNextReviewDate}/></PopoverContent>
+                </Popover>
+            </Field>
+          </Section>
+
+           <Section title="Indicadores Chave (KRI)" icon={Target}>
+                <Field label="KRI" className="sm:col-span-3"><Input id="KRI" name="kri" /></Field>
+                <Field label="Indicador de Risco" className="sm:col-span-3"><Input id="Indicador de Risco" name="indicadorRisco" /></Field>
+                <Field label="Limite de Apetite"><Input id="Limite de Apetite" name="limiteApetite" type="number" /></Field>
+                <Field label="Limite de Tolerância"><Input id="Limite de Tolerância" name="limiteTolerancia" type="number" /></Field>
+                <Field label="Limite de Capacidade"><Input id="Limite de Capacidade" name="limiteCapacidade" type="number" /></Field>
+                <Field label="Medição Atual"><Input id="Medição Atual" name="medicaoAtual" type="number" /></Field>
+            </Section>
+
+            <Section title="Análise Financeira" icon={DollarSign}>
+                <Field label="Custo do Risco"><Input id="Custo do Risco" name="custoDoRisco" type="number" /></Field>
+                <Field label="Benefício do Controle"><Input id="Benefício do Controle" name="beneficioDoControle" type="number" /></Field>
+                <Field label="Valor Exposto"><Input id="Valor Exposto" name="valorExposto" type="number" /></Field>
+            </Section>
+
         </form>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">

@@ -1,4 +1,5 @@
 
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Risk } from "@/lib/types";
@@ -8,12 +9,12 @@ const impactLevels: Risk['impactoResidual'][] = ["Insignificante", "Menor", "Mod
 
 // Using Tailwind full class names to avoid purging issues.
 const matrixColors = [
-    ["bg-green-200", "bg-green-300", "bg-yellow-200", "bg-yellow-300", "bg-orange-300"],
-    ["bg-green-300", "bg-yellow-200", "bg-yellow-300", "bg-orange-300", "bg-orange-400"],
-    ["bg-yellow-200", "bg-yellow-300", "bg-orange-300", "bg-orange-400", "bg-red-400"],
-    ["bg-yellow-300", "bg-orange-300", "bg-orange-400", "bg-red-400", "bg-red-500"],
-    ["bg-orange-300", "bg-orange-400", "bg-red-400", "bg-red-500", "bg-red-600"],
-];
+    ["bg-green-200", "bg-green-300", "bg-yellow-200", "bg-yellow-300", "bg-orange-300"], // Raro
+    ["bg-green-300", "bg-yellow-200", "bg-yellow-300", "bg-orange-300", "bg-orange-400"], // Improvável
+    ["bg-yellow-200", "bg-yellow-300", "bg-orange-300", "bg-orange-400", "bg-red-400"],    // Possível
+    ["bg-yellow-300", "bg-orange-300", "bg-orange-400", "bg-red-400", "bg-red-500"],    // Provável
+    ["bg-orange-300", "bg-orange-400", "bg-red-400", "bg-red-500", "bg-red-600"],    // Quase Certo
+].reverse(); // Reverse to match the visual layout (Quase Certo at the top)
 
 const calculateRiskCounts = (risks: Risk[]) => {
     const counts = Array(probabilityLevels.length).fill(0).map(() => Array(impactLevels.length).fill(0));
@@ -26,7 +27,7 @@ const calculateRiskCounts = (risks: Risk[]) => {
         }
     });
 
-    return counts.reverse();
+    return counts.reverse(); // Reverse to match the visual layout
 };
 
 export function RiskMatrix({risks}: {risks: Risk[]}) {

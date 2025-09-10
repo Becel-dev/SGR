@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from "react";
@@ -22,6 +23,7 @@ const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive"
 
 const riskLevelVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
     'Crítico': 'destructive',
+    'Extremo': 'destructive',
     'Alto': 'default',
     'Médio': 'secondary',
     'Baixo': 'outline',
@@ -32,13 +34,9 @@ export default function RisksPage() {
   
   const filteredRisks = risksData.filter((risk: Risk) => {
     const term = searchTerm.toLowerCase();
-    return (
-      risk.risco.toLowerCase().includes(term) ||
-      risk.id.toLowerCase().includes(term) ||
-      risk.gerencia.toLowerCase().includes(term) ||
-      risk.responsavelPeloRisco.toLowerCase().includes(term) ||
-      risk.statusDoRisco.toLowerCase().includes(term) ||
-      risk.nivelDeRiscoResidual.toLowerCase().includes(term)
+    // Search through all string values of the risk object
+    return Object.values(risk).some(value => 
+      String(value).toLowerCase().includes(term)
     );
   });
 
@@ -83,37 +81,43 @@ export default function RisksPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>ID</TableHead>
                 <TableHead>Risco</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Nível de Risco Residual</TableHead>
                 <TableHead>Gerência</TableHead>
+                <TableHead>Nível de Risco Residual</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Responsável</TableHead>
-                <TableHead>Última Revisão</TableHead>
+                <TableHead>Próxima Revisão</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredRisks.map(risk => (
                 <TableRow key={risk.id}>
+                  <TableCell className="font-mono">{risk.id}</TableCell>
                   <TableCell className="font-medium">{risk.risco}</TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariantMap[risk.statusDoRisco]}>{risk.statusDoRisco}</Badge>
-                  </TableCell>
+                  <TableCell>{risk.gerencia}</TableCell>
                   <TableCell>
                     <Badge 
-                      variant={riskLevelVariantMap[risk.nivelDeRiscoResidual]}
-                      className={cn(risk.nivelDeRiscoResidual === 'Alto' && 'bg-orange-500 text-white dark:bg-orange-500 dark:text-white')}
+                      variant={riskLevelVariantMap[risk.nivelDeRiscoResidual] || 'default'}
+                      className={cn(
+                        risk.nivelDeRiscoResidual === 'Alto' && 'bg-orange-500 text-white dark:bg-orange-500 dark:text-white',
+                        risk.nivelDeRiscoResidual === 'Extremo' && 'bg-red-700 text-white dark:bg-red-700 dark:text-white'
+                      )}
                     >
                       {risk.nivelDeRiscoResidual}
                     </Badge>
                   </TableCell>
-                  <TableCell>{risk.gerencia}</TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariantMap[risk.statusDoRisco] || 'default'}>{risk.statusDoRisco}</Badge>
+                  </TableCell>
                   <TableCell>{risk.responsavelPeloRisco}</TableCell>
-                  <TableCell>{risk.dataDaUltimaRevisao}</TableCell>
+                  <TableCell>{risk.dataDaProximaRevisao}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" asChild>
                       <Link href={`/risks/${risk.id}`}>
                         <ArrowRight className="h-4 w-4" />
+                        <span className="sr-only">Ver Detalhes</span>
                       </Link>
                     </Button>
                   </TableCell>
@@ -131,3 +135,4 @@ export default function RisksPage() {
     </Card>
   );
 }
+
