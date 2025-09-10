@@ -89,8 +89,8 @@ export default function RisksPage() {
                   <Badge variant={statusVariantMap[risk.status]}>{risk.status}</Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={criticalityVariantMap[risk.criticality]} 
-                    className={cn(risk.criticality === 'Alto' &amp;&amp; 'bg-orange-500 text-white')}>
+                  <Badge variant={criticalityVariantMap[risk.criticality]}
+                    className={cn(risk.criticality === 'Alto' && 'bg-orange-500 text-white')}>
                     {risk.criticality}
                   </Badge>
                 </TableCell>
