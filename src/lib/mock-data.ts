@@ -1,5 +1,97 @@
 
-import type { Risk, RecentActivity, BowtieData, BowtieThreat, BowtieConsequence } from './types';
+
+import type { Risk, RecentActivity, BowtieData, BowtieThreat, BowtieConsequence, Control } from './types';
+
+export const controlsData: Control[] = [
+  {
+    id: 'C001',
+    criadoEm: '2024-07-29',
+    controle: 'Inspeção ultrassônica de trilhos',
+    gerenciaResponsavel: 'Operação',
+    natureza: 'Semi-Sistêmico',
+    tipo: 'Preventivo',
+    frequencia: 'Semanal',
+    status: 'Ativo',
+    riscosAssociados: ['R001'],
+  },
+  {
+    id: 'C002',
+    criadoEm: '2024-07-29',
+    controle: 'Manutenção de estoque de segurança',
+    gerenciaResponsavel: 'Suprimentos',
+    natureza: 'Manual',
+    tipo: 'Corretivo',
+    frequencia: 'Mensal',
+    status: 'Ativo',
+    riscosAssociados: ['R002'],
+  },
+  {
+    id: 'C003',
+    criadoEm: '2024-07-29',
+    controle: 'Monitoramento de publicações da ANTT',
+    gerenciaResponsavel: 'Regulatório',
+    natureza: 'Manual',
+    tipo: 'Detectivo',
+    frequencia: 'Diário',
+    status: 'Ativo',
+    riscosAssociados: ['R003'],
+  },
+  {
+    id: 'C004',
+    criadoEm: '2024-07-29',
+    controle: 'Plano de Atendimento a Emergências (PAE)',
+    gerenciaResponsavel: 'Ambiental',
+    natureza: 'Manual',
+    tipo: 'Corretivo',
+    frequencia: 'Anual',
+    status: 'Ativo',
+    riscosAssociados: ['R004'],
+  },
+   {
+    id: 'C005',
+    criadoEm: '2024-07-30',
+    controle: 'Firewall de Nova Geração e IDS/IPS',
+    gerenciaResponsavel: 'Tecnologia',
+    natureza: 'Sistêmico',
+    tipo: 'Preventivo',
+    frequencia: 'Diário',
+    status: 'Ativo',
+    riscosAssociados: ['R005'],
+  },
+  {
+    id: 'C006',
+    criadoEm: '2024-07-30',
+    controle: 'Utilização de Instrumentos de Hedge Cambial',
+    gerenciaResponsavel: 'Financeiro',
+    natureza: 'Sistêmico',
+    tipo: 'Preventivo',
+    frequencia: 'Trimestral',
+    status: 'Inativo',
+    riscosAssociados: ['R006'],
+  },
+   {
+    id: 'C007',
+    criadoEm: '2024-07-30',
+    controle: 'Programa de Mentoria e Mapeamento de Sucessão',
+    gerenciaResponsavel: 'RH',
+    natureza: 'Manual',
+    tipo: 'Preventivo',
+    frequencia: 'Anual',
+    status: 'Ativo',
+    riscosAssociados: ['R007'],
+  },
+   {
+    id: 'C008',
+    criadoEm: '2024-07-30',
+    controle: 'Revisão dos Procedimentos de Registro de Jornada',
+    gerenciaResponsavel: 'Jurídico',
+    natureza: 'Manual',
+    tipo: 'Corretivo',
+    frequencia: 'Semestral',
+    status: 'Ativo',
+    riscosAssociados: ['R008'],
+  }
+];
 
 export const kpiData = {
   compliance: {
@@ -525,44 +617,41 @@ export const statusBreakdownChartData = [
 
 export const initialBowtieData: BowtieData[] = [
     {
-        id: 'B004',
-        riskId: 'R004',
+        id: 'B001',
+        riskId: 'R001',
         topEvent: {
-            title: "Vazamento de Produto Perigoso",
-            description: "Transporte ferroviário de produtos perigosos"
+            title: "Descarrilamento em Curva",
+            description: "Operação Ferroviária"
         },
         threats: [
             { 
                 id: 'T1', 
-                title: 'Comprometimento da integridade mecânica do vagão tanque',
+                title: 'Desgaste excessivo do trilho',
                 barriers: [
-                    { id: 'B1-1', title: 'Certificado de aferição do vagão', responsible: 'João Silva', effectiveness: 'Eficaz', status: 'Implementado' },
-                    { id: 'B1-2', title: 'Inspeção mecânica de Pré-Operação', responsible: 'Maria Costa', effectiveness: 'Pouco Eficaz', status: 'Pendente' },
+                    { id: 'B1-1', title: 'Inspeção ultrassônica', responsible: 'Operação', effectiveness: 'Eficaz', status: 'Implementado' },
                 ]
             },
             { 
                 id: 'T2', 
-                title: 'Colapso do vagão tanque por pressão',
+                title: 'Velocidade inadequada do trem',
                 barriers: [
-                    { id: 'B2-1', title: 'Teste hidrostático e válvulas de segurança', responsible: 'Carlos Lima', effectiveness: 'Eficaz', status: 'Implementado' },
+                    { id: 'B2-1', title: 'Controle de velocidade via ATC', responsible: 'CCO', effectiveness: 'Eficaz', status: 'Implementado' },
                 ]
             }
         ],
         consequences: [
             {
                 id: 'C1',
-                title: 'Incêndio ou explosão com múltiplas fatalidades',
+                title: 'Danos ao material rodante e à via',
                 barriers: [
-                    { id: 'B3-1', title: 'PAE - Plano de Atendimento à Emergência', responsible: 'Ana Souza', effectiveness: 'Eficaz', status: 'Implementado' },
-                    { id: 'B3-2', title: 'PAM - Plano de Auxílio Mútuo', responsible: 'Pedro Martins', effectiveness: 'Eficaz', status: 'Implementado' },
+                    { id: 'B3-1', title: 'Plano de Ação Corretiva', responsible: 'Manutenção', effectiveness: 'Eficaz', status: 'Implementado' },
                 ]
             },
             {
                 id: 'C2',
-                title: 'Contaminação ambiental (solo, recursos hídricos)',
+                title: 'Interrupção do tráfego ferroviário',
                 barriers: [
-                    { id: 'B4-1', title: 'Placas ONU', responsible: 'Juliana Santos', effectiveness: 'Eficaz', status: 'Implementado' },
-                    { id: 'B4-2', title: 'Botoeira de emergência para desligamento da bomba', responsible: 'Ricardo Alves', effectiveness: 'Ineficaz', status: 'Não Implementado' },
+                    { id: 'B4-1', title: 'Plano de contingência operacional', responsible: 'CCO', effectiveness: 'Pouco Eficaz', status: 'Pendente' },
                 ]
             }
         ]

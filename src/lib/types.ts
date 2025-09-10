@@ -1,4 +1,5 @@
 
+
 export type Role = 'admin' | 'moderator' | 'editor' | 'viewer';
 
 export type User = {
@@ -15,6 +16,19 @@ export type Kpi = {
   target: number;
   period: string;
 };
+
+export type Control = {
+  id: string;
+  criadoEm: string;
+  controle: string;
+  gerenciaResponsavel: 'Operação' | 'Tecnologia' | 'Ambiental' | 'GesMun' | 'Compliance' | 'Regulatório' | 'Suprimentos' | 'Jurídico' | 'Comercial' | 'DHO' | 'Expansão' | 'Financeiro' | 'SMS' | 'RH';
+  natureza: 'Manual' | 'Sistêmico' | 'Semi-Sistêmico';
+  tipo: 'Preventivo' | 'Detectivo' | 'Corretivo';
+  frequencia: 'Diário' | 'Semanal' | 'Mensal' | 'Trimestral' | 'Semestral' | 'Anual' | 'Sob Demanda';
+  status: 'Ativo' | 'Inativo';
+  riscosAssociados: string[]; // Array of Risk IDs
+};
+
 
 export type Risk = {
   id: string;
