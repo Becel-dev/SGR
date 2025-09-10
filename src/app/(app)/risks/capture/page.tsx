@@ -52,6 +52,10 @@ export default function CaptureRiskPage() {
           {/* Column 1 */}
           <div className="space-y-6">
             <div>
+              <Label htmlFor="id">ID do Risco</Label>
+              <Input id="id" name="id" placeholder="Ex: R016" />
+            </div>
+            <div>
               <Label htmlFor="gerencia">Gerência</Label>
               <Select name="gerencia">
                 <SelectTrigger id="gerencia"><SelectValue placeholder="Selecione a gerência" /></SelectTrigger>
