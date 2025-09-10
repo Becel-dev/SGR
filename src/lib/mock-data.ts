@@ -30,21 +30,6 @@ export const complianceChartData = [
   { month: 'Jul', compliance: 92.5, target: 90 },
 ];
 
-export const statusBreakdownChartData = [
-  { name: 'No Prazo', value: 400, fill: 'hsl(var(--chart-1))' },
-  { name: 'Em Risco', value: 150, fill: 'hsl(var(--chart-2))' },
-  { name: 'Atrasado', value: 50, fill: 'hsl(var(--destructive))' },
-];
-
-export const riskMatrixData = [
-  { impact: 'Insignificante', probability: 0, color: 'bg-green-200' },
-  { impact: 'Menor', probability: 1, color: 'bg-yellow-200' },
-  { impact: 'Moderado', probability: 2, color: 'bg-orange-300' },
-  { impact: 'Maior', probability: 3, color: 'bg-red-400' },
-  { impact: 'Catastrófico', probability: 4, color: 'bg-red-600' },
-];
-
-
 export const recentActivityData: RecentActivity[] = [
     {
         id: '1',
@@ -512,6 +497,30 @@ export const risksData: Risk[] = [
     dataDaUltimaRevisao: '2024-07-28',
     dataDaProximaRevisao: '2024-08-28',
   }
+];
+
+const getStatusCounts = (risks: Risk[]) => {
+  const counts = {
+    'Aberto': 0,
+    'Em Tratamento': 0,
+    'Fechado': 0,
+    'Mitigado': 0,
+  };
+  risks.forEach(risk => {
+    if (counts.hasOwnProperty(risk.statusDoRisco)) {
+      counts[risk.statusDoRisco]++;
+    }
+  });
+  return counts;
+};
+
+const statusCounts = getStatusCounts(risksData);
+
+export const statusBreakdownChartData = [
+  { name: 'Aberto', value: statusCounts['Aberto'], fill: 'hsl(var(--chart-2))' },
+  { name: 'Em Tratamento', value: statusCounts['Em Tratamento'], fill: 'hsl(var(--chart-1))' },
+  { name: 'Mitigado', value: statusCounts['Mitigado'], fill: 'hsl(var(--chart-3))' },
+  { name: 'Fechado', value: statusCounts['Fechado'], fill: 'hsl(var(--muted-foreground))' },
 ];
 
 

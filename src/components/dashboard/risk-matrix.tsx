@@ -1,8 +1,10 @@
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { Risk } from "@/lib/types";
 
-const probabilityLevels = ["Raro", "Improvável", "Possível", "Provável", "Quase Certo"];
-const impactLevels = ["Insignificante", "Menor", "Moderado", "Maior", "Catastrófico"];
+const probabilityLevels: Risk['probabilidadeResidual'][] = ["Raro", "Improvável", "Possível", "Provável", "Quase Certo"];
+const impactLevels: Risk['impactoResidual'][] = ["Insignificante", "Menor", "Moderado", "Maior", "Catastrófico"];
 
 // Using Tailwind full class names to avoid purging issues.
 const matrixColors = [
@@ -13,20 +15,27 @@ const matrixColors = [
     ["bg-orange-300", "bg-orange-400", "bg-red-400", "bg-red-500", "bg-red-600"],
 ];
 
-const riskCounts = [
-    [5, 3, 2, 1, 0],
-    [2, 8, 5, 3, 1],
-    [1, 4, 12, 7, 2],
-    [0, 2, 6, 10, 4],
-    [0, 1, 2, 3, 3],
-].reverse();
+const calculateRiskCounts = (risks: Risk[]) => {
+    const counts = Array(probabilityLevels.length).fill(0).map(() => Array(impactLevels.length).fill(0));
+    
+    risks.forEach(risk => {
+        const probIndex = probabilityLevels.indexOf(risk.probabilidadeResidual);
+        const impactIndex = impactLevels.indexOf(risk.impactoResidual);
+        if (probIndex !== -1 && impactIndex !== -1) {
+            counts[probIndex][impactIndex]++;
+        }
+    });
 
+    return counts.reverse();
+};
 
-export function RiskMatrix() {
+export function RiskMatrix({risks}: {risks: Risk[]}) {
+  const riskCounts = calculateRiskCounts(risks);
+  
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Matriz de Risco</CardTitle>
+        <CardTitle>Matriz de Risco Residual</CardTitle>
         <CardDescription>Distribuição de riscos por probabilidade e impacto.</CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto">

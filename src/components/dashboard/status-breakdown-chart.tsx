@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -20,8 +21,8 @@ export function StatusBreakdownChart() {
   return (
     <Card className="flex flex-col">
       <CardHeader>
-        <CardTitle>Status dos Itens</CardTitle>
-        <CardDescription>Distribuição de todos os itens de controle e risco.</CardDescription>
+        <CardTitle>Status dos Riscos</CardTitle>
+        <CardDescription>Distribuição de todos os riscos por status.</CardDescription>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         <ChartContainer

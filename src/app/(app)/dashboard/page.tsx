@@ -1,8 +1,9 @@
+
 import { AlertCircle, BarChart, CheckCircle, TrendingDown } from 'lucide-react';
 import { KpiCard } from '@/components/dashboard/kpi-card';
 import { RiskComplianceChart } from '@/components/dashboard/risk-compliance-chart';
 import { StatusBreakdownChart } from '@/components/dashboard/status-breakdown-chart';
-import { kpiData } from '@/lib/mock-data';
+import { kpiData, risksData } from '@/lib/mock-data';
 import { RecentActivityTable } from '@/components/dashboard/recent-activity-table';
 import { RiskMatrix } from '@/components/dashboard/risk-matrix';
 
@@ -50,7 +51,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <RiskMatrix />
+        <RiskMatrix risks={risksData} />
         <RecentActivityTable />
       </div>
     </div>
