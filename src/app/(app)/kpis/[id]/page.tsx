@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import * as React from 'react';
@@ -131,16 +132,16 @@ export default function KpiDetailPage() {
 
         {control && (
             <Section title="Controle Associado" icon={Shield}>
-                <DetailItem label="ID do Controle" value={control.id} />
+                 <DetailItem 
+                    label="ID do Controle" 
+                    value={
+                         <Button variant="link" asChild className="p-0 h-auto text-base">
+                            <Link href={`/controls/${control.id}`}>{control.id}</Link>
+                        </Button>
+                    } 
+                />
                 <DetailItem label="Nome do Controle" value={control.nomeControle} className="sm:col-span-2" />
                 <DetailItem label="Dono do Controle" value={control.donoControle} />
-                <DetailItem label="Área do Controle" value={control.area} />
-                <DetailItem label="Status do Controle" value={control.status} />
-                <div className="sm:col-span-4">
-                    <Button asChild variant="link" className="p-0 h-auto">
-                        <Link href={`/controls/${control.id}`}>Ver detalhes completos do controle</Link>
-                    </Button>
-                </div>
             </Section>
         )}
         

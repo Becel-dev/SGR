@@ -1,12 +1,17 @@
 
 
+'use client'
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { risksData } from "@/lib/mock-data";
-import { notFound } from "next/navigation";
+import { controlsData, risksData } from "@/lib/mock-data";
+import { notFound, useParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Siren, DollarSign, Target, Shield, Activity, BarChart3, Briefcase, Users, CircleHelp, ClipboardList, TrendingUp, PlusCircle } from "lucide-react";
+import { ArrowLeft, Siren, DollarSign, Target, Shield, Activity, BarChart3, Briefcase, Users, CircleHelp, ClipboardList, TrendingUp, PlusCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Control } from "@/lib/types";
+import { useEffect, useState } from "react";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 
 const riskLevelVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
     'Crítico': 'destructive',
@@ -21,6 +26,13 @@ const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive"
     'Em Tratamento': 'default',
     'Fechado': 'outline',
     'Mitigado': 'outline',
+};
+
+const controlStatusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
+    'Implementado': 'default',
+    'Implementado com Pendência': 'secondary',
+    'Implementação Futura': 'outline',
+    'Não Implementado': 'destructive',
 };
 
 const DetailItem = ({ label, value, className, isBadge = false }: { label: string, value: React.ReactNode, className?: string, isBadge?: boolean }) => {
@@ -55,11 +67,31 @@ const Section = ({ title, children, icon: Icon }: { title: string, children: Rea
     </div>
 )
 
-export default function RiskDetailPage({ params }: { params: { id: string } }) {
-    const risk = risksData.find(r => r.id === params.id);
+export default function RiskDetailPage() {
+    const params = useParams();
+    const { id } = params;
+    const [risk, setRisk] = useState<(typeof risksData[0]) | undefined>(undefined);
+    const [relatedControls, setRelatedControls] = useState<Control[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (id) {
+            const foundRisk = risksData.find(r => r.id === id);
+            setRisk(foundRisk);
+             if(foundRisk) {
+                const foundControls = controlsData.filter(c => c.idRiscoMUE.toString() === foundRisk.id);
+                setRelatedControls(foundControls);
+            }
+        }
+        setLoading(false);
+    }, [id]);
+
+    if (loading) {
+        return <div>Carregando...</div>;
+    }
 
     if (!risk) {
-        notFound();
+        return notFound();
     }
 
     return (
@@ -170,6 +202,50 @@ export default function RiskDetailPage({ params }: { params: { id: string } }) {
                     <DetailItem label="Riscos Não Aceitáveis" value={risk.riscosNaoAceitaveis} />
                     <DetailItem label="Riscos Mix" value={risk.riscosMix} />
                 </Section>
+
+                {relatedControls.length > 0 && (
+                    <div className="space-y-4 rounded-lg border p-4">
+                        <h3 className="font-semibold text-lg flex items-center gap-2">
+                            <Shield className="h-5 w-5 text-primary" />
+                            Controles Relacionados
+                        </h3>
+                         <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                <TableRow>
+                                    <TableHead>ID</TableHead>
+                                    <TableHead>Título</TableHead>
+                                    <TableHead>Nome do Controle</TableHead>
+                                    <TableHead>Dono</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Ações</TableHead>
+                                </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                {relatedControls.map(control => (
+                                    <TableRow key={control.id}>
+                                    <TableCell className="font-mono">{control.id}</TableCell>
+                                    <TableCell className="font-medium">{control.titulo}</TableCell>
+                                    <TableCell>{control.nomeControle}</TableCell>
+                                    <TableCell>{control.donoControle}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={controlStatusVariantMap[control.status] || 'default'}>{control.status}</Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button variant="ghost" size="icon" asChild>
+                                        <Link href={`/controls/${control.id}`}>
+                                            <ArrowRight className="h-4 w-4" />
+                                            <span className="sr-only">Ver Detalhes do Controle</span>
+                                        </Link>
+                                        </Button>
+                                    </TableCell>
+                                    </TableRow>
+                                ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
+                )}
 
             </CardContent>
             <CardFooter className="flex justify-between">

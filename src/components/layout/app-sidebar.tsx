@@ -42,7 +42,7 @@ const navigationItems = [
   { href: '/dashboard', icon: AreaChart, label: 'Painéis', badge: '' },
   { href: '/risks', icon: Siren, label: 'Captura de Riscos', badge: '' },
   { href: '/controls', icon: Shield, label: 'Governança de Controles', badge: '' },
-  { href: '/kpis', icon: GanttChartSquare, label: "Gestão de KPI's", badge: '3' },
+  { href: '/kpis', icon: GanttChartSquare, label: "Gestão de KPI's", badge: '' },
   { href: '/escalation', icon: Rss, label: 'Escalonamento', badge: '' },
   { href: '/bowtie', icon: GitFork, label: 'Visualização Bowtie', badge: '' },
   { href: '/reports/generate', icon: Bot, label: 'Gerador de Relatório IA', badge: '' },

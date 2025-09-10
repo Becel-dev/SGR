@@ -2,6 +2,7 @@
 
 'use client'
 
+import * as React from 'react';
 import {
   Card,
   CardContent,
@@ -11,12 +12,14 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { controlsData } from '@/lib/mock-data';
-import type { Control } from '@/lib/types';
+import { controlsData, kpisData } from '@/lib/mock-data';
+import type { Control, Kpi } from '@/lib/types';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Shield, GanttChartSquare, ClipboardList, User, Calendar, Info, PlusCircle } from 'lucide-react';
+import { ArrowLeft, Shield, GanttChartSquare, ClipboardList, User, Calendar, Info, PlusCircle, ArrowRight } from 'lucide-react';
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 
 
 const DetailItem = ({ label, value, className }: { label: string, value: React.ReactNode, className?: string }) => {
@@ -24,7 +27,7 @@ const DetailItem = ({ label, value, className }: { label: string, value: React.R
     return (
         <div className={className}>
             <p className="text-sm font-medium text-muted-foreground">{label}</p>
-            <p className="text-base break-words">{value}</p>
+            <div className="text-base break-words">{value}</div>
         </div>
     );
 };
@@ -41,16 +44,39 @@ const Section = ({ title, children, icon: Icon }: { title: string, children: Rea
     </div>
 )
 
+const kpiStatusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
+    'Em dia': 'default',
+    'Atrasado': 'destructive',
+    'Pendente': 'secondary',
+};
+
+const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return '-';
+    try {
+        const date = new Date(dateString);
+        const utcDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12);
+        return utcDate.toLocaleDateString('pt-BR');
+    } catch(e) {
+        return dateString;
+    }
+}
+
+
 export default function ControlDetailPage() {
     const params = useParams();
     const { id } = params;
     const [control, setControl] = useState<Control | undefined>(undefined);
+    const [relatedKpis, setRelatedKpis] = useState<Kpi[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (id) {
             const foundControl = controlsData.find(c => c.id.toString() === id);
             setControl(foundControl);
+            if (foundControl) {
+                const foundKpis = kpisData.filter(k => k.controlId === foundControl.id);
+                setRelatedKpis(foundKpis);
+            }
         }
         setLoading(false);
     }, [id]);
@@ -94,7 +120,14 @@ export default function ControlDetailPage() {
         </Section>
         
         <Section title="Risco Associado" icon={GanttChartSquare}>
-            <DetailItem label="ID do Risco" value={control.idRiscoMUE} />
+            <DetailItem 
+                label="ID do Risco" 
+                value={
+                    <Button variant="link" asChild className="p-0 h-auto text-base">
+                        <Link href={`/risks/${control.idRiscoMUE}`}>{control.idRiscoMUE}</Link>
+                    </Button>
+                } 
+            />
             <DetailItem label="Top Risk Associado" value={control.topRiskAssociado} />
             <DetailItem label="Gerência do Risco" value={control.gerenciaRisco} />
             <DetailItem label="Descrição do Risco (MUE)" value={control.descricaoMUE} className="sm:col-span-4"/>
@@ -126,6 +159,50 @@ export default function ControlDetailPage() {
              <DetailItem label="Modificado Por" value={control.modificadoPor} />
              <DetailItem label="E-mails para KPI" value={control.preenchimentoKPI} className="sm:col-span-4" />
         </Section>
+
+        {relatedKpis.length > 0 && (
+            <div className="space-y-4 rounded-lg border p-4">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                    <GanttChartSquare className="h-5 w-5 text-primary" />
+                    KPIs Relacionados
+                </h3>
+                <div className="overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>ID do KPI</TableHead>
+                                <TableHead>Responsável</TableHead>
+                                <TableHead>Frequência</TableHead>
+                                <TableHead>Próximo Registro</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Ações</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {relatedKpis.map(kpi => (
+                                <TableRow key={kpi.id}>
+                                    <TableCell className="font-mono">{kpi.id}</TableCell>
+                                    <TableCell>{kpi.responsavel}</TableCell>
+                                    <TableCell>{kpi.frequencia}</TableCell>
+                                    <TableCell>{formatDate(kpi.prazoProximoRegistro)}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={kpiStatusVariantMap[kpi.status] || 'default'}>{kpi.status}</Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Button variant="ghost" size="icon" asChild>
+                                        <Link href={`/kpis/${kpi.id}`}>
+                                            <ArrowRight className="h-4 w-4" />
+                                            <span className="sr-only">Ver Detalhes do KPI</span>
+                                        </Link>
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+            </div>
+        )}
         
       </CardContent>
        <CardFooter className="flex justify-between">
