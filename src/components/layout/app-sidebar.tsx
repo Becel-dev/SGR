@@ -68,9 +68,7 @@ export function AppSidebar() {
             <Shield className="w-8 h-8 text-sidebar-primary" />
             <h1 className="text-xl font-bold text-primary-foreground">SGR: Sistema de Gestão de Riscos</h1>
         </div>
-        <SidebarTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden" />
-        </SidebarTrigger>
+        <SidebarTrigger className="md:hidden" />
       </SidebarHeader>
       <SidebarRail />
       <Separator className="my-2" />
