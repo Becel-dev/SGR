@@ -20,10 +20,14 @@ import { Badge } from '@/components/ui/badge';
 
 const DetailItem = ({ label, value, className }: { label: string, value: React.ReactNode, className?: string }) => {
     if (value === null || value === undefined || value === '') return null;
+
+    const isBadge = React.isValidElement(value) && value.type === Badge;
+    const ValueWrapper = isBadge ? 'div' : 'p';
+
     return (
         <div className={className}>
             <p className="text-sm font-medium text-muted-foreground">{label}</p>
-            <p className="text-base break-words">{value}</p>
+            <ValueWrapper className="text-base break-words">{value}</ValueWrapper>
         </div>
     );
 };
