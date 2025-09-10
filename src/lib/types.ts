@@ -11,10 +11,14 @@ export type User = {
 
 export type Kpi = {
   id: string;
-  name:string;
-  value: number;
-  target: number;
-  period: string;
+  controlId: number;
+  frequencia: string;
+  ultimoKpiInformado?: string;
+  prazoProximoRegistro: string;
+  diasPendentes: number;
+  status: string;
+  responsavel: string;
+  emailResponsavel: string;
 };
 
 export type Control = {

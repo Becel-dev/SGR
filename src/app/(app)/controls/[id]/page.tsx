@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import {
@@ -15,7 +16,7 @@ import type { Control } from '@/lib/types';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Shield, GanttChartSquare, ClipboardList, User, Calendar, Info } from 'lucide-react';
+import { ArrowLeft, Shield, GanttChartSquare, ClipboardList, User, Calendar, Info, PlusCircle } from 'lucide-react';
 
 
 const DetailItem = ({ label, value, className }: { label: string, value: React.ReactNode, className?: string }) => {
@@ -127,10 +128,20 @@ export default function ControlDetailPage() {
         </Section>
         
       </CardContent>
-       <CardFooter>
-            <Button asChild>
-                <Link href={`/controls/edit/${control.id}`}>Editar Controle</Link>
-            </Button>
+       <CardFooter className="flex justify-between">
+            <div>
+                 <Button asChild>
+                    <Link href={`/kpis/capture?controlId=${control.id}`}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Adicionar KPI
+                    </Link>
+                </Button>
+            </div>
+            <div>
+                 <Button asChild>
+                    <Link href={`/controls/edit/${control.id}`}>Editar Controle</Link>
+                </Button>
+            </div>
        </CardFooter>
     </Card>
   );

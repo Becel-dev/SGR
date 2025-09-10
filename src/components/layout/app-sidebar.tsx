@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -54,7 +55,7 @@ export function AppSidebar() {
   const { user, hasRole } = useUser();
 
   const isNavItemActive = (href: string) => {
-    return pathname === href;
+    return pathname.startsWith(href);
   };
 
   return (
