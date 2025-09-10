@@ -500,7 +500,7 @@ export const risksData: Risk[] = [
 ];
 
 const getStatusCounts = (risks: Risk[]) => {
-  const counts = {
+  const counts: { [key in Risk['statusDoRisco']]: number } = {
     'Aberto': 0,
     'Em Tratamento': 0,
     'Fechado': 0,
@@ -526,27 +526,27 @@ export const statusBreakdownChartData = [
 
 export const bowtieData: BowtieData = {
     event: {
-        label: "Descarrilamento",
-        description: "Saída do trem dos trilhos na via principal.",
+        label: "Descarrilamento em Curva",
+        description: "Saída do trem dos trilhos em uma curva de raio reduzido.",
     },
     threats: [
-        { label: "Excesso de Velocidade", description: "Operação acima da VMA do trecho." },
-        { label: "Falha de Material Rodante", description: "Ex: rolamento, truque, rodeiro." },
-        { label: "Defeito na Via", description: "Ex: trilho quebrado, fixação." },
+        { label: "Velocidade Inadequada", description: "Operação acima da velocidade máxima do trecho." },
+        { label: "Desgaste Excessivo do Trilho", description: "Componente da via permanente fora das tolerâncias." },
+        { label: "Falha de Material Rodante", description: "Quebra de componente do vagão ou locomotiva." },
     ],
     preventiveControls: [
-        { label: "ATC/ATS", description: "Controle de velocidade embarcado." },
-        { label: "Manutenção Preditiva", description: "Inspeção e troca de componentes." },
-        { label: "Inspeção de Via", description: "Ultrassom, veículo de controle." },
+        { label: "Controle de Velocidade (ATC)", description: "Sistema embarcado que limita a velocidade." },
+        { label: "Inspeção de Via Ultrassônica", description: "Detecção de defeitos internos nos trilhos." },
+        { label: "Manutenção Preditiva da Frota", description: "Análise de dados para prever falhas em componentes." },
     ],
     consequences: [
-        { label: "Danos à Carga", description: "Avaria ou perda total da carga." },
-        { label: "Impacto Ambiental", description: "Vazamento de produtos perigosos." },
-        { label: "Interdição da Via", description: "Bloqueio da linha para reparos." },
+        { label: "Danos à Carga e Ativos", description: "Avaria ou perda total da carga e do material rodante." },
+        { label: "Impacto Ambiental", description: "Vazamento de produtos perigosos transportados." },
+        { label: "Interdição da Via", description: "Bloqueio da linha para reparos, causando atrasos." },
     ],
     mitigatoryControls: [
-        { label: "Plano de Emergência", description: "Ação rápida para contenção de danos." },
-        { label: "Kits de Mitigação", description: "Materiais para contenção de vazamentos." },
-        { label: "Equipe de Restabelecimento", description: "Equipe para liberar a via rapidamente." },
+        { label: "Plano de Atendimento a Emergências", description: "Acionamento rápido de equipes para contenção." },
+        { label: "Kits de Mitigação Ambiental", description: "Materiais para contenção de vazamentos e proteção." },
+        { label: "Equipe de Restabelecimento", description: "Equipe especializada para liberar a via rapidamente." },
     ]
 };
