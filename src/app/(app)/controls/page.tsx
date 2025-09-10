@@ -17,6 +17,14 @@ const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive"
     'Inativo': 'secondary',
 };
 
+// Helper function to format date consistently
+const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    // Adjust for timezone offset to prevent date changes
+    const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+    const correctedDate = new Date(date.getTime() + userTimezoneOffset);
+    return correctedDate.toLocaleDateString('pt-BR');
+}
 
 export default function ControlsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -98,7 +106,7 @@ export default function ControlsPage() {
                   <TableCell>
                     <Badge variant={statusVariantMap[control.status]}>{control.status}</Badge>
                   </TableCell>
-                  <TableCell>{new Date(control.criadoEm).toLocaleDateString()}</TableCell>
+                  <TableCell>{formatDate(control.criadoEm)}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" asChild>
                       <Link href={`/controls/${control.id}`}>
