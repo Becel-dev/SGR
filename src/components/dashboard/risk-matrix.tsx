@@ -29,13 +29,13 @@ export function RiskMatrix() {
         <CardTitle>Matriz de Risco</CardTitle>
         <CardDescription>Distribuição de riscos por probabilidade e impacto.</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-x-auto">
         <div className="flex">
           <div className="flex items-center -rotate-90 whitespace-nowrap -ml-8 mr-2">
             <span className="font-semibold text-sm text-muted-foreground">Probabilidade</span>
           </div>
           <div className="w-full">
-            <Table>
+            <Table className="min-w-[600px]">
                 <TableHeader>
                     <TableRow className="hover:bg-transparent">
                         <TableHead className="w-24 border-r"></TableHead>
@@ -47,7 +47,7 @@ export function RiskMatrix() {
                 <TableBody>
                     {probabilityLevels.slice().reverse().map((probLevel, rowIndex) => (
                         <TableRow key={probLevel} className="hover:bg-transparent">
-                            <TableHead className="text-right font-semibold text-foreground border-r">{probLevel}</TableHead>
+                            <TableHead className="text-right font-semibold text-foreground border-r whitespace-nowrap">{probLevel}</TableHead>
                             {impactLevels.map((_, colIndex) => (
                                 <TableCell key={colIndex} className={`text-center font-bold text-lg text-card-foreground/80 ${matrixColors[rowIndex][colIndex]}`}>
                                     {riskCounts[rowIndex][colIndex] > 0 ? riskCounts[rowIndex][colIndex] : '-'}
