@@ -67,6 +67,9 @@ export default function CaptureRiskPage() {
                   <SelectItem value="Comercial">Comercial</SelectItem>
                   <SelectItem value="DHO">DHO</SelectItem>
                   <SelectItem value="Expansão">Expansão</SelectItem>
+                  <SelectItem value="Financeiro">Financeiro</SelectItem>
+                  <SelectItem value="SMS">SMS</SelectItem>
+                  <SelectItem value="RH">RH</SelectItem>
                 </SelectContent>
               </Select>
             </div>

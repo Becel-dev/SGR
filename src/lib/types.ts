@@ -1,3 +1,4 @@
+
 export type Role = 'admin' | 'moderator' | 'editor' | 'viewer';
 
 export type User = {
@@ -17,7 +18,7 @@ export type Kpi = {
 
 export type Risk = {
   id: string;
-  gerencia: 'Operação' | 'Tecnologia' | 'Ambiental' | 'GesMun' | 'Compliance' | 'Regulatório' | 'Suprimentos' | 'Jurídico' | 'Comercial' | 'DHO' | 'Expansão';
+  gerencia: 'Operação' | 'Tecnologia' | 'Ambiental' | 'GesMun' | 'Compliance' | 'Regulatório' | 'Suprimentos' | 'Jurídico' | 'Comercial' | 'DHO' | 'Expansão' | 'Financeiro' | 'SMS' | 'RH';
   risco: string;
   descricaoDoRisco: string;
   dataDeIdentificacao: string;
