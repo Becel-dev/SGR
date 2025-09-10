@@ -17,29 +17,32 @@ export type Kpi = {
 
 export type Risk = {
   id: string;
-  risk: string;
-  description: string;
-  identificationDate: string;
-  riskSource: 'Interna' | 'Externa';
-  primaryCause: string;
-  consequence: string;
-  riskType: 'Estratégico' | 'Financeiro' | 'Operacional' | 'Conformidade';
-  responsibleArea: string;
-  impactedProcess: string;
-  inherentLikelihood: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo';
-  inherentImpact: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico';
-  inherentRiskLevel: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
-  responseStrategy: 'Mitigar' | 'Aceitar' | 'Transferir' | 'Evitar';
-  controlDescription: string;
-  controlType: 'Preventivo' | 'Detectivo' | 'Corretivo';
-  controlEffectiveness: 'Ineficaz' | 'Pouco Eficaz' | 'Eficaz' | 'Muito Eficaz';
-  residualLikelihood: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo';
-  residualImpact: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico';
-  residualRiskLevel: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
-  status: 'Aberto' | 'Em Tratamento' | 'Fechado' | 'Mitigado';
-  responsible: string;
-  lastReviewDate: string;
-  nextReviewDate: string;
+  gerencia: 'Operação' | 'Tecnologia' | 'Ambiental' | 'GesMun' | 'Compliance' | 'Regulatório' | 'Suprimentos' | 'Jurídico' | 'Comercial' | 'DHO' | 'Expansão';
+  risco: string;
+  descricaoDoRisco: string;
+  dataDeIdentificacao: string;
+  origemDoRisco: 'Interna' | 'Externa';
+  causaRaizDoRisco: string;
+  consequenciaDoRisco: string;
+  tipoDeRisco: 'Estratégico' | 'Financeiro' | 'Operacional' | 'Conformidade' | 'Ambiental' | 'Regulatório' | 'Legal' | 'Imagem';
+  processoAfetado: string;
+  probabilidadeInerente: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo';
+  impactoInerente: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico';
+  nivelDeRiscoInerente: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
+  estrategia: 'Mitigar' | 'Aceitar' | 'Transferir' | 'Evitar';
+  descricaoDoControle: string;
+  naturezaDoControle: 'Manual' | 'Sistêmico' | 'Semi-Sistêmico';
+  tipoDeControle: 'Preventivo' | 'Detectivo' | 'Corretivo';
+  classificacaoDoControle: 'Chave' | 'Não Chave';
+  frequencia: 'Diário' | 'Semanal' | 'Mensal' | 'Trimestral' | 'Semestral' | 'Anual';
+  eficaciaDoControle: 'Ineficaz' | 'Pouco Eficaz' | 'Eficaz' | 'Muito Eficaz';
+  probabilidadeResidual: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo';
+  impactoResidual: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico';
+  nivelDeRiscoResidual: 'Baixo' | 'Médio' | 'Alto' | 'Crítico';
+  statusDoRisco: 'Aberto' | 'Em Tratamento' | 'Fechado' | 'Mitigado';
+  responsavelPeloRisco: string;
+  dataDaUltimaRevisao: string;
+  dataDaProximaRevisao: string;
 };
 
 export type RecentActivity = {

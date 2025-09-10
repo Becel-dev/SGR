@@ -52,7 +52,7 @@ export default function RisksPage() {
                     <DropdownMenuSeparator />
                     <DropdownMenuCheckboxItem checked>Status</DropdownMenuCheckboxItem>
                     <DropdownMenuCheckboxItem>Nível de Risco</DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem>Área Responsável</DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem>Gerência</DropdownMenuCheckboxItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
                 
@@ -76,7 +76,7 @@ export default function RisksPage() {
                 <TableHead>Risco</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Nível de Risco Residual</TableHead>
-                <TableHead>Área Responsável</TableHead>
+                <TableHead>Gerência</TableHead>
                 <TableHead>Responsável</TableHead>
                 <TableHead>Última Revisão</TableHead>
                 <TableHead>Ações</TableHead>
@@ -85,21 +85,21 @@ export default function RisksPage() {
             <TableBody>
               {risksData.map(risk => (
                 <TableRow key={risk.id}>
-                  <TableCell className="font-medium">{risk.risk}</TableCell>
+                  <TableCell className="font-medium">{risk.risco}</TableCell>
                   <TableCell>
-                    <Badge variant={statusVariantMap[risk.status]}>{risk.status}</Badge>
+                    <Badge variant={statusVariantMap[risk.statusDoRisco]}>{risk.statusDoRisco}</Badge>
                   </TableCell>
                   <TableCell>
                     <Badge 
-                      variant={riskLevelVariantMap[risk.residualRiskLevel]}
-                      className={cn(risk.residualRiskLevel === 'Alto' && 'bg-orange-500 text-white dark:bg-orange-500 dark:text-white')}
+                      variant={riskLevelVariantMap[risk.nivelDeRiscoResidual]}
+                      className={cn(risk.nivelDeRiscoResidual === 'Alto' && 'bg-orange-500 text-white dark:bg-orange-500 dark:text-white')}
                     >
-                      {risk.residualRiskLevel}
+                      {risk.nivelDeRiscoResidual}
                     </Badge>
                   </TableCell>
-                  <TableCell>{risk.responsibleArea}</TableCell>
-                  <TableCell>{risk.responsible}</TableCell>
-                  <TableCell>{risk.lastReviewDate}</TableCell>
+                  <TableCell>{risk.gerencia}</TableCell>
+                  <TableCell>{risk.responsavelPeloRisco}</TableCell>
+                  <TableCell>{risk.dataDaUltimaRevisao}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" asChild>
                       <Link href={`/risks/${risk.id}`}>
