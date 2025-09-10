@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import {
@@ -32,6 +33,13 @@ import type { Control } from '@/lib/types';
 import Link from 'next/link';
 import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { cn } from '@/lib/utils';
 
 const areaOptions = ['OPERAÇÃO', 'MANUTENÇÃO', 'SEGURANÇA', 'FINANCEIRO', 'RH', 'JURÍDICO', 'COMPLIANCE', 'TI'];
 const tipoOptions = ['Preventivo', 'Mitigatório'];
@@ -39,6 +47,31 @@ const classificacaoOptions = ['Procedimento', 'Equipamento', 'Pessoa', 'Sistema'
 const statusOptions = ['Implementado', 'Implementado com Pendência', 'Não Implementado', 'Implementação Futura'];
 const validacaoOptions = ['DENTRO DO PRAZO', 'ATRASADO', 'PENDENTE'];
 const criticidadeOptions = ['Sim', 'Não'];
+
+
+const Section = ({ title, children, defaultOpen = false }: { title: string, children: React.ReactNode, defaultOpen?: boolean }) => (
+    <Accordion type="single" collapsible defaultValue={defaultOpen ? "item-1" : ""} className='w-full'>
+        <AccordionItem value="item-1" className="border rounded-lg">
+             <AccordionTrigger className="bg-muted/50 px-4 py-3 rounded-t-lg hover:no-underline">
+                <h3 className="font-semibold text-lg">
+                    {title}
+                </h3>
+            </AccordionTrigger>
+            <AccordionContent className="p-6 pt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {children}
+                </div>
+            </AccordionContent>
+        </AccordionItem>
+    </Accordion>
+)
+
+const Field = ({ label, children, className }: {label: string, children: React.ReactNode, className?: string}) => (
+    <div className={cn("space-y-2", className)}>
+        <Label>{label}</Label>
+        {children}
+    </div>
+)
 
 
 export default function EditControlPage() {
@@ -103,68 +136,57 @@ export default function EditControlPage() {
         </div>
       </CardHeader>
       <CardContent>
-        <form className="grid grid-cols-1 gap-x-6 gap-y-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-           {/* Column 1 */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg border-b pb-2">Identificação</h3>
-            <div><Label htmlFor="id">ID</Label><Input id="id" name="id" value={control.id} onChange={handleInputChange} disabled /></div>
-            <div><Label htmlFor="codigoMUE">Código do MUE</Label><Input id="codigoMUE" name="codigoMUE" value={control.codigoMUE} onChange={handleInputChange} /></div>
-            <div><Label htmlFor="titulo">Título</Label><Input id="titulo" name="titulo" value={control.titulo} onChange={handleInputChange}/></div>
-            <div><Label htmlFor="idRiscoMUE">ID Risco Associado</Label><Input id="idRiscoMUE" name="idRiscoMUE" value={control.idRiscoMUE} onChange={handleInputChange}/></div>
-            <div><Label htmlFor="topRiskAssociado">Top Risk Associado</Label><Input id="topRiskAssociado" name="topRiskAssociado" value={control.topRiskAssociado} onChange={handleInputChange}/></div>
-            <div><Label htmlFor="descricaoMUE">Descrição do MUE</Label><Textarea id="descricaoMUE" name="descricaoMUE" value={control.descricaoMUE} onChange={handleInputChange}/></div>
-          </div>
+        <form className="space-y-4">
+          <Section title="Identificação" defaultOpen>
+            <Field label="ID"><Input name="id" value={control.id} onChange={handleInputChange} disabled /></Field>
+            <Field label="Código do MUE"><Input name="codigoMUE" value={control.codigoMUE} onChange={handleInputChange} /></Field>
+            <Field label="Título"><Input name="titulo" value={control.titulo} onChange={handleInputChange}/></Field>
+            <Field label="ID Risco Associado"><Input name="idRiscoMUE" value={control.idRiscoMUE} onChange={handleInputChange}/></Field>
+            <Field label="Top Risk Associado"><Input name="topRiskAssociado" value={control.topRiskAssociado} onChange={handleInputChange}/></Field>
+            <Field label="Descrição do MUE" className="sm:col-span-2 md:col-span-3"><Textarea name="descricaoMUE" value={control.descricaoMUE} onChange={handleInputChange}/></Field>
+          </Section>
 
-          {/* Column 2 */}
-          <div className="space-y-4">
-             <h3 className="font-semibold text-lg border-b pb-2">Detalhes do Controle</h3>
-             <div><Label htmlFor="nomeControle">Nome do Controle (CC)</Label><Textarea id="nomeControle" name="nomeControle" value={control.nomeControle} onChange={handleInputChange}/></div>
-             <div>
-                <Label htmlFor="tipo">Tipo</Label>
+          <Section title="Detalhes do Controle">
+             <Field label="Nome do Controle (CC)" className="sm:col-span-2"><Textarea name="nomeControle" value={control.nomeControle} onChange={handleInputChange}/></Field>
+             <Field label="Tipo">
                 <Select name="tipo" value={control.tipo} onValueChange={(v) => handleSelectChange('tipo', v)}>
                     <SelectTrigger><SelectValue/></SelectTrigger>
                     <SelectContent>{tipoOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                 </Select>
-            </div>
-             <div>
-                <Label htmlFor="classificacao">Classificação</Label>
+            </Field>
+             <Field label="Classificação">
                  <Select name="classificacao" value={control.classificacao} onValueChange={(v) => handleSelectChange('classificacao', v)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{classificacaoOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                 </Select>
-            </div>
-            <div>
-                <Label htmlFor="status">Status</Label>
+            </Field>
+            <Field label="Status">
                 <Select name="status" value={control.status} onValueChange={(v) => handleSelectChange('status', v)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{statusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                 </Select>
-            </div>
-            <div>
-                <Label htmlFor="criticidade">Criticidade</Label>
+            </Field>
+            <Field label="Criticidade">
                 <Select name="criticidade" value={control.criticidade} onValueChange={(v) => handleSelectChange('criticidade', v)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{criticidadeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                 </Select>
-            </div>
-             <div><Label htmlFor="onePager">OnePager</Label><Input id="onePager" name="onePager" value={control.onePager} onChange={handleInputChange}/></div>
-             <div><Label htmlFor="evidencia">Evidência</Label><Input id="evidencia" name="evidencia" value={control.evidencia} onChange={handleInputChange} /></div>
-          </div>
+            </Field>
+             <Field label="OnePager"><Input name="onePager" value={control.onePager} onChange={handleInputChange}/></Field>
+             <Field label="Evidência"><Input name="evidencia" value={control.evidencia} onChange={handleInputChange} /></Field>
+          </Section>
           
-          {/* Column 3 */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg border-b pb-2">Responsabilidade e Prazos</h3>
-            <div><Label htmlFor="donoControle">Dono do Controle</Label><Input id="donoControle" name="donoControle" value={control.donoControle} onChange={handleInputChange} /></div>
-            <div><Label htmlFor="emailDono">E-mail do Dono</Label><Input id="emailDono" name="emailDono" type="email" value={control.emailDono} onChange={handleInputChange}/></div>
-            <div>
-                <Label htmlFor="area">Área</Label>
+          <Section title="Responsabilidade e Prazos">
+            <Field label="Dono do Controle"><Input name="donoControle" value={control.donoControle} onChange={handleInputChange} /></Field>
+            <Field label="E-mail do Dono"><Input name="emailDono" type="email" value={control.emailDono} onChange={handleInputChange}/></Field>
+            <Field label="Área">
                  <Select name="area" value={control.area} onValueChange={(v) => handleSelectChange('area', v)}>
                     <SelectTrigger><SelectValue/></SelectTrigger>
                     <SelectContent>{areaOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                 </Select>
-            </div>
-             <div>
-                <Label htmlFor="dataUltimaVerificacao">Data da Última Verificação</Label>
+            </Field>
+            <Field label="Frequência (em meses)"><Input name="frequenciaMeses" type="number" value={control.frequenciaMeses} onChange={handleInputChange}/></Field>
+             <Field label="Data da Última Verificação">
                 <Popover>
                     <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
@@ -176,10 +198,8 @@ export default function EditControlPage() {
                         <Calendar mode="single" selected={lastCheckDate} onSelect={(date) => { setLastCheckDate(date); handleDateChange('dataUltimaVerificacao', date); }} initialFocus/>
                     </PopoverContent>
                 </Popover>
-            </div>
-            <div><Label htmlFor="frequenciaMeses">Frequência (em meses)</Label><Input id="frequenciaMeses" name="frequenciaMeses" type="number" value={control.frequenciaMeses} onChange={handleInputChange}/></div>
-            <div>
-                <Label htmlFor="proximaVerificacao">Próxima Verificação</Label>
+            </Field>
+            <Field label="Próxima Verificação">
                  <Popover>
                     <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
@@ -191,21 +211,17 @@ export default function EditControlPage() {
                         <Calendar mode="single" selected={nextCheckDate} onSelect={(date) => { setNextCheckDate(date); handleDateChange('proximaVerificacao', date); }}/>
                     </PopoverContent>
                 </Popover>
-            </div>
-             <div>
-                <Label htmlFor="validacao">Validação</Label>
+            </Field>
+             <Field label="Validação">
                  <Select name="validacao" value={control.validacao} onValueChange={(v) => handleSelectChange('validacao', v)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{validacaoOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                 </Select>
-            </div>
-          </div>
+            </Field>
+          </Section>
 
-           {/* Column 4 */}
-           <div className="space-y-4">
-                <h3 className="font-semibold text-lg border-b pb-2">Metadados</h3>
-                 <div>
-                    <Label htmlFor="criadoEm">Data de Criação</Label>
+           <Section title="Metadados">
+                 <Field label="Data de Criação">
                     <Popover>
                         <PopoverTrigger asChild>
                         <Button variant="outline" className="w-full justify-start text-left font-normal">
@@ -217,11 +233,11 @@ export default function EditControlPage() {
                             <Calendar mode="single" selected={creationDate} onSelect={(date) => { setCreationDate(date); handleDateChange('criadoEm', date); }} initialFocus/>
                         </PopoverContent>
                     </Popover>
-                </div>
-                <div><Label htmlFor="criadoPor">Criado Por</Label><Input id="criadoPor" name="criadoPor" value={control.criadoPor} onChange={handleInputChange} /></div>
-                <div><Label htmlFor="modificadoPor">Modificado Por</Label><Input id="modificadoPor" name="modificadoPor" value={control.modificadoPor} onChange={handleInputChange} /></div>
-                <div><Label htmlFor="preenchimentoKPI">E-mails para KPI</Label><Textarea id="preenchimentoKPI" name="preenchimentoKPI" value={control.preenchimentoKPI} onChange={handleInputChange}/></div>
-           </div>
+                </Field>
+                <Field label="Criado Por"><Input name="criadoPor" value={control.criadoPor} onChange={handleInputChange} /></Field>
+                <Field label="Modificado Por"><Input name="modificadoPor" value={control.modificadoPor} onChange={handleInputChange} /></Field>
+                <Field label="E-mails para KPI" className="sm:col-span-2"><Textarea name="preenchimentoKPI" value={control.preenchimentoKPI} onChange={handleInputChange}/></Field>
+           </Section>
         </form>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
@@ -231,3 +247,5 @@ export default function EditControlPage() {
     </Card>
   );
 }
+
+    
