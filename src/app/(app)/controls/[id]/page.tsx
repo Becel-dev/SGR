@@ -92,6 +92,10 @@ export default function EditControlPage() {
           {/* Column 1 */}
           <div className="space-y-6">
             <div>
+                <Label htmlFor="control-id">ID do Controle</Label>
+                <Input id="control-id" name="id" value={control.id} onChange={handleInputChange} placeholder="Ex: C001" disabled />
+            </div>
+            <div>
               <Label htmlFor="control-title">Controle</Label>
               <Input id="control-title" name="controle" value={control.controle} onChange={handleInputChange} placeholder="Título resumido do controle" />
             </div>
@@ -112,6 +116,10 @@ export default function EditControlPage() {
                     </PopoverContent>
                 </Popover>
             </div>
+          </div>
+
+          {/* Column 2 */}
+          <div className="space-y-6">
              <div>
               <Label htmlFor="gerencia">Gerência Responsável</Label>
               <Select name="gerenciaResponsavel" value={control.gerenciaResponsavel} onValueChange={(v) => handleSelectChange('gerenciaResponsavel', v)}>
@@ -134,10 +142,6 @@ export default function EditControlPage() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          {/* Column 2 */}
-          <div className="space-y-6">
              <div>
                 <Label htmlFor="control-nature">Natureza do Controle</Label>
                 <Select name="natureza" value={control.natureza} onValueChange={(v) => handleSelectChange('natureza', v)}>
@@ -160,6 +164,10 @@ export default function EditControlPage() {
                     </SelectContent>
                 </Select>
             </div>
+          </div>
+          
+          {/* Column 3 */}
+          <div className="space-y-6">
             <div>
                 <Label htmlFor="control-frequency">Frequência</Label>
                 <Select name="frequencia" value={control.frequencia} onValueChange={(v) => handleSelectChange('frequencia', v)}>
@@ -175,10 +183,6 @@ export default function EditControlPage() {
                     </SelectContent>
                 </Select>
             </div>
-          </div>
-          
-          {/* Column 3 */}
-          <div className="space-y-6">
              <div>
               <Label htmlFor="status">Status</Label>
               <Select name="status" value={control.status} onValueChange={(v) => handleSelectChange('status', v)}>

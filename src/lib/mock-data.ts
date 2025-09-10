@@ -658,7 +658,7 @@ export const initialBowtieData: BowtieData[] = [
     }
 ];
 
-export const getEmptyBowtie = (risk: Risk): BowtieData => {
+export const getEmptyBowtie = (risk?: Risk): BowtieData => {
     const newId = `B${Math.random().toString(36).substr(2, 9)}`;
     const newThreat: BowtieThreat = {
         id: 'T1',
@@ -682,6 +682,19 @@ export const getEmptyBowtie = (risk: Risk): BowtieData => {
             status: 'Pendente'
         }]
     };
+
+    if (!risk) {
+        return {
+            id: newId,
+            riskId: `R-GENERIC-${newId}`,
+            topEvent: {
+                title: 'Novo Evento de Topo',
+                description: 'Descreva o processo',
+            },
+            threats: [newThreat],
+            consequences: [newConsequence],
+        };
+    }
 
     return {
         id: newId,

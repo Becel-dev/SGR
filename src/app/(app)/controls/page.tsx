@@ -28,7 +28,9 @@ export default function ControlsPage() {
       control.id.toLowerCase().includes(term) ||
       control.gerenciaResponsavel.toLowerCase().includes(term) ||
       control.status.toLowerCase().includes(term) ||
-      control.tipo.toLowerCase().includes(term)
+      control.tipo.toLowerCase().includes(term) ||
+      control.natureza.toLowerCase().includes(term) ||
+      control.frequencia.toLowerCase().includes(term)
     );
   });
 
@@ -73,24 +75,30 @@ export default function ControlsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>ID</TableHead>
                 <TableHead>Controle</TableHead>
                 <TableHead>Gerência Responsável</TableHead>
+                <TableHead>Natureza</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Frequência</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Criado Em</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredControls.map(control => (
                 <TableRow key={control.id}>
+                  <TableCell className="font-mono">{control.id}</TableCell>
                   <TableCell className="font-medium">{control.controle}</TableCell>
                   <TableCell>{control.gerenciaResponsavel}</TableCell>
-                   <TableCell>{control.tipo}</TableCell>
+                  <TableCell>{control.natureza}</TableCell>
+                  <TableCell>{control.tipo}</TableCell>
                   <TableCell>{control.frequencia}</TableCell>
                   <TableCell>
                     <Badge variant={statusVariantMap[control.status]}>{control.status}</Badge>
                   </TableCell>
+                  <TableCell>{new Date(control.criadoEm).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" asChild>
                       <Link href={`/controls/${control.id}`}>

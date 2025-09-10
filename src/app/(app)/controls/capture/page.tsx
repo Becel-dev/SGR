@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import {
@@ -19,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
@@ -51,6 +51,10 @@ export default function CaptureControlPage() {
         <form className="grid grid-cols-1 gap-x-6 gap-y-8 md:grid-cols-2 lg:grid-cols-3">
           {/* Column 1 */}
           <div className="space-y-6">
+             <div>
+                <Label htmlFor="control-id">ID do Controle</Label>
+                <Input id="control-id" name="id" placeholder="Ex: C009" />
+            </div>
             <div>
               <Label htmlFor="control-title">Controle</Label>
               <Input id="control-title" name="controle" placeholder="Título resumido do controle" />
@@ -69,6 +73,10 @@ export default function CaptureControlPage() {
                     </PopoverContent>
                 </Popover>
             </div>
+          </div>
+
+          {/* Column 2 */}
+          <div className="space-y-6">
              <div>
               <Label htmlFor="gerencia">Gerência Responsável</Label>
               <Select name="gerencia">
@@ -91,10 +99,6 @@ export default function CaptureControlPage() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          {/* Column 2 */}
-          <div className="space-y-6">
              <div>
                 <Label htmlFor="control-nature">Natureza do Controle</Label>
                 <Select name="natureza">
@@ -117,6 +121,10 @@ export default function CaptureControlPage() {
                     </SelectContent>
                 </Select>
             </div>
+          </div>
+          
+          {/* Column 3 */}
+          <div className="space-y-6">
             <div>
                 <Label htmlFor="control-frequency">Frequência</Label>
                 <Select name="frequencia">
@@ -132,10 +140,6 @@ export default function CaptureControlPage() {
                     </SelectContent>
                 </Select>
             </div>
-          </div>
-          
-          {/* Column 3 */}
-          <div className="space-y-6">
              <div>
               <Label htmlFor="status">Status</Label>
               <Select name="status">
