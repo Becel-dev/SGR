@@ -47,7 +47,7 @@ export type Control = {
   preenchimentoKPI: string;
   gerenciaRisco: string;
   topRiskAssociado: string;
-  idRiscos: number;
+  idRiscos: string;
   criticidade: string;
 };
 

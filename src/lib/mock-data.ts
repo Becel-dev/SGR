@@ -59,7 +59,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;RUBENS.ALENCAR@RUMOLOG.COM;CS264288@rumolog.com;kaio.farias@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 01.Não integridade Operacional de Ativos',
-        idRiscos: 30,
+        idRiscos: '30',
         criticidade: 'Sim',
     },
     {
@@ -88,7 +88,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;pablo.aguiar@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 01.Não integridade Operacional de Ativos',
-        idRiscos: 30,
+        idRiscos: '30',
         criticidade: 'Sim',
     },
     {
@@ -117,7 +117,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;CS306132@rumolog.com;bruno.dalosto@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 01.Não integridade Operacional de Ativos',
-        idRiscos: 30,
+        idRiscos: '30',
         criticidade: 'Sim',
     },
     {
@@ -146,7 +146,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;pablo.aguiar@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 01.Não integridade Operacional de Ativos',
-        idRiscos: 30,
+        idRiscos: '30',
         criticidade: 'Sim',
     },
      {
@@ -175,7 +175,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;pablo.aguiar@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 01.Não integridade Operacional de Ativos',
-        idRiscos: 30,
+        idRiscos: '30',
         criticidade: 'Sim',
     },
     {
@@ -204,7 +204,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;edson.abe@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 01.Não integridade Operacional de Ativos',
-        idRiscos: 30,
+        idRiscos: '30',
         criticidade: 'Sim',
     },
     {
@@ -233,7 +233,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;bruno.dalosto@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 01.Não integridade Operacional de Ativos',
-        idRiscos: 30,
+        idRiscos: '30',
         criticidade: 'Sim',
     },
     {
@@ -262,7 +262,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;bruno.dalosto@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 01.Não integridade Operacional de Ativos',
-        idRiscos: 30,
+        idRiscos: '30',
         criticidade: 'Sim',
     },
     {
@@ -291,7 +291,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;pablo.aguiar@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 01.Não integridade Operacional de Ativos',
-        idRiscos: 29,
+        idRiscos: '29',
         criticidade: 'Sim',
     },
     {
@@ -320,7 +320,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;kaio.farias@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 01.Não integridade Operacional de Ativos',
-        idRiscos: 29,
+        idRiscos: '29',
         criticidade: 'Sim',
     },
     {
@@ -349,7 +349,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;bruno.dalosto@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 01.Não integridade Operacional de Ativos',
-        idRiscos: 2,
+        idRiscos: '2',
         criticidade: 'Sim',
     },
     {
@@ -378,7 +378,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;bruno.dalosto@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 01.Não integridade Operacional de Ativos',
-        idRiscos: 2,
+        idRiscos: '2',
         criticidade: 'Sim',
     },
     {
@@ -407,7 +407,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;bruno.dalosto@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 02.Acidente com fatalidade ou incapacitante',
-        idRiscos: 1,
+        idRiscos: '1',
         criticidade: 'Sim',
     },
     {
@@ -436,7 +436,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;pablo.aguiar@rumolog.com',
         gerenciaRisco: 'Comercial',
         topRiskAssociado: 'Risco 04.Perdas ou danos ao produto',
-        idRiscos: 18,
+        idRiscos: '18',
         criticidade: 'Sim',
     },
     {
@@ -465,7 +465,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;pablo.aguiar@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 02.Acidente com fatalidade ou incapacitante',
-        idRiscos: 14,
+        idRiscos: '14',
         criticidade: 'Sim',
     },
     {
@@ -494,7 +494,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;kaio.farias@rumolog.com',
         gerenciaRisco: 'Meio Ambiente',
         topRiskAssociado: 'Risco 03.Dano ambiental e/ou à comunidade',
-        idRiscos: 21,
+        idRiscos: '21',
         criticidade: 'Sim',
     },
     {
@@ -523,7 +523,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;edson.abe@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 02.Acidente com fatalidade ou incapacitante',
-        idRiscos: 13,
+        idRiscos: '13',
         criticidade: 'Sim',
     },
     {
@@ -552,7 +552,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;bruno.dalosto@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 02.Acidente com fatalidade ou incapacitante',
-        idRiscos: 13,
+        idRiscos: '13',
         criticidade: 'Sim',
     },
     {
@@ -581,7 +581,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;kaio.farias@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 02.Acidente com fatalidade ou incapacitante',
-        idRiscos: 13,
+        idRiscos: '13',
         criticidade: 'Não',
     },
     {
@@ -610,7 +610,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;pablo.aguiar@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 02.Acidente com fatalidade ou incapacitante',
-        idRiscos: 27,
+        idRiscos: '27',
         criticidade: 'Sim',
     },
     {
@@ -639,7 +639,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;kaio.farias@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 02.Acidente com fatalidade ou incapacitante',
-        idRiscos: 27,
+        idRiscos: '27',
         criticidade: 'Sim',
     },
     {
@@ -668,7 +668,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;bruno.dalosto@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 02.Acidente com fatalidade ou incapacitante',
-        idRiscos: 27,
+        idRiscos: '27',
         criticidade: 'Sim',
     },
     {
@@ -697,7 +697,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;bruno.dalosto@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 04.Perdas ou danos ao produto',
-        idRiscos: 25,
+        idRiscos: '25',
         criticidade: 'Sim',
     },
     {
@@ -726,7 +726,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;edson.abe@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 04.Perdas ou danos ao produto',
-        idRiscos: 25,
+        idRiscos: '25',
         criticidade: 'Sim',
     },
     {
@@ -755,7 +755,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;bruno.dalosto@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 04.Perdas ou danos ao produto',
-        idRiscos: 25,
+        idRiscos: '25',
         criticidade: 'Não',
     },
     {
@@ -784,7 +784,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;kaio.farias@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 01.Não integridade Operacional de Ativos',
-        idRiscos: 28,
+        idRiscos: '28',
         criticidade: 'Sim',
     },
     {
@@ -813,7 +813,7 @@ export const controlsData: Control[] = [
         preenchimentoKPI: 'CS337482@rumolog.com;edson.abe@rumolog.com',
         gerenciaRisco: 'Operação',
         topRiskAssociado: 'Risco 02.Acidente com fatalidade ou incapacitante',
-        idRiscos: 22,
+        idRiscos: '22',
         criticidade: 'Sim',
     },
 ];
@@ -852,20 +852,20 @@ export const risksData: Risk[] = [
 
 export const kpiData = {
   compliance: {
-    value: 92.5,
-    change: 1.2,
+    value: 85.7,
+    change: -5.2,
   },
   overdueItems: {
     value: kpisData.filter(k => k.status === 'Atrasado').length,
-    change: -3,
+    change: 15,
   },
   criticalRisks: {
     value: risksData.filter(r => (r.nivelDeRiscoResidual === 'Crítico' || r.nivelDeRiscoResidual === 'Extremo') && r.possuiCC !== 'Sim').length,
-    change: 1,
+    change: 4,
   },
   controlDeviations: {
     value: controlsData.filter(c => c.status === 'Implementado com Pendência').length,
-    change: 2,
+    change: 5,
   },
 };
 
@@ -876,7 +876,7 @@ export const complianceChartData = [
   { month: 'Apr', compliance: 89, target: 90 },
   { month: 'May', compliance: 93, target: 90 },
   { month: 'Jun', compliance: 95, target: 90 },
-  { month: 'Jul', compliance: 92.5, target: 90 },
+  { month: 'Jul', compliance: 85.7, target: 90 },
 ];
 
 export const recentActivityData: RecentActivity[] = [

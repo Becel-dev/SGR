@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { risksData } from "@/lib/mock-data";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Siren, DollarSign, Target, Shield, Activity, BarChart3, Briefcase, Users, CircleHelp, ClipboardList, TrendingUp } from "lucide-react";
+import { ArrowLeft, Siren, DollarSign, Target, Shield, Activity, BarChart3, Briefcase, Users, CircleHelp, ClipboardList, TrendingUp, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -172,7 +172,13 @@ export default function RiskDetailPage({ params }: { params: { id: string } }) {
                 </Section>
 
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex justify-between">
+                <Button asChild>
+                    <Link href={`/controls/capture?riskId=${risk.id}`}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Adicionar Controle
+                    </Link>
+                </Button>
                  <Button asChild>
                     <Link href={`/risks/capture?id=${risk.id}`}>Editar Risco</Link>
                 </Button>
