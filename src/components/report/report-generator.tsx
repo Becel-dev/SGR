@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useEffect } from 'react';
+import { useFormStatus } from 'react-dom';
 import { generateReportAction, ReportState } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Bot, Loader2, Sparkles } from 'lucide-react';
-import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 function SubmitButton() {
@@ -32,7 +32,7 @@ function SubmitButton() {
 
 export function ReportGenerator() {
   const initialState: ReportState = {};
-  const [state, formAction] = useFormState(generateReportAction, initialState);
+  const [state, formAction] = useActionState(generateReportAction, initialState);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -85,7 +85,7 @@ export function ReportGenerator() {
               <Textarea
                 id="kpi-details"
                 name="kpiDetails"
-                placeholder="Ex: KPI de conformidade das inspeções (Meta: 95%). KPI de ocorrências por trecho (Meta &lt; 1/mês)."
+                placeholder="Ex: KPI de conformidade das inspeções (Meta: 95%). KPI de ocorrências por trecho (Meta < 1/mês)."
                 rows={3}
               />
               {state.errors?.kpiDetails && (
