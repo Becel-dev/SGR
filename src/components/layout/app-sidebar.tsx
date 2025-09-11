@@ -82,7 +82,7 @@ export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
 
                 return (
                   <Tooltip key={item.label}>
-                    <Link href={item.href}>
+                     <Link href={item.href}>
                       <TooltipTrigger className='w-full'>
                          {linkContent}
                       </TooltipTrigger>
