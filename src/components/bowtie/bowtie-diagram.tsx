@@ -359,18 +359,27 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
     const maxMitigatoryBarriers = Math.max(1, ...data.consequences.map(c => c.barriers.length));
     
     const DiagramHeader = ({ title, color, columns, side }: { title: string; color: string; columns?: number; side: 'left' | 'right' }) => (
-        <div className={`flex items-center ${side === 'right' ? 'flex-row-reverse' : ''}`}>
-             <div className={`w-48 px-3 py-1 text-center font-semibold text-sm text-white rounded ${color}`}>
-                {title}
-            </div>
+        <div className={`flex items-center gap-4 ${side === 'left' ? 'justify-start' : 'justify-end'}`}>
+            {side === 'left' && (
+                <>
+                    <div className={`w-48 px-3 py-1 text-center font-semibold text-sm text-white rounded ${color}`}>{title}</div>
+                    <div className="flex-1 h-px bg-gray-300"></div>
+                </>
+            )}
             {Array.from({ length: columns || 0 }).map((_, i) => (
                 <React.Fragment key={i}>
-                    <div className="flex-1 h-px bg-gray-300 mx-4"></div>
                     <div className={`w-48 px-3 py-1 text-center font-semibold text-sm text-gray-600 bg-gray-200 rounded`}>
                        {side === 'left' ? 'Barreira Preventiva' : 'Barreira Mitigatória'}
                     </div>
+                     {i < (columns || 0) - 1 && <div className="flex-1 h-px bg-gray-300"></div>}
                 </React.Fragment>
             ))}
+             {side === 'right' && (
+                <>
+                    <div className="flex-1 h-px bg-gray-300"></div>
+                    <div className={`w-48 px-3 py-1 text-center font-semibold text-sm text-white rounded ${color}`}>{title}</div>
+                </>
+            )}
         </div>
     );
 
