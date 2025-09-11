@@ -366,6 +366,7 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                     <div className="flex-1 h-px bg-gray-300"></div>
                 </>
             )}
+            
             {Array.from({ length: columns || 0 }).map((_, i) => (
                 <React.Fragment key={i}>
                     <div className={`w-48 px-3 py-1 text-center font-semibold text-sm text-gray-600 bg-gray-200 rounded`}>
@@ -374,7 +375,8 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                      {i < (columns || 0) - 1 && <div className="flex-1 h-px bg-gray-300"></div>}
                 </React.Fragment>
             ))}
-             {side === 'right' && (
+            
+            {side === 'right' && (
                 <>
                     <div className="flex-1 h-px bg-gray-300"></div>
                     <div className={`w-48 px-3 py-1 text-center font-semibold text-sm text-white rounded ${color}`}>{title}</div>
