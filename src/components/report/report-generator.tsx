@@ -6,7 +6,6 @@ import { generateReportAction, ReportState } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Bot, Loader2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -52,58 +51,21 @@ export function ReportGenerator() {
           <CardHeader>
             <CardTitle>Gerador de Relatório de Risco com IA</CardTitle>
             <CardDescription>
-              Forneça os detalhes para que a IA possa montar um relatório customizado.
+              Faça uma pergunta ou dê um comando. A IA usará os dados de riscos, controles e KPIs do sistema para gerar o relatório.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="risk-details">Detalhes dos Riscos</Label>
+              <Label htmlFor="prompt">Seu Pedido</Label>
               <Textarea
-                id="risk-details"
-                name="riskDetails"
-                placeholder="Ex: Risco de descarrilamento em curvas de raio reduzido devido a desgaste de trilhos. Atinge principalmente a Malha Sul..."
-                rows={5}
+                id="prompt"
+                name="prompt"
+                placeholder="Ex: Gere um sumário executivo dos riscos críticos com status 'Aberto'. Liste os 5 principais controles com status 'Implementado com Pendência' e seus responsáveis. Quais KPIs estão atrasados e quem são os responsáveis?"
+                rows={8}
               />
-              {state.errors?.riskDetails && (
-                <p className="text-sm text-destructive">{state.errors.riskDetails[0]}</p>
+              {state.errors?.prompt && (
+                <p className="text-sm text-destructive">{state.errors.prompt[0]}</p>
               )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="control-details">Detalhes dos Controles</Label>
-              <Textarea
-                id="control-details"
-                name="controlDetails"
-                placeholder="Ex: Controle preventivo: Inspeção ultrassônica de trilhos com frequência semanal. Controle mitigatório: Redução de velocidade em trechos críticos."
-                rows={5}
-              />
-               {state.errors?.controlDetails && (
-                <p className="text-sm text-destructive">{state.errors.controlDetails[0]}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="kpi-details">Detalhes dos KPIs</Label>
-              <Textarea
-                id="kpi-details"
-                name="kpiDetails"
-                placeholder="Ex: KPI de conformidade das inspeções (Meta: 95%). KPI de ocorrências por trecho (Meta < 1/mês)."
-                rows={3}
-              />
-              {state.errors?.kpiDetails && (
-                <p className="text-sm text-destructive">{state.errors.kpiDetails[0]}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="report-format">Formato do Relatório</Label>
-              <Select name="reportFormat" defaultValue="paragraph">
-                <SelectTrigger id="report-format">
-                  <SelectValue placeholder="Selecione o formato" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="paragraph">Parágrafos</SelectItem>
-                  <SelectItem value="bullet_points">Tópicos (Bullet Points)</SelectItem>
-                  <SelectItem value="executive_summary">Sumário Executivo</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </CardContent>
           <CardFooter>

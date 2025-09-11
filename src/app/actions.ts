@@ -1,32 +1,24 @@
 'use server';
 
 import { generateRiskReport } from '@/ai/flows/generate-risk-report';
+import { controlsData, kpisData, risksData } from '@/lib/mock-data';
 import { z } from 'zod';
 
 const ReportSchema = z.object({
-  riskDetails: z.string().min(10, 'Risk details must be at least 10 characters.'),
-  controlDetails: z.string().min(10, 'Control details must be at least 10 characters.'),
-  kpiDetails: z.string().min(10, 'KPI details must be at least 10 characters.'),
-  reportFormat: z.string(),
+  prompt: z.string().min(10, 'O prompt deve ter pelo menos 10 caracteres.'),
 });
 
 export type ReportState = {
   message?: string;
   errors?: {
-    riskDetails?: string[];
-    controlDetails?: string[];
-    kpiDetails?: string[];
-    reportFormat?: string[];
+    prompt?: string[];
   };
   report?: string;
 };
 
 export async function generateReportAction(prevState: ReportState, formData: FormData): Promise<ReportState> {
   const validatedFields = ReportSchema.safeParse({
-    riskDetails: formData.get('riskDetails'),
-    controlDetails: formData.get('controlDetails'),
-    kpiDetails: formData.get('kpiDetails'),
-    reportFormat: formData.get('reportFormat'),
+    prompt: formData.get('prompt'),
   });
 
   if (!validatedFields.success) {
@@ -37,7 +29,12 @@ export async function generateReportAction(prevState: ReportState, formData: For
   }
 
   try {
-    const result = await generateRiskReport(validatedFields.data);
+    const result = await generateRiskReport({
+      prompt: validatedFields.data.prompt,
+      risks: risksData,
+      controls: controlsData,
+      kpis: kpisData,
+    });
     return {
       message: 'Report generated successfully.',
       report: result.report,

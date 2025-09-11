@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview An AI agent for generating risk reports.
+ * @fileOverview An AI agent for generating risk reports based on system data.
  *
  * - generateRiskReport - A function that generates a risk report.
  * - GenerateRiskReportInput - The input type for the generateRiskReport function.
@@ -10,23 +10,19 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import type { Risk, Control, Kpi } from '@/lib/types';
+
 
 const GenerateRiskReportInputSchema = z.object({
-  riskDetails: z
-    .string()
-    .describe('Detailed information about the risks to be included in the report.'),
-  controlDetails: z
-    .string()
-    .describe('Detailed information about the controls in place for the risks.'),
-  kpiDetails: z.string().describe('Detailed information about the KPIs associated with the risks.'),
-  reportFormat: z
-    .string()
-    .describe('The desired format of the report, e.g., bullet points, paragraph, etc.'),
+  prompt: z.string().describe('The user\'s request or question about the data.'),
+  risks: z.array(z.any()).describe('A list of all risks registered in the system.'),
+  controls: z.array(z.any()).describe('A list of all controls registered in the system.'),
+  kpis: z.array(z.any()).describe('A list of all KPIs registered in the system.'),
 });
 export type GenerateRiskReportInput = z.infer<typeof GenerateRiskReportInputSchema>;
 
 const GenerateRiskReportOutputSchema = z.object({
-  report: z.string().describe('The generated risk report.'),
+  report: z.string().describe('The generated risk report, formatted in Portuguese (pt-br).'),
 });
 export type GenerateRiskReportOutput = z.infer<typeof GenerateRiskReportOutputSchema>;
 
@@ -38,17 +34,28 @@ const prompt = ai.definePrompt({
   name: 'generateRiskReportPrompt',
   input: {schema: GenerateRiskReportInputSchema},
   output: {schema: GenerateRiskReportOutputSchema},
-  prompt: `You are an AI agent specializing in generating comprehensive risk reports.
+  prompt: `Você é um especialista em análise de riscos e geração de relatórios para uma grande empresa de logística (Rumo).
 
-  You will use the provided details about risks, controls, and KPIs to generate a risk report in the specified format.
+Sua tarefa é analisar os dados fornecidos e gerar um relatório claro e conciso em português do Brasil (pt-br) que responda diretamente ao pedido do usuário.
 
-  Risk Details: {{{riskDetails}}}
-  Control Details: {{{controlDetails}}}
-  KPI Details: {{{kpiDetails}}}
-  Report Format: {{{reportFormat}}}
+Aqui estão os dados disponíveis no sistema:
+1. Riscos: Uma lista de todos os riscos mapeados.
+   - Dados de Riscos: {{{json risks}}}
+2. Controles: Uma lista de todos os controles para mitigar os riscos.
+   - Dados de Controles: {{{json controls}}}
+3. KPIs: Uma lista de todos os indicadores chave de performance para monitorar os controles.
+   - Dados de KPIs: {{{json kpis}}}
 
-  Generate the risk report based on the information provided. The report should be well-structured and easy to understand.
-  `,
+Pedido do Usuário:
+"{{{prompt}}}"
+
+Instruções:
+- Baseie sua resposta EXCLUSIVAMENTE nos dados fornecidos (Riscos, Controles, KPIs).
+- Responda de forma direta e objetiva à solicitação do usuário.
+- Se o pedido for para criar um sumário ou listar itens, use tópicos (bullet points) para clareza.
+- Formate a saída como um relatório bem estruturado.
+- Sempre responda em português do Brasil (pt-br).
+`,
 });
 
 const generateRiskReportFlow = ai.defineFlow(
