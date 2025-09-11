@@ -49,7 +49,7 @@ export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
   const SidebarContent = () => (
      <div className="flex h-full max-h-screen flex-col gap-2">
         <div className={cn(
-          "flex h-14 items-center border-b border-sidebar-border px-4 lg:h-[60px] lg:px-6",
+          "flex h-14 items-center border-b border-sidebar-border px-4 lg:h-[60px]",
           isCollapsed && !isMobile && "justify-center px-2"
         )}>
           <Link href="/" className="flex items-center gap-2 font-semibold text-sidebar-foreground">
@@ -82,11 +82,11 @@ export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
 
                 return (
                   <Tooltip key={item.label}>
-                    <TooltipTrigger asChild>
-                      <Link href={item.href}>
+                    <Link href={item.href}>
+                      <TooltipTrigger className='w-full'>
                          {linkContent}
-                      </Link>
-                    </TooltipTrigger>
+                      </TooltipTrigger>
+                    </Link>
                     {isCollapsed && !isMobile && (
                       <TooltipContent side="right">
                         <p>{item.label}</p>
