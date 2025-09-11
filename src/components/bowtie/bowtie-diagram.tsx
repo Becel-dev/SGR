@@ -268,6 +268,11 @@ const Line = ({ position }: { position: 'start' | 'middle' | 'end' }) => (
     </div>
 );
 
+const DiagramHeader = ({ title, color, className }: { title: string; color: string; className?: string }) => (
+    <div className={cn(`px-3 py-1 text-center font-semibold text-sm text-white rounded ${color}`, className)}>
+        {title}
+    </div>
+);
 
 export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, onUpdate: (data: BowtieData) => void, onDelete: (id: string) => void }) => {
 
@@ -358,30 +363,9 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
     const maxPreventiveBarriers = Math.max(1, ...data.threats.map(t => t.barriers.length));
     const maxMitigatoryBarriers = Math.max(1, ...data.consequences.map(c => c.barriers.length));
     
-    const DiagramHeader = ({ title, color, columns, side }: { title: string; color: string; columns?: number; side: 'left' | 'right' }) => (
-        <div className={`flex items-center gap-4 ${side === 'left' ? 'justify-start' : 'justify-end'}`}>
-            {side === 'left' && (
-                <>
-                    <div className={`w-48 px-3 py-1 text-center font-semibold text-sm text-white rounded ${color}`}>{title}</div>
-                    <div className="flex-1 h-px bg-gray-300"></div>
-                </>
-            )}
-            
-            {Array.from({ length: columns || 0 }).map((_, i) => (
-                <React.Fragment key={i}>
-                    <div className={`w-48 px-3 py-1 text-center font-semibold text-sm text-gray-600 bg-gray-200 rounded`}>
-                       {side === 'left' ? 'Barreira Preventiva' : 'Barreira Mitigatória'}
-                    </div>
-                     {i < (columns || 0) - 1 && <div className="flex-1 h-px bg-gray-300"></div>}
-                </React.Fragment>
-            ))}
-            
-            {side === 'right' && (
-                <>
-                    <div className="flex-1 h-px bg-gray-300"></div>
-                    <div className={`w-48 px-3 py-1 text-center font-semibold text-sm text-white rounded ${color}`}>{title}</div>
-                </>
-            )}
+    const barrierTitle = (type: 'preventive' | 'mitigatory') => (
+        <div className="w-48 px-3 py-1 text-center font-semibold text-sm text-gray-600 bg-gray-200 rounded">
+            {type === 'preventive' ? 'Barreira Preventiva' : 'Barreira Mitigatória'}
         </div>
     );
 
@@ -405,25 +389,46 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                     </AlertDialog>
                 </div>
             </CardHeader>
-            <CardContent className="p-4 pt-2">
-                <div className="flex justify-center mb-4">
-                    <div className="w-56 text-center">
-                        <div className="px-3 py-1 font-semibold text-sm text-white rounded bg-green-600">Evento de Topo</div>
-                    </div>
-                </div>
+            <CardContent className="p-4 pt-2 min-w-[1800px]">
 
-                <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-x-4">
+                {/* Headers */}
+                <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-x-4 mb-4">
                     {/* Left Side Header */}
-                    <DiagramHeader title="Ameaça" color="bg-orange-400" columns={maxPreventiveBarriers} side="left" />
+                    <div className='flex items-center gap-4'>
+                        <DiagramHeader title="Ameaça" color="bg-orange-400" className='w-48'/>
+                        <div className="flex-1 h-px bg-gray-300"></div>
+                        <div className='flex items-center gap-4'>
+                             {Array.from({ length: maxPreventiveBarriers }).map((_, i) => (
+                                <React.Fragment key={i}>
+                                    {barrierTitle('preventive')}
+                                    {i < maxPreventiveBarriers - 1 && <div className="flex-1 h-px bg-gray-300"></div>}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    </div>
                     
-                    {/* Spacer */}
-                    <div></div> 
+                    {/* Center Header */}
+                    <div className="w-56 text-center">
+                        <DiagramHeader title="Evento de Topo" color="bg-green-600" />
+                    </div>
                     
                     {/* Right Side Header */}
-                    <DiagramHeader title="Consequência" color="bg-red-500" columns={maxMitigatoryBarriers} side="right" />
+                    <div className='flex items-center gap-4 flex-row-reverse'>
+                         <DiagramHeader title="Consequência" color="bg-red-500" className='w-48'/>
+                         <div className="flex-1 h-px bg-gray-300"></div>
+                         <div className='flex items-center gap-4'>
+                              {Array.from({ length: maxMitigatoryBarriers }).map((_, i) => (
+                                <React.Fragment key={i}>
+                                    {barrierTitle('mitigatory')}
+                                    {i < maxMitigatoryBarriers - 1 && <div className="flex-1 h-px bg-gray-300"></div>}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    </div>
                 </div>
                 
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-4 min-w-[1800px] mt-4">
+                {/* Diagram Content */}
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-4">
                     {/* Left side threats and barriers */}
                     <div className="flex flex-col gap-4">
                         {data.threats.map((threat) => (
