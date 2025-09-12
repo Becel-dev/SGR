@@ -112,13 +112,8 @@ export function RiskMappingDashboard() {
     return (
         <Card className="mt-4">
             <CardHeader>
-                <div className='flex items-start gap-4'>
-                    <Shield className="h-12 w-12 text-primary" />
-                    <div>
-                        <CardTitle className="text-2xl">MAPEAMENTO DO RISCO</CardTitle>
-                        <CardDescription>Mapeamento Geral dos Riscos levantados pela RUMO. Os valores estão em constante mudança e validação pela Curadoria e Comitê de Riscos.</CardDescription>
-                    </div>
-                </div>
+                <CardTitle>Painel de Mapeamento de Risco</CardTitle>
+                <CardDescription>Mapeamento Geral dos Riscos levantados pela RUMO. Os valores estão em constante mudança e validação pela Curadoria e Comitê de Riscos.</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
