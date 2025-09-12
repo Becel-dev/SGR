@@ -82,11 +82,11 @@ export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
 
                 return (
                   <Tooltip key={item.label}>
-                     <Link href={item.href}>
-                      <TooltipTrigger className='w-full'>
+                    <TooltipTrigger asChild>
+                       <Link href={item.href}>
                          {linkContent}
-                      </TooltipTrigger>
-                    </Link>
+                      </Link>
+                    </TooltipTrigger>
                     {isCollapsed && !isMobile && (
                       <TooltipContent side="right">
                         <p>{item.label}</p>
