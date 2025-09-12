@@ -127,9 +127,9 @@ export function RiskMappingDashboard() {
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                     {/* Filtros */}
-                    <div className="lg:col-span-1 space-y-4 p-4 border rounded-lg">
+                    <div className="lg:col-span-2 space-y-4 p-4 border rounded-lg">
                         <div>
                             <h3 className="font-semibold text-center mb-1">TOTAL DE RISCOS</h3>
                             <div className="p-4 bg-primary text-primary-foreground text-center rounded-lg text-4xl font-bold">{risksData.length}</div>
@@ -223,10 +223,10 @@ export function RiskMappingDashboard() {
                             ></div>
                             <ChartContainer 
                                 config={{
-                                    'Risco Aceitável': { color: riskColorMap['Risco Aceitável'] },
-                                    'Risco Gerenciável': { color: riskColorMap['Risco Gerenciável'] },
-                                    'Risco Prioritário': { color: riskColorMap['Risco Prioritário'] },
-                                    'Risco Crítico': { color: riskColorMap['Risco Crítico'] },
+                                    'Risco Aceitável': { label: 'Risco Aceitável', color: riskColorMap['Risco Aceitável'] },
+                                    'Risco Gerenciável': { label: 'Risco Gerenciável', color: riskColorMap['Risco Gerenciável'] },
+                                    'Risco Prioritário': { label: 'Risco Prioritário', color: riskColorMap['Risco Prioritário'] },
+                                    'Risco Crítico': { label: 'Risco Crítico', color: riskColorMap['Risco Crítico'] },
                                 }}
                                 className="w-full h-full"
                             >
@@ -236,7 +236,7 @@ export function RiskMappingDashboard() {
                                     <ZAxis type="number" dataKey="z" range={[100, 1000]} name="IER" />
                                     <ChartTooltip cursor={{ strokeDasharray: '3 3' }} content={<ChartTooltipContent />} />
                                     <ChartLegend 
-                                        content={<ChartLegendContent payload={Object.entries(riskColorMap).map(([name, color]) => ({ value: name, type: 'circle', color: color as string }))} />}
+                                        content={<ChartLegendContent />}
                                         verticalAlign="top" 
                                         wrapperStyle={{top: 0, right: 0}}
                                     />
