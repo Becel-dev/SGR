@@ -1,59 +1,33 @@
 
-import { AlertCircle, BarChart, CheckCircle, TrendingDown } from 'lucide-react';
-import { KpiCard } from '@/components/dashboard/kpi-card';
-import { RiskComplianceChart } from '@/components/dashboard/risk-compliance-chart';
-import { StatusBreakdownChart } from '@/components/dashboard/status-breakdown-chart';
-import { kpiData, risksData } from '@/lib/mock-data';
-import { RecentActivityTable } from '@/components/dashboard/recent-activity-table';
-import { RiskMatrix } from '@/components/dashboard/risk-matrix';
+'use client';
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RiskMappingDashboard } from "@/components/dashboard/risk-mapping-dashboard";
+import { RiskAnalysisDashboard } from "@/components/dashboard/risk-analysis-dashboard";
+import { EsgDashboard } from "@/components/dashboard/esg-dashboard";
+import { MatrixAppetiteDashboard } from "@/components/dashboard/matrix-appetite-dashboard";
 
 export default function DashboardPage() {
   return (
-    <div className="grid gap-6">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          title="% de KPIs em conformidade"
-          value={`${kpiData.compliance.value}%`}
-          change={kpiData.compliance.change}
-          description="no último mês"
-          Icon={CheckCircle}
-        />
-        <KpiCard
-          title="Itens atrasados"
-          value={kpiData.overdueItems.value.toString()}
-          change={kpiData.overdueItems.change}
-          description="no último mês"
-          Icon={AlertCircle}
-        />
-        <KpiCard
-          title="Riscos críticos sem controle"
-          value={kpiData.criticalRisks.value.toString()}
-          change={kpiData.criticalRisks.change}
-          description="novos este mês"
-          Icon={TrendingDown}
-        />
-        <KpiCard
-          title="Controles com desvios"
-          value={kpiData.controlDeviations.value.toString()}
-          change={kpiData.controlDeviations.change}
-          description="reincidentes este mês"
-          Icon={BarChart}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <RiskComplianceChart />
-        </div>
-        <div className="lg:col-span-2">
-            <StatusBreakdownChart />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <RiskMatrix risks={risksData} />
-        <RecentActivityTable />
-      </div>
-    </div>
+    <Tabs defaultValue="risk-mapping">
+      <TabsList className="grid w-full grid-cols-4">
+        <TabsTrigger value="risk-mapping">Mapeamento de Riscos</TabsTrigger>
+        <TabsTrigger value="risk-analysis">Análise do Risco</TabsTrigger>
+        <TabsTrigger value="esg">ESG</TabsTrigger>
+        <TabsTrigger value="matrix-appetite">Matriz & Apetite</TabsTrigger>
+      </TabsList>
+      <TabsContent value="risk-mapping">
+        <RiskMappingDashboard />
+      </TabsContent>
+      <TabsContent value="risk-analysis">
+        <RiskAnalysisDashboard />
+      </TabsContent>
+      <TabsContent value="esg">
+        <EsgDashboard />
+      </TabsContent>
+      <TabsContent value="matrix-appetite">
+        <MatrixAppetiteDashboard />
+      </TabsContent>
+    </Tabs>
   );
 }

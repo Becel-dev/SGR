@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -189,6 +190,27 @@ const ChartTooltipContent = React.forwardRef<
             const key = `${nameKey || item.name || item.dataKey || "value"}`
             const itemConfig = getPayloadConfigFromPayload(config, item, key)
             const indicatorColor = color || item.payload.fill || item.color
+
+            const value = item.value;
+            const name = item.name;
+            const payloadData = item.payload;
+
+            // Specific logic for ScatterChart Tooltip
+            if(payloadData && payloadData.name) {
+                 return (
+                    <div key={index} className="grid gap-1.5">
+                        <div className="font-semibold">{payloadData.name}</div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                            <div className="h-2.5 w-2.5 rounded-full" style={{backgroundColor: indicatorColor}} />
+                            Nível: {payloadData.level}
+                        </div>
+                        <div>Impacto: {payloadData.x}</div>
+                        <div>Probabilidade: {payloadData.y}</div>
+                        <div>IER: {payloadData.z}</div>
+                    </div>
+                 )
+            }
+
 
             return (
               <div
