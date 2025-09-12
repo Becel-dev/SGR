@@ -47,7 +47,7 @@ export default function RisksPage() {
             <div>
                 <CardTitle className="flex items-center gap-2">
                     <Siren />
-                    Captura de Riscos
+                    Análise de Riscos
                 </CardTitle>
                 <CardDescription>
                     Visualize, filtre e gerencie todos os riscos reportados.
@@ -135,5 +135,6 @@ export default function RisksPage() {
     </Card>
   );
 }
+
 
 

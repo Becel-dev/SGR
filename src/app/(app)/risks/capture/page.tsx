@@ -76,7 +76,7 @@ export default function CaptureRiskPage() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <Siren />
-            Cadastro de Novo Risco
+            Análise de Risco
         </CardTitle>
         <CardDescription>
           Preencha os campos abaixo para registrar um novo risco.
@@ -295,3 +295,4 @@ export default function CaptureRiskPage() {
     </Card>
   );
 }
+

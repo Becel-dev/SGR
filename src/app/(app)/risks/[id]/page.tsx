@@ -103,7 +103,7 @@ export default function RiskDetailPage() {
                     <div>
                         <CardTitle className="flex items-center gap-2">
                             <Siren />
-                            Detalhes do Risco: {risk.id}
+                            Análise de Risco: {risk.id}
                         </CardTitle>
                         <CardDescription>
                             {risk.risco}
@@ -281,3 +281,4 @@ export default function RiskDetailPage() {
         </Card>
     );
 }
+
