@@ -18,29 +18,12 @@ const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive"
     'Novo': 'destructive',
     'Em Análise': 'secondary',
     'Analisado': 'default',
-    'Aberto': 'secondary',
-    'Em Tratamento': 'default',
-    'Fechado': 'outline',
-    'Mitigado': 'outline',
 };
 
-const riskLevelVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
-    'Crítico': 'destructive',
-    'Extremo': 'destructive',
-    'Alto': 'default',
-    'Médio': 'secondary',
-    'Baixo': 'outline',
-};
-
-// Define a sort order for statuses
 const statusOrder: { [key: string]: number } = {
   'Novo': 1,
   'Em Análise': 2,
   'Analisado': 3,
-  'Aberto': 4,
-  'Em Tratamento': 5,
-  'Mitigado': 6,
-  'Fechado': 7,
 };
 
 
@@ -50,14 +33,13 @@ export default function RisksPage() {
   const filteredRisks = risksData
     .filter((risk: Risk) => {
         const term = searchTerm.toLowerCase();
-        // Search through all string values of the risk object
         return Object.values(risk).some(value => 
         String(value).toLowerCase().includes(term)
         );
     })
     .sort((a, b) => {
-        const statusA = statusOrder[a.statusDoRisco] || 99;
-        const statusB = statusOrder[b.statusDoRisco] || 99;
+        const statusA = statusOrder[a.status] || 99;
+        const statusB = statusOrder[b.status] || 99;
         return statusA - statusB;
     });
 
@@ -103,38 +85,30 @@ export default function RisksPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Risco</TableHead>
-                <TableHead>Gerência</TableHead>
-                <TableHead>Nível de Risco Residual</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Responsável</TableHead>
-                <TableHead>Próxima Revisão</TableHead>
+                <TableHead>ID</TableHead>
+                <TableHead>Código</TableHead>
+                <TableHead>Nome do Risco</TableHead>
+                <TableHead>IER</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredRisks.map(risk => (
                 <TableRow key={risk.id}>
+                  <TableCell>
+                    <Badge variant={statusVariantMap[risk.status] || 'default'}>{risk.status}</Badge>
+                  </TableCell>
                   <TableCell className="font-mono">{risk.id}</TableCell>
-                  <TableCell className="font-medium">{risk.risco}</TableCell>
-                  <TableCell>{risk.gerencia}</TableCell>
-                  <TableCell>
-                    <Badge 
-                      variant={risk.nivelDeRiscoResidual ? riskLevelVariantMap[risk.nivelDeRiscoResidual] : 'outline'}
-                      className={cn(
-                        risk.nivelDeRiscoResidual === 'Alto' && 'bg-orange-500 text-white dark:bg-orange-500 dark:text-white',
-                        risk.nivelDeRiscoResidual === 'Extremo' && 'bg-red-700 text-white dark:bg-red-700 dark:text-white'
-                      )}
-                    >
-                      {risk.nivelDeRiscoResidual || 'N/A'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariantMap[risk.statusDoRisco] || 'default'}>{risk.statusDoRisco}</Badge>
-                  </TableCell>
-                  <TableCell>{risk.responsavelPeloRisco}</TableCell>
-                  <TableCell>{risk.dataDaProximaRevisao}</TableCell>
+                  <TableCell className="font-medium">{risk.taxonomia}</TableCell>
+                  <TableCell>{risk.risco}</TableCell>
+                   <TableCell className="font-bold">
+                        <span className={cn('p-2 rounded', {
+                            'bg-red-500 text-white': risk.ier > 800,
+                            'bg-orange-400 text-white': risk.ier > 750 && risk.ier <= 800,
+                            'bg-yellow-400 text-black': risk.ier <= 750
+                        })}>{risk.ier}</span>
+                    </TableCell>
                   <TableCell>
                     <Button variant="ghost" size="icon" asChild>
                       <Link href={`/risks/${risk.id}`}>

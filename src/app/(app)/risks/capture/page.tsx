@@ -66,9 +66,9 @@ const Field = ({ label, children, className }: {label: string, children: React.R
 
 export default function CaptureRiskPage() {
     const router = useRouter();
-    const [identificationDate, setIdentificationDate] = useState<Date>();
-    const [lastReviewDate, setLastReviewDate] = useState<Date>();
-    const [nextReviewDate, setNextReviewDate] = useState<Date>();
+    const [criadoDate, setCriadoDate] = useState<Date>();
+    const [modificadoDate, setModificadoDate] = useState<Date>();
+    const [dataAlteracaoCuradoria, setDataAlteracaoCuradoria] = useState<Date>();
     
   return (
     <Card>
@@ -78,7 +78,7 @@ export default function CaptureRiskPage() {
             Análise de Risco
         </CardTitle>
         <CardDescription>
-          Preencha os campos abaixo para registrar um novo risco.
+          Preencha os campos abaixo para analisar um risco.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -86,131 +86,106 @@ export default function CaptureRiskPage() {
           
           <Section title="Identificação e Contexto" icon={Briefcase} defaultOpen>
             <Field label="ID"><Input name="id" placeholder="Ex: 1" /></Field>
-            <Field label="Risco (Título)" className="sm:col-span-3"><Input name="risco" placeholder="Título resumido do risco" /></Field>
-            <Field label="Descrição do Risco" className="sm:col-span-4"><Textarea name="descricaoDoRisco" rows={3} placeholder="Descreva o risco em detalhes" /></Field>
-            <Field label="Diretoria"><Input name="diretoria" /></Field>
             <Field label="Gerência"><Input name="gerencia" /></Field>
-            <Field label="Processo"><Input name="processo" /></Field>
-             <Field label="Data de Identificação">
+            <Field label="Risco (Nome)" className="sm:col-span-2"><Input name="risco" placeholder="Nome do Risco" /></Field>
+            <Field label="TopRisk Associado" className="sm:col-span-2"><Input name="topRiskAssociado" /></Field>
+            <Field label="Fator de Risco" className="sm:col-span-2"><Input name="fatorDeRisco" /></Field>
+            <Field label="Taxonomia (Código)"><Input name="taxonomia" placeholder="RISK-CR-Negócio-1" /></Field>
+            <Field label="Categoria"><Input name="categoriaDoRisco" placeholder="RISK-CR-Negócio"/></Field>
+            <Field label="Contexto" className="sm:col-span-2"><Textarea name="contexto" /></Field>
+            <Field label="Observação" className="sm:col-span-2"><Textarea name="observacao" /></Field>
+          </Section>
+          
+          <Section title="Análise e Classificação" icon={BarChart3}>
+                <Field label="IMP"><Input name="imp" type="number" /></Field>
+                <Field label="ORG"><Input name="org" type="number" /></Field>
+                <Field label="PROB"><Input name="prob" type="number" /></Field>
+                <Field label="CTRL"><Input name="ctrl" type="number" /></Field>
+                <Field label="TEMPO"><Input name="tempo" type="number" /></Field>
+                <Field label="FACIL"><Input name="facil" type="number" /></Field>
+                <Field label="IER"><Input name="ier" type="number" disabled placeholder="Calculado" /></Field>
+                <Field label="Origem"><Input name="origem" /></Field>
+                <Field label="Tipo IER"><Input name="tipoIER" /></Field>
+                <Field label="X"><Input name="x" /></Field>
+                <Field label="Y"><Input name="y" /></Field>
+          </Section>
+
+          <Section title="ESG e Governança" icon={ClipboardList}>
+              <Field label="Englobador"><Input name="englobador" /></Field>
+              <Field label="Pilar"><Input name="pilar" /></Field>
+              <Field label="Pilar ESG"><Input name="pilarESG" /></Field>
+              <Field label="Tema Material"><Input name="temaMaterial" /></Field>
+              <Field label="GE de Origem do Risco"><Input name="geOrigemRisco" /></Field>
+          </Section>
+
+          <Section title="Gestão e Prazos" icon={Activity}>
+            <Field label="Status do Risco">
+                <Select name="status"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Novo">Novo</SelectItem>
+                        <SelectItem value="Em Análise">Em Análise</SelectItem>
+                        <SelectItem value="Analisado">Analisado</SelectItem>
+                    </SelectContent>
+                </Select>
+            </Field>
+            <Field label="Responsável pelo Bowtie"><Input name="responsavelBowtie" /></Field>
+            <Field label="Horizonte Tempo"><Input name="horizonteTempo" /></Field>
+            <Field label="Data Alteração Curadoria">
                  <Popover>
                     <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {identificationDate ? <span>{identificationDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
+                        {dataAlteracaoCuradoria ? <span>{dataAlteracaoCuradoria.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
                     </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={identificationDate} onSelect={setIdentificationDate} initialFocus/></PopoverContent>
+                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dataAlteracaoCuradoria} onSelect={setDataAlteracaoCuradoria}/></PopoverContent>
                 </Popover>
             </Field>
-            <Field label="Causa Raiz" className="sm:col-span-2"><Textarea name="causaRaizDoRisco" rows={3} placeholder="Descreva a causa principal" /></Field>
-            <Field label="Consequência" className="sm:col-span-2"><Textarea name="consequenciaDoRisco" rows={3} placeholder="Descreva a principal consequência" /></Field>
+            <Field label="Criado">
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {criadoDate ? <span>{criadoDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={criadoDate} onSelect={setCriadoDate} initialFocus/></PopoverContent>
+                </Popover>
+            </Field>
+            <Field label="Criado Por"><Input name="criadoPor" /></Field>
+            <Field label="Modificado">
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {modificadoDate ? <span>{modificadoDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={modificadoDate} onSelect={setModificadoDate} /></PopoverContent>
+                </Popover>
+            </Field>
+            <Field label="Modificado Por"><Input name="modificadoPor" /></Field>
           </Section>
 
-          <Section title="Categorização" icon={ClipboardList}>
-                <Field label="Origem do Risco">
-                    <Select name="origemDoRisco">
-                        <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Técnico">Técnico</SelectItem>
-                            <SelectItem value="Negócio">Negócio</SelectItem>
-                            <SelectItem value="Externo">Externo</SelectItem>
-                            <SelectItem value="Interno">Interno</SelectItem>
-                            <SelectItem value="Regulatório">Regulatório</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </Field>
-                <Field label="Tipo de Risco"><Input name="tipoDeRisco" /></Field>
-                <Field label="Categoria do Risco"><Input name="categoriaDoRisco" /></Field>
-                <Field label="Processo Afetado"><Input name="processoAfetado" /></Field>
-          </Section>
-          
-          <Section title="Análise de Risco (Inerente e Residual)" icon={BarChart3}>
-                <Field label="Probabilidade Inerente">
-                    <Select name="probabilidadeInerente"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Raro">Raro</SelectItem><SelectItem value="Improvável">Improvável</SelectItem><SelectItem value="Possível">Possível</SelectItem>
-                            <SelectItem value="Provável">Provável</SelectItem><SelectItem value="Quase Certo">Quase Certo</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </Field>
-                <Field label="Impacto Inerente">
-                    <Select name="impactoInerente"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Insignificante">Insignificante</SelectItem><SelectItem value="Menor">Menor</SelectItem><SelectItem value="Moderado">Moderado</SelectItem>
-                            <SelectItem value="Maior">Maior</SelectItem><SelectItem value="Catastrófico">Catastrófico</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </Field>
-                <Field label="Nível de Risco Inerente"><Input name="nivelDeRiscoInerente" disabled placeholder="Calculado" /></Field>
-                <Field label="Probabilidade Residual">
-                    <Select name="probabilidadeResidual"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Raro">Raro</SelectItem><SelectItem value="Improvável">Improvável</SelectItem><SelectItem value="Possível">Possível</SelectItem>
-                            <SelectItem value="Provável">Provável</SelectItem><SelectItem value="Quase Certo">Quase Certo</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </Field>
-                <Field label="Impacto Residual">
-                    <Select name="impactoResidual"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Insignificante">Insignificante</SelectItem><SelectItem value="Menor">Menor</SelectItem><SelectItem value="Moderado">Moderado</SelectItem>
-                            <SelectItem value="Maior">Maior</SelectItem><SelectItem value="Catastrófico">Catastrófico</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </Field>
-                <Field label="Nível de Risco Residual"><Input name="nivelDeRiscoResidual" disabled placeholder="Calculado" /></Field>
-          </Section>
-
-          <Section title="Tratamento e Monitoramento" icon={Activity}>
-            <Field label="Estratégia (Ação)"><Input name="estrategia" /></Field>
-            <Field label="Descrição do Controle" className="sm:col-span-3"><Textarea name="descricaoDoControle" placeholder="Descreva o controle aplicado" /></Field>
-            <Field label="Status do Risco">
-                <Select name="statusDoRisco"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+           <Section title="Controles e Bowtie" icon={ClipboardList}>
+              <Field label="Bowtie Realizado">
+                <Select name="bowtieRealizado"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="Aberto">Aberto</SelectItem><SelectItem value="Em Tratamento">Em Tratamento</SelectItem><SelectItem value="Fechado">Fechado</SelectItem><SelectItem value="Mitigado">Mitigado</SelectItem>
+                        <SelectItem value="Sim">Sim</SelectItem>
+                        <SelectItem value="Não">Não</SelectItem>
+                        <SelectItem value="Realizado">Realizado</SelectItem>
                     </SelectContent>
                 </Select>
-            </Field>
-            <Field label="Plano de Ação"><Input name="planoDeAcao" /></Field>
-            <Field label="Responsável"><Input name="responsavelPeloRisco" /></Field>
-            <Field label="Data da Última Revisão">
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {lastReviewDate ? <span>{lastReviewDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={lastReviewDate} onSelect={setLastReviewDate} /></PopoverContent>
-                </Popover>
-            </Field>
-            <Field label="Próxima Revisão">
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {nextReviewDate ? <span>{nextReviewDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={nextReviewDate} onSelect={setNextReviewDate}/></PopoverContent>
-                </Popover>
-            </Field>
-          </Section>
-
-          <Section title="Outras Classificações" icon={ClipboardList}>
-              <Field label="Top Risk Associado"><Input name="topRiskAssociado" /></Field>
-              <Field label="Fator de Risco"><Input name="fatorDeRisco" /></Field>
-              <Field label="Pilar"><Input name="pilar" /></Field>
-              <Field label="Pilar ESG"><Input name="pilarESG" /></Field>
-              <Field label="Contexto"><Input name="contexto" /></Field>
-              <Field label="Bowtie"><Input name="bowtie" /></Field>
-              <Field label="Observação"><Textarea name="observacao" /></Field>
-              <Field label="Possui CC"><Input name="possuiCC" /></Field>
-              <Field label="URL do CC"><Input name="urlDoCC" /></Field>
-              <Field label="Status do Controle"><Input name="statusControle" /></Field>
-              <Field label="Horizonte"><Input name="horizonte" /></Field>
-              <Field label="Englobado"><Input name="englobado" /></Field>
-              <Field label="Tronco"><Input name="tronco" /></Field>
+              </Field>
+              <Field label="Possui CC">
+                 <Select name="possuiCC"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Sim">Sim</SelectItem>
+                        <SelectItem value="Não">Não</SelectItem>
+                    </SelectContent>
+                </Select>
+              </Field>
+              <Field label="URL do CC" className="sm:col-span-2"><Input name="urlDoCC" /></Field>
           </Section>
         </form>
       </CardContent>

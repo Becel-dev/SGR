@@ -26,6 +26,8 @@ const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive"
     'Em Tratamento': 'default',
     'Fechado': 'outline',
     'Mitigado': 'outline',
+    'Novo': 'destructive',
+    'Em Análise': 'secondary',
 };
 
 const controlStatusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
@@ -36,7 +38,7 @@ const controlStatusVariantMap: { [key: string]: "default" | "secondary" | "destr
 };
 
 const DetailItem = ({ label, value, className, isBadge = false }: { label: string, value: React.ReactNode, className?: string, isBadge?: boolean }) => {
-    if (!value && value !== 0) return null;
+    if (!value && value !== 0 && value !== '') return null;
 
     let displayValue: React.ReactNode = value;
     let ValueWrapper: 'p' | 'div' = 'p';
@@ -70,7 +72,7 @@ const Section = ({ title, children, icon: Icon }: { title: string, children: Rea
 export default function RiskDetailPage() {
     const params = useParams();
     const { id } = params;
-    const [risk, setRisk] = useState<(typeof risksData[0]) | undefined>(undefined);
+    const [risk, setRisk] = useState<Risk | undefined>(undefined);
     const [relatedControls, setRelatedControls] = useState<Control[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -94,7 +96,7 @@ export default function RiskDetailPage() {
         return notFound();
     }
     
-    const hasBowtie = risk.bowtie === 'Realizado' || risk.bowtie === 'Sim';
+    const hasBowtie = risk.bowtieRealizado === 'Realizado' || risk.bowtieRealizado === 'Sim';
 
     return (
         <Card>
@@ -118,63 +120,56 @@ export default function RiskDetailPage() {
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
-
                 <Section title="Identificação e Contexto" icon={Briefcase}>
-                    <DetailItem label="Diretoria" value={risk.diretoria} />
+                    <DetailItem label="ID" value={risk.id} />
+                    <DetailItem label="Risco" value={risk.risco} className="sm:col-span-3"/>
                     <DetailItem label="Gerência" value={risk.gerencia} />
-                    <DetailItem label="Processo" value={risk.processo} />
-                    <DetailItem label="Data de Identificação" value={risk.dataDeIdentificacao} />
-                    <DetailItem label="Descrição Detalhada" value={risk.descricaoDoRisco} className="sm:col-span-2 md:col-span-4"/>
-                    <DetailItem label="Causa Raiz" value={risk.causaRaizDoRisco} className="sm:col-span-2"/>
-                    <DetailItem label="Consequência" value={risk.consequenciaDoRisco} className="sm:col-span-2"/>
+                    <DetailItem label="TopRisk Associado" value={risk.topRiskAssociado} className="sm:col-span-3"/>
+                    <DetailItem label="Fator de Risco" value={risk.fatorDeRisco} className="sm:col-span-4"/>
+                    <DetailItem label="Taxonomia" value={risk.taxonomia} />
+                    <DetailItem label="Contexto" value={risk.contexto} className="sm:col-span-3"/>
+                    <DetailItem label="Observação" value={risk.observacao} className="sm:col-span-4"/>
                 </Section>
                 
-                <Section title="Categorização" icon={ClipboardList}>
-                    <DetailItem label="Origem do Risco" value={risk.origemDoRisco} />
-                    <DetailItem label="Tipo de Risco" value={risk.tipoDeRisco} />
-                    <DetailItem label="Categoria do Risco" value={risk.categoriaDoRisco} />
-                    <DetailItem label="Processo Afetado" value={risk.processoAfetado} />
-                </Section>
-                
-                <Section title="Análise de Risco" icon={BarChart3}>
-                    <DetailItem label="Probabilidade Inerente" value={risk.probabilidadeInerente} />
-                    <DetailItem label="Impacto Inerente" value={risk.impactoInerente} />
-                    <DetailItem label="Nível de Risco Inerente" value={risk.nivelDeRiscoInerente} isBadge />
-                    <DetailItem label="Probabilidade Residual" value={risk.probabilidadeResidual} />
-                    <DetailItem label="Impacto Residual" value={risk.impactoResidual} />
-                    <DetailItem label="Nível de Risco Residual" value={risk.nivelDeRiscoResidual} isBadge />
+                <Section title="Análise e Classificação" icon={BarChart3}>
+                    <DetailItem label="IMP" value={risk.imp} />
+                    <DetailItem label="ORG" value={risk.org} />
+                    <DetailItem label="PROB" value={risk.prob} />
+                    <DetailItem label="CTRL" value={risk.ctrl} />
+                    <DetailItem label="TEMPO" value={risk.tempo} />
+                    <DetailItem label="FACIL" value={risk.facil} />
+                    <DetailItem label="IER" value={risk.ier} />
+                    <DetailItem label="Origem" value={risk.origem} />
+                    <DetailItem label="Tipo IER" value={risk.tipoIER} />
+                    <DetailItem label="X" value={risk.x} />
+                    <DetailItem label="Y" value={risk.y} />
+                    <DetailItem label="Englobador" value={risk.englobador} />
                 </Section>
 
-                <Section title="Tratamento e Controles" icon={Shield}>
-                     <DetailItem label="Estratégia de Resposta (Ação)" value={risk.estrategia} />
-                     <DetailItem label="Descrição do Controle" value={risk.descricaoDoControle} className="sm:col-span-4" />
+                <Section title="ESG e Governança" icon={Shield}>
+                     <DetailItem label="Pilar" value={risk.pilar} />
+                     <DetailItem label="Tema Material" value={risk.temaMaterial} />
+                     <DetailItem label="Pilar ESG" value={risk.pilarESG} />
+                     <DetailItem label="GE de Origem do Risco" value={risk.geOrigemRisco} />
                 </Section>
                 
-                <Section title="Gestão e Monitoramento" icon={Activity}>
-                    <DetailItem label="Status do Risco" value={risk.statusDoRisco} isBadge />
-                    <DetailItem label="Plano de Ação" value={risk.planoDeAcao} />
-                    <DetailItem label="Responsável" value={risk.responsavelPeloRisco} />
-                    <DetailItem label="Data da Última Revisão" value={risk.dataDaUltimaRevisao} />
-                    <DetailItem label="Próxima Revisão" value={risk.dataDaProximaRevisao} />
+                <Section title="Gestão e Prazos" icon={Activity}>
+                    <DetailItem label="Status do Risco" value={risk.status} isBadge />
+                    <DetailItem label="Responsável pelo Bowtie" value={risk.responsavelBowtie} />
+                    <DetailItem label="Horizonte Tempo" value={risk.horizonteTempo} />
+                    <DetailItem label="Data Alteração Curadoria" value={risk.dataAlteracaoCuradoria} />
+                    <DetailItem label="Criado em" value={risk.criado} />
+                    <DetailItem label="Criado por" value={risk.criadoPor} />
+                    <DetailItem label="Modificado em" value={risk.modificado} />
+                    <DetailItem label="Modificado por" value={risk.modificadoPor} />
                 </Section>
 
-                <Section title="Outras Classificações" icon={CircleHelp}>
-                    <DetailItem label="Top Risk Associado" value={risk.topRiskAssociado} />
-                    <DetailItem label="Fator de Risco" value={risk.fatorDeRisco} />
-                    <DetailItem label="Pilar" value={risk.pilar} />
-                    <DetailItem label="Pilar ESG" value={risk.pilarESG} />
-                    <DetailItem label="Contexto" value={risk.contexto} />
-                    <DetailItem label="Bowtie" value={risk.bowtie} />
+                <Section title="Controles e Bowtie" icon={CircleHelp}>
+                    <DetailItem label="Bowtie Realizado" value={risk.bowtieRealizado} />
                     <DetailItem label="Possui CC" value={risk.possuiCC} />
                     <DetailItem label="URL do CC" value={risk.urlDoCC} />
-                    <DetailItem label="Status do Controle" value={risk.statusControle} />
-                    <DetailItem label="Horizonte" value={risk.horizonte} />
-                    <DetailItem label="Englobado" value={risk.englobado} />
-                    <DetailItem label="Tronco" value={risk.tronco} />
-                    <DetailItem label="Observação" value={risk.observacao} className="sm:col-span-4" />
                 </Section>
                 
-
                 {relatedControls.length > 0 && (
                     <div className="space-y-4 rounded-lg border p-4">
                         <h3 className="font-semibold text-lg flex items-center gap-2">

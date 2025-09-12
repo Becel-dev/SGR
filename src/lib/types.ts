@@ -54,81 +54,47 @@ export type Control = {
 
 export type Risk = {
   id: string;
-  risco: string; 
-  descricaoDoRisco: string;
-  processo: string;
+  status: 'Novo' | 'Em Análise' | 'Analisado';
   gerencia: string;
-  diretoria: string;
-  dataDeIdentificacao: string;
-  origemDoRisco: string;
-  causaRaizDoRisco: string;
-  consequenciaDoRisco: string;
-  categoriaDoRisco: string;
-  tipoDeRisco: string;
-  processoAfetado: string;
-  
-  estrategia: string;
-  descricaoDoControle: string;
-  
-  probabilidadeInerente: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo' | '';
-  impactoInerente: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico' | '';
-  nivelDeRiscoInerente: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | ''; 
-  
-  probabilidadeResidual: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo' | '';
-  impactoResidual: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico' | '';
-  nivelDeRiscoResidual: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | ''; 
-  
-  statusDoRisco: 'Aberto' | 'Em Tratamento' | 'Fechado' | 'Mitigado' | 'Novo' | 'Em Análise' | 'Analisado' | '';
-  planoDeAcao: string;
-  responsavelPeloRisco: string;
-  dataDaUltimaRevisao: string;
-  dataDaProximaRevisao: string;
-  
-  // Mapeados da Identificação
+  risco: string;
   topRiskAssociado: string;
   fatorDeRisco: string;
+  categoria: string;
+  taxonomia: string;
 
-  // Pontuações
-  imp: number; // Potencial de Impacto Corporativo
-  org: number; // Relevância Organizacional
-  prob: number; // Probabilidade Contextualizada
-  ctrl: number; // Capacidade Atual de Controle
-  tempo: number; // Tempo Estimado de Contenção
-  facil: number; // Facilidade Técnica de Ocorrência
-  ier: number; // Índice de Exposição ao Risco (Calculado)
+  imp: number;
+  org: number;
+  prob: number;
+  ctrl: number;
+  tempo: number;
+  facil: number;
+  ier: number;
+  
+  responsavelBowtie: string;
+  x: number;
+  y: number;
+  origem: string;
+  tipoIER: string;
+  
+  modificado: string;
+  criado: string;
+  criadoPor: string;
+  modificadoPor: string;
 
-  // Campos adicionais da planilha
-  dataDaAvaliacao: string;
-  contexto: string;
-  bowtie: string; 
-  observacao: string;
-  pilar: string;
-  pilarESG: string;
-  indicador: string;
-  subtema: string;
-  ge: string;
-  gr: string;
-  categoriaMP: string;
-  orig: number; 
-  elev: number;
-  filho: string;
-  v: number;
-  d: number;
-  g: number;
-  u: number;
-  t_score: number;
-  i_score: number;
-  oredsX: number;
-  t_rating: number;
-  riscosAceitaveis: string;
-  riscosNaoAceitaveis: string;
-  riscosMix: string;
-  statusControle: string;
+  bowtieRealizado: string;
   urlDoCC: string;
   possuiCC: string;
-  tronco: string;
-  englobado: string;
-  horizonte: string;
+  
+  pilar: string;
+  temaMaterial: string;
+  pilarESG: string;
+  englobador: string;
+  horizonteTempo: string;
+  geOrigemRisco: string;
+  
+  observacao: string;
+  dataAlteracaoCuradoria: string;
+  contexto: string;
 };
 
 
@@ -214,4 +180,3 @@ export type IdentifiedRisk = {
   // Field 16
   technicalFeasibility: number; // 0-10 - FACIL
 };
-
