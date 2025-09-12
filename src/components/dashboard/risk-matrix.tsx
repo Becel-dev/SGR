@@ -4,9 +4,6 @@ import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import type { Risk } from "@/lib/types";
 
-const probabilityLevels: Risk['probabilidadeResidual'][] = ["Pouco Provável", "Possível", "Provável", "Muito Provável"];
-const impactLevels: Risk['impactoResidual'][] = ["Baixo", "Moderado", "Significativo", "Alto"];
-
 const matrixConfig = {
     probabilities: [
         { level: "Muito Provável", weight: 10, num: 4 },
@@ -27,10 +24,10 @@ const matrixConfig = {
         [63, 125, 200, 250],
     ],
     colors: [ // From Top-Left to Bottom-Right
-        ["bg-yellow-400", "bg-orange-500", "bg-red-600", "bg-red-600"],
-        ["bg-yellow-400", "bg-yellow-400", "bg-orange-500", "bg-red-600"],
-        ["bg-green-400", "bg-yellow-400", "bg-orange-500", "bg-orange-500"],
-        ["bg-green-400", "bg-green-400", "bg-yellow-400", "bg-yellow-400"],
+        ["bg-yellow-400 text-black", "bg-orange-500 text-white", "bg-red-600 text-white", "bg-red-600 text-white"],
+        ["bg-yellow-400 text-black", "bg-yellow-400 text-black", "bg-orange-500 text-white", "bg-red-600 text-white"],
+        ["bg-green-400 text-black", "bg-yellow-400 text-black", "bg-orange-500 text-white", "bg-orange-500 text-white"],
+        ["bg-green-400 text-black", "bg-green-400 text-black", "bg-yellow-400 text-black", "bg-yellow-400 text-black"],
     ]
 };
 
@@ -55,8 +52,8 @@ const calculateRiskCounts = (risks: Risk[]) => {
     return counts;
 };
 
-const Cell = ({ className, children, ...props }: { className?: string, children?: React.ReactNode, [key:string]: any }) => (
-    <div className={`flex items-center justify-center p-1 text-xs font-bold ${className}`} {...props}>
+const Cell = ({ className, children }: { className?: string; children: React.ReactNode }) => (
+    <div className={`flex flex-col items-center justify-center p-1 text-xs font-bold h-16 w-20 text-center ${className}`}>
         {children}
     </div>
 );
@@ -70,47 +67,42 @@ export function RiskMatrix({risks}: {risks: Risk[]}) {
         <CardTitle>Matriz de Risco Residual</CardTitle>
         <CardDescription>Distribuição de riscos por probabilidade e impacto.</CardDescription>
       </CardHeader>
-      <CardContent className="overflow-x-auto p-4 flex justify-center">
-        <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto] grid-rows-[auto_auto_auto_auto_auto_auto_auto] text-white" style={{ fontFamily: 'Arial, sans-serif' }}>
-            
-            {/* Row 1: Impact Header */}
-            <Cell className="col-start-4 col-span-4 bg-transparent text-black">IMPACTO</Cell>
+      <CardContent className="overflow-x-auto p-4 flex flex-col items-center gap-4">
+        
+        <p className="font-bold">IMPACTO</p>
+        <div className="flex items-end">
+            <p className="font-bold writing-mode-vertical-rl rotate-180">PROBABILIDADE</p>
+            <div className="grid grid-cols-[auto_repeat(4,_minmax(0,_1fr))] text-sm">
+                {/* Header Row 1: PESOS + weights */}
+                <div className="flex items-center justify-center font-bold bg-gray-200 text-black p-2">PESOS</div>
+                {matrixConfig.impacts.map(impact => (
+                    <div key={impact.weight} className="flex items-center justify-center font-bold bg-gray-200 text-black p-2">{impact.weight}</div>
+                ))}
 
-            {/* Row 2: Matrix Title and Impact Levels */}
-            <Cell className="col-start-1 col-span-2 row-start-2 row-span-2 bg-[#0F1E36] text-base">MATRIZ DE RISCO</Cell>
-            {matrixConfig.impacts.map(impact => (
-                <Cell key={impact.level} className="bg-[#1D3C67] writing-mode-vertical-rl rotate-180 py-2 h-24">{impact.level.toUpperCase()}</Cell>
-            ))}
+                {/* Header Row 2: Empty + A, B, C, D */}
+                <div className="bg-gray-200"></div>
+                {matrixConfig.impacts.map(impact => (
+                    <div key={impact.letter} className="flex items-center justify-center font-bold bg-black text-white p-2">{impact.letter}</div>
+                ))}
 
-            {/* Row 3: Pesos and Impact Weights */}
-            <Cell className="col-start-2 row-start-4 bg-gray-300 text-black">PESOS</Cell>
-            {matrixConfig.impacts.map(impact => (
-                 <Cell key={impact.weight} className="bg-gray-200 text-black">{impact.weight}</Cell>
-            ))}
-           
-            {/* Row 4: Letters */}
-            <Cell className="col-start-3 row-start-5 bg-black" /> 
-            {matrixConfig.impacts.map(impact => (
-                <Cell key={impact.letter} className="bg-black">{impact.letter}</Cell>
-            ))}
-
-            {/* Row 5-8: Probability, Weights, and IER Matrix */}
-            <Cell className="row-start-5 row-span-4 bg-gray-200 text-black writing-mode-vertical-rl rotate-180">PROBABILIDADE</Cell>
-            
-            {matrixConfig.probabilities.map((prob, probIndex) => (
-                <React.Fragment key={prob.level}>
-                    <Cell className="bg-[#1D3C67] px-2 w-32">{prob.level.toUpperCase()}</Cell>
-                    <Cell className="bg-gray-200 text-black">{prob.weight.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}</Cell>
-                    <Cell className="bg-black">{prob.num}</Cell>
-                    {matrixConfig.ierValues[probIndex].map((ier, ierIndex) => (
-                        <Cell key={ierIndex} className={`${matrixConfig.colors[probIndex][ierIndex]} text-black h-16 w-20 flex-col text-sm`}>
-                            <span>{ier}</span>
-                            <span className="text-lg">{riskCounts[probIndex][ierIndex] > 0 ? riskCounts[probIndex][ierIndex] : ''}</span>
-                        </Cell>
-                    ))}
-                </React.Fragment>
-            ))}
-
+                {/* Matrix Body */}
+                {matrixConfig.probabilities.map((prob, rowIndex) => (
+                    <React.Fragment key={prob.level}>
+                        <div className="flex flex-col items-center justify-center font-bold bg-gray-200 text-black p-2">
+                            <span>{prob.weight.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}</span>
+                            <span className="bg-black text-white w-full text-center my-1">{prob.num}</span>
+                        </div>
+                        {matrixConfig.ierValues[rowIndex].map((ier, colIndex) => (
+                            <div key={colIndex} className={`flex flex-col items-center justify-center p-1 text-sm font-bold h-16 w-20 text-center ${matrixConfig.colors[rowIndex][colIndex]}`}>
+                                <span>{ier}</span>
+                                {riskCounts[rowIndex][colIndex] > 0 && (
+                                     <span className="text-lg">{riskCounts[rowIndex][colIndex]}</span>
+                                )}
+                            </div>
+                        ))}
+                    </React.Fragment>
+                ))}
+            </div>
         </div>
       </CardContent>
     </Card>
