@@ -95,6 +95,7 @@ export type Risk = {
   observacao: string;
   dataAlteracaoCuradoria: string;
   contexto: string;
+  responsavel?: string;
 };
 
 
