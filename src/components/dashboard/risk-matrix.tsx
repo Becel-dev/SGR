@@ -52,11 +52,6 @@ const calculateRiskCounts = (risks: Risk[]) => {
     return counts;
 };
 
-const Cell = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-    <div className={`flex flex-col items-center justify-center p-1 text-xs font-bold h-16 w-20 text-center ${className}`}>
-        {children}
-    </div>
-);
 
 export function RiskMatrix({risks}: {risks: Risk[]}) {
   const riskCounts = calculateRiskCounts(risks);
@@ -70,8 +65,10 @@ export function RiskMatrix({risks}: {risks: Risk[]}) {
       <CardContent className="overflow-x-auto p-4 flex flex-col items-center gap-4">
         
         <p className="font-bold">IMPACTO</p>
-        <div className="flex items-end">
-            <p className="font-bold writing-mode-vertical-rl rotate-180">PROBABILIDADE</p>
+        <div className="flex items-center">
+            <div className="flex items-center justify-center -mr-4">
+                 <p className="font-bold [writing-mode:vertical-rl] rotate-180">PROBABILIDADE</p>
+            </div>
             <div className="grid grid-cols-[auto_auto_repeat(4,_minmax(0,_1fr))] text-sm">
                 {/* Header Row 1: PESOS + weights */}
                 <div className="col-span-2 flex items-center justify-center font-bold bg-gray-200 text-black p-2">PESOS</div>
@@ -110,3 +107,4 @@ export function RiskMatrix({risks}: {risks: Risk[]}) {
     </Card>
   );
 }
+
