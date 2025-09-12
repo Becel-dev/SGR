@@ -11,7 +11,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Cell } from 'recharts';
 import { risksData } from '@/lib/mock-data';
 import type { Risk } from '@/lib/types';
-import Image from 'next/image';
 import { Shield } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 import { cn } from '@/lib/utils';
@@ -122,7 +121,7 @@ export function RiskMappingDashboard() {
                 <div className='flex items-start gap-4'>
                     <Shield className="h-12 w-12 text-primary" />
                     <div>
-                        <CardTitle className="text-2xl">MAPEAMENTO DO RISCO v0.7</CardTitle>
+                        <CardTitle className="text-2xl">MAPEAMENTO DO RISCO</CardTitle>
                         <CardDescription>Mapeamento Geral dos Riscos levantados pela RUMO. Os valores estão em constante mudança e validação pela Curadoria e Comitê de Riscos.</CardDescription>
                     </div>
                 </div>
@@ -188,13 +187,16 @@ export function RiskMappingDashboard() {
                             <h3 className="font-semibold">TopRisks</h3>
                             <div className="space-y-2 mt-2">
                                 {topRisksFilters.map(topRisk => (
-                                    <div key={topRisk} className="flex items-center space-x-2">
+                                    <div key={topRisk} className="flex items-start space-x-2">
                                         <Checkbox 
                                             id={topRisk} 
                                             checked={topRisksFiltro.includes(topRisk)}
                                             onCheckedChange={() => handleTopRiskChange(topRisk)}
+                                            className="mt-1"
                                         />
-                                        <label htmlFor={topRisk} className="text-sm">{topRisk}</label>
+                                        <label htmlFor={topRisk} className="text-sm leading-snug">
+                                            {topRisk}
+                                        </label>
                                     </div>
                                 ))}
                             </div>
