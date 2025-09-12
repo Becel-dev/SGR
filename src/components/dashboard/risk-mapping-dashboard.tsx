@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -7,12 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ResponsiveContainer, ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, Legend, Cell } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Cell } from 'recharts';
 import { risksData } from '@/lib/mock-data';
 import type { Risk } from '@/lib/types';
 import Image from 'next/image';
 import { Shield } from 'lucide-react';
-import { ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 import { cn } from '@/lib/utils';
 
 const topRisksFilters = [
@@ -38,10 +39,10 @@ const riskLevelMap: { [key: string]: string } = {
 };
 
 const riskColorMap: { [key: string]: string } = {
-    'Risco Aceitável': '#22c55e', // green-500
-    'Risco Gerenciável': '#facc15', // yellow-400
-    'Risco Prioritário': '#f97316', // orange-500
-    'Risco Crítico': '#ef4444', // red-500
+    'Risco Aceitável': 'hsl(var(--chart-2))', // green-500
+    'Risco Gerenciável': 'hsl(var(--chart-3))', // yellow-400
+    'Risco Prioritário': 'hsl(var(--chart-4))', // orange-500
+    'Risco Crítico': 'hsl(var(--chart-5))', // red-500
 };
 
 const probabilityScore: Record<Risk['probabilidadeResidual'], number> = { "Raro": 1, "Improvável": 2, "Possível": 3, "Provável": 4, "Quase Certo": 5, '': 0 };
@@ -74,6 +75,7 @@ export function RiskMappingDashboard() {
             z: risk.ier,
             name: risk.risco,
             level: riskLevelMap[risk.nivelDeRiscoResidual] || 'N/A',
+            fill: riskColorMap[riskLevelMap[risk.nivelDeRiscoResidual]]
         }));
     }, [filteredRisks]);
 
@@ -217,24 +219,32 @@ export function RiskMappingDashboard() {
                             <div 
                                 className="absolute top-0 right-0 h-1/2 w-1/2 bg-red-100/50 -z-10"
                             ></div>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <ScatterChart margin={{ top: 20, right: 20, bottom: 40, left: 40 }}>
-                                    <XAxis type="number" dataKey="x" name="Impacto + Relevância" domain={[0, 6]} ticks={[1,2,3,4,5]} tickFormatter={(val) => impactScore[val as any]} label={{ value: "Impacto + Relevância", position: "bottom", offset: 10 }} />
-                                    <YAxis type="number" dataKey="y" name="Probabilidade + Facilidade" domain={[0, 6]} ticks={[1,2,3,4,5]} label={{ value: "Probabilidade + Facilidade", angle: -90, position: "insideLeft", offset: -20 }} />
+                            <ChartContainer 
+                                config={{
+                                    'Risco Aceitável': { color: riskColorMap['Risco Aceitável'] },
+                                    'Risco Gerenciável': { color: riskColorMap['Risco Gerenciável'] },
+                                    'Risco Prioritário': { color: riskColorMap['Risco Prioritário'] },
+                                    'Risco Crítico': { color: riskColorMap['Risco Crítico'] },
+                                }}
+                                className="w-full h-full"
+                            >
+                                <ScatterChart margin={{ top: 40, right: 20, bottom: 40, left: 40 }}>
+                                    <XAxis type="number" dataKey="x" name="Impacto" domain={[0, 6]} ticks={[1,2,3,4,5]} tickFormatter={(val) => Object.keys(impactScore).find(key => impactScore[key as keyof typeof impactScore] === val) || ''} label={{ value: "Impacto", position: "bottom", offset: 20 }} />
+                                    <YAxis type="number" dataKey="y" name="Probabilidade" domain={[0, 6]} ticks={[1,2,3,4,5]} tickFormatter={(val) => Object.keys(probabilityScore).find(key => probabilityScore[key as keyof typeof probabilityScore] === val) || ''} label={{ value: "Probabilidade", angle: -90, position: "insideLeft", offset: -20 }} />
                                     <ZAxis type="number" dataKey="z" range={[100, 1000]} name="IER" />
-                                    <Tooltip cursor={{ strokeDasharray: '3 3' }} content={<ChartTooltipContent />} />
-                                     <Legend 
-                                        payload={Object.entries(riskColorMap).map(([name, color]) => ({ value: name, type: 'circle', color }))}
+                                    <ChartTooltip cursor={{ strokeDasharray: '3 3' }} content={<ChartTooltipContent />} />
+                                    <ChartLegend 
+                                        content={<ChartLegendContent payload={Object.entries(riskColorMap).map(([name, color]) => ({ value: name, type: 'circle', color: color as string }))} />}
                                         verticalAlign="top" 
                                         wrapperStyle={{top: 0, right: 0}}
                                     />
                                     <Scatter data={chartData}>
                                         {chartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={riskColorMap[entry.level]} fillOpacity={0.7} />
+                                            <Cell key={`cell-${index}`} fill={entry.fill} fillOpacity={0.7} />
                                         ))}
                                     </Scatter>
                                 </ScatterChart>
-                            </ResponsiveContainer>
+                            </ChartContainer>
                         </div>
                         <div className="max-h-[400px] overflow-auto border rounded-lg">
                             <Table>
