@@ -9,11 +9,11 @@ const impactLevels: Risk['impactoResidual'][] = ["Insignificante", "Menor", "Mod
 
 // Using Tailwind full class names to avoid purging issues.
 const matrixColors = [
-    ["bg-green-200", "bg-green-300", "bg-yellow-200", "bg-yellow-300", "bg-orange-300"], // Raro
-    ["bg-green-300", "bg-yellow-200", "bg-yellow-300", "bg-orange-300", "bg-orange-400"], // Improvável
-    ["bg-yellow-200", "bg-yellow-300", "bg-orange-300", "bg-orange-400", "bg-red-400"],    // Possível
-    ["bg-yellow-300", "bg-orange-300", "bg-orange-400", "bg-red-400", "bg-red-500"],    // Provável
-    ["bg-orange-300", "bg-orange-400", "bg-red-400", "bg-red-500", "bg-red-600"],    // Quase Certo
+    ["bg-green-200", "bg-yellow-200", "bg-yellow-300", "bg-orange-300", "bg-orange-400"], // Raro
+    ["bg-yellow-200", "bg-yellow-300", "bg-orange-300", "bg-orange-400", "bg-red-400"], // Improvável
+    ["bg-yellow-300", "bg-orange-300", "bg-orange-400", "bg-red-400", "bg-red-500"],    // Possível
+    ["bg-orange-300", "bg-orange-400", "bg-red-400", "bg-red-500", "bg-red-600"],    // Provável
+    ["bg-orange-400", "bg-red-400", "bg-red-500", "bg-red-600", "bg-red-700"],    // Quase Certo
 ].reverse(); // Reverse to match the visual layout (Quase Certo at the top)
 
 const calculateRiskCounts = (risks: Risk[]) => {
