@@ -27,7 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Calendar as CalendarIcon, DollarSign, Siren, Target, Shield, Activity, BarChart3, Briefcase, Building, ChevronDown, CircleHelp, ClipboardList, TrendingUp, Users } from 'lucide-react';
+import { Calendar as CalendarIcon, Siren, Activity, BarChart3, Briefcase, ClipboardList } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -69,7 +69,6 @@ export default function CaptureRiskPage() {
     const [identificationDate, setIdentificationDate] = useState<Date>();
     const [lastReviewDate, setLastReviewDate] = useState<Date>();
     const [nextReviewDate, setNextReviewDate] = useState<Date>();
-    const [evaluationDate, setEvaluationDate] = useState<Date>();
     
   return (
     <Card>
@@ -87,15 +86,11 @@ export default function CaptureRiskPage() {
           
           <Section title="Identificação e Contexto" icon={Briefcase} defaultOpen>
             <Field label="ID"><Input name="id" placeholder="Ex: 1" /></Field>
-            <Field label="Risco (Título)" className="sm:col-span-2"><Input name="risco" placeholder="Título resumido do risco" /></Field>
-            <Field label="Responsável"><Input name="responsavelPeloRisco" /></Field>
+            <Field label="Risco (Título)" className="sm:col-span-3"><Input name="risco" placeholder="Título resumido do risco" /></Field>
             <Field label="Descrição do Risco" className="sm:col-span-4"><Textarea name="descricaoDoRisco" rows={3} placeholder="Descreva o risco em detalhes" /></Field>
             <Field label="Diretoria"><Input name="diretoria" /></Field>
             <Field label="Gerência"><Input name="gerencia" /></Field>
             <Field label="Processo"><Input name="processo" /></Field>
-            <Field label="Processo Afetado"><Input name="processoAfetado" /></Field>
-            <Field label="Causa Raiz" className="sm:col-span-2"><Textarea name="causaRaizDoRisco" rows={3} placeholder="Descreva a causa principal" /></Field>
-            <Field label="Consequência" className="sm:col-span-2"><Textarea name="consequenciaDoRisco" rows={3} placeholder="Descreva a principal consequência" /></Field>
              <Field label="Data de Identificação">
                  <Popover>
                     <PopoverTrigger asChild>
@@ -107,6 +102,8 @@ export default function CaptureRiskPage() {
                     <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={identificationDate} onSelect={setIdentificationDate} initialFocus/></PopoverContent>
                 </Popover>
             </Field>
+            <Field label="Causa Raiz" className="sm:col-span-2"><Textarea name="causaRaizDoRisco" rows={3} placeholder="Descreva a causa principal" /></Field>
+            <Field label="Consequência" className="sm:col-span-2"><Textarea name="consequenciaDoRisco" rows={3} placeholder="Descreva a principal consequência" /></Field>
           </Section>
 
           <Section title="Categorização" icon={ClipboardList}>
@@ -124,16 +121,11 @@ export default function CaptureRiskPage() {
                 </Field>
                 <Field label="Tipo de Risco"><Input name="tipoDeRisco" /></Field>
                 <Field label="Categoria do Risco"><Input name="categoriaDoRisco" /></Field>
-                <Field label="Categoria (MP)"><Input name="categoriaMP" /></Field>
-                <Field label="Top Risk Associado"><Input name="topRiskAssociado" /></Field>
-                <Field label="Horizonte"><Input name="horizonte" /></Field>
-                <Field label="Fator de Risco"><Input name="fatorDeRisco" /></Field>
-                <Field label="Tronco"><Input name="tronco" /></Field>
-                <Field label="Englobado"><Input name="englobado" /></Field>
+                <Field label="Processo Afetado"><Input name="processoAfetado" /></Field>
           </Section>
           
-          <Section title="Análise de Risco Inerente" icon={BarChart3}>
-                <Field label="Probabilidade">
+          <Section title="Análise de Risco (Inerente e Residual)" icon={BarChart3}>
+                <Field label="Probabilidade Inerente">
                     <Select name="probabilidadeInerente"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="Raro">Raro</SelectItem><SelectItem value="Improvável">Improvável</SelectItem><SelectItem value="Possível">Possível</SelectItem>
@@ -141,7 +133,7 @@ export default function CaptureRiskPage() {
                         </SelectContent>
                     </Select>
                 </Field>
-                <Field label="Impacto">
+                <Field label="Impacto Inerente">
                     <Select name="impactoInerente"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="Insignificante">Insignificante</SelectItem><SelectItem value="Menor">Menor</SelectItem><SelectItem value="Moderado">Moderado</SelectItem>
@@ -149,25 +141,8 @@ export default function CaptureRiskPage() {
                         </SelectContent>
                     </Select>
                 </Field>
-                <Field label="Nível de Risco Inerente (Calculado)">
-                    <Input name="nivelDeRiscoInerente" disabled />
-                </Field>
-          </Section>
-
-          <Section title="Tratamento e Controles" icon={Shield}>
-            <Field label="Estratégia (Ação)"><Input name="estrategia" /></Field>
-            <Field label="Descrição do Controle" className="sm:col-span-2"><Textarea name="descricaoDoControle" placeholder="Descreva o controle aplicado" /></Field>
-            <Field label="Possui Controle Central (CC)?">
-                <Select name="possuiCC"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent><SelectItem value="Sim">Sim</SelectItem><SelectItem value="Não">Não</SelectItem></SelectContent>
-                </Select>
-            </Field>
-            <Field label="URL do CC"><Input name="urlDoCC" /></Field>
-            <Field label="Status do Controle"><Input name="statusControle" /></Field>
-          </Section>
-
-          <Section title="Análise de Risco Residual" icon={TrendingUp}>
-                <Field label="Probabilidade">
+                <Field label="Nível de Risco Inerente"><Input name="nivelDeRiscoInerente" disabled placeholder="Calculado" /></Field>
+                <Field label="Probabilidade Residual">
                     <Select name="probabilidadeResidual"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="Raro">Raro</SelectItem><SelectItem value="Improvável">Improvável</SelectItem><SelectItem value="Possível">Possível</SelectItem>
@@ -175,7 +150,7 @@ export default function CaptureRiskPage() {
                         </SelectContent>
                     </Select>
                 </Field>
-                <Field label="Impacto">
+                <Field label="Impacto Residual">
                     <Select name="impactoResidual"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="Insignificante">Insignificante</SelectItem><SelectItem value="Menor">Menor</SelectItem><SelectItem value="Moderado">Moderado</SelectItem>
@@ -183,13 +158,12 @@ export default function CaptureRiskPage() {
                         </SelectContent>
                     </Select>
                 </Field>
-                <Field label="Nível de Risco Residual (Calculado)">
-                    <Input name="nivelDeRiscoResidual" disabled />
-                </Field>
+                <Field label="Nível de Risco Residual"><Input name="nivelDeRiscoResidual" disabled placeholder="Calculado" /></Field>
           </Section>
 
-          <Section title="Gestão e Monitoramento" icon={Activity}>
-            <Field label="Plano de Ação"><Input name="planoDeAcao" /></Field>
+          <Section title="Tratamento e Monitoramento" icon={Activity}>
+            <Field label="Estratégia (Ação)"><Input name="estrategia" /></Field>
+            <Field label="Descrição do Controle" className="sm:col-span-3"><Textarea name="descricaoDoControle" placeholder="Descreva o controle aplicado" /></Field>
             <Field label="Status do Risco">
                 <Select name="statusDoRisco"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
@@ -197,6 +171,8 @@ export default function CaptureRiskPage() {
                     </SelectContent>
                 </Select>
             </Field>
+            <Field label="Plano de Ação"><Input name="planoDeAcao" /></Field>
+            <Field label="Responsável"><Input name="responsavelPeloRisco" /></Field>
             <Field label="Data da Última Revisão">
                 <Popover>
                     <PopoverTrigger asChild>
@@ -219,72 +195,7 @@ export default function CaptureRiskPage() {
                     <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={nextReviewDate} onSelect={setNextReviewDate}/></PopoverContent>
                 </Popover>
             </Field>
-             <Field label="Data da Avaliação">
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {evaluationDate ? <span>{evaluationDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={evaluationDate} onSelect={setEvaluationDate} /></PopoverContent>
-                </Popover>
-            </Field>
-             <Field label="Contexto (%)"><Input name="contexto" /></Field>
-             <Field label="Observação"><Textarea name="observacao" /></Field>
-             <Field label="Bowtie">
-                <Select name="bowtie"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent><SelectItem value="Sim">Sim</SelectItem><SelectItem value="Não">Não</SelectItem></SelectContent>
-                </Select>
-            </Field>
           </Section>
-
-           <Section title="Indicadores e ESG" icon={Users}>
-                <Field label="Pilar"><Input name="pilar" /></Field>
-                <Field label="Pilar ESG"><Input name="pilarESG" /></Field>
-                <Field label="Indicador"><Input name="indicador" /></Field>
-                <Field label="Sub-tema"><Input name="subtema" /></Field>
-                <Field label="GE"><Input name="ge" /></Field>
-                <Field label="GR"><Input name="gr" /></Field>
-            </Section>
-
-            <Section title="Pontuações e Classificações (Interno)" icon={CircleHelp}>
-                <Field label="Impacto (orig)" className="text-muted-foreground"><Input name="orig" type="number" /></Field>
-                <Field label="PROB"><Input name="prob" type="number" /></Field>
-                <Field label="CTRL"><Input name="ctrl" type="number" /></Field>
-                <Field label="TEMPO"><Input name="tempo" type="number" /></Field>
-                <Field label="FACIL"><Input name="facil" type="number" /></Field>
-                <Field label="ELEV"><Input name="elev" type="number" /></Field>
-                <Field label="IER"><Input name="ier" type="number" /></Field>
-                <Field label="V"><Input name="v" type="number" /></Field>
-                <Field label="D"><Input name="d" type="number" /></Field>
-                <Field label="G"><Input name="g" type="number" /></Field>
-                <Field label="U"><Input name="u" type="number" /></Field>
-                <Field label="T (Score)"><Input name="t_score" type="number" /></Field>
-                <Field label="I (Score)"><Input name="i_score" type="number" /></Field>
-                <Field label="OredsX"><Input name="oredsX" type="number" /></Field>
-                <Field label="T (Rating)"><Input name="t_rating" type="number" /></Field>
-                <Field label="Filho">
-                  <Select name="filho"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                      <SelectContent><SelectItem value="Sim">Sim</SelectItem><SelectItem value="Não">Não</SelectItem></SelectContent>
-                  </Select>
-                </Field>
-                <Field label="Riscos Aceitáveis">
-                   <Select name="riscosAceitaveis"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                       <SelectContent><SelectItem value="sim">Sim</SelectItem><SelectItem value="não">Não</SelectItem></SelectContent>
-                   </Select>
-                </Field>
-                <Field label="Riscos Não Aceitáveis">
-                   <Select name="riscosNaoAceitaveis"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                       <SelectContent><SelectItem value="sim">Sim</SelectItem><SelectItem value="não">Não</SelectItem></SelectContent>
-                   </Select>
-                </Field>
-                <Field label="Riscos Mix">
-                   <Select name="riscosMix"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                       <SelectContent><SelectItem value="sim">Sim</SelectItem><SelectItem value="não">Não</SelectItem></SelectContent>
-                   </Select>
-                </Field>
-            </Section>
 
         </form>
       </CardContent>
@@ -295,5 +206,4 @@ export default function CaptureRiskPage() {
     </Card>
   );
 }
-
 

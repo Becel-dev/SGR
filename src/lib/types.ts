@@ -54,26 +54,26 @@ export type Control = {
 
 export type Risk = {
   id: string;
+  risco: string; // Title from Identification
+  descricaoDoRisco: string;
+  processo: string;
   gerencia: string;
   diretoria: string;
-  processo: string;
-  risco: string; // Title
-  descricaoDoRisco: string;
   dataDeIdentificacao: string;
-  origemDoRisco: string; // ORIGEM column
+  origemDoRisco: string;
   causaRaizDoRisco: string;
   consequenciaDoRisco: string;
-  categoriaDoRisco: string; // Categoria
-  tipoDeRisco: string; // TIPO ER
+  categoriaDoRisco: string;
+  tipoDeRisco: string;
   processoAfetado: string;
   
   // Inherent Risk
-  probabilidadeInerente: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo' | ''; // PROB
-  impactoInerente: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico' | ''; // IMP
+  probabilidadeInerente: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo' | '';
+  impactoInerente: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico' | '';
   nivelDeRiscoInerente: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | ''; // Calculated
   
   // Treatment
-  estrategia: string; // AÇÃO column
+  estrategia: string;
   descricaoDoControle: string;
   
   // Residual Risk
@@ -84,49 +84,55 @@ export type Risk = {
   // Management and Monitoring
   statusDoRisco: 'Aberto' | 'Em Tratamento' | 'Fechado' | 'Mitigado' | '';
   planoDeAcao: string;
-  responsavelPeloRisco: string; // Responsável
+  responsavelPeloRisco: string;
   dataDaUltimaRevisao: string;
   dataDaProximaRevisao: string;
   
-  // New fields from image
+  // Common fields from Identification
   topRiskAssociado: string;
+  fatorDeRisco: string;
+
+  // These might be the scores from identification
+  imp: number; // Potencial de Impacto Corporativo
+  org: number; // Relevância Organizacional
+  prob: number; // Probabilidade Contextualizada
+  ctrl: number; // Capacidade Atual de Controle
+  tempo: number; // Tempo Estimado de Contenção
+  facil: number; // Facilidade Técnica de Ocorrência
+
+  // Extra fields from spreadsheet that might not be used in capture form directly
+  dataDaAvaliacao: string;
+  ier: number; // Seems calculated
+  contexto: string;
+  bowtie: string; // Sim/Não
+  observacao: string;
+  pilar: string;
+  pilarESG: string;
+  indicador: string;
+  subtema: string;
+  ge: string;
+  gr: string;
   categoriaMP: string;
-  orig: number;
-  prob: number;
-  ctrl: number;
-  tempo: number;
-  facil: number;
+  orig: number; // Not clear if this is imp
   elev: number;
-  ier: number;
   filho: string;
   v: number;
   d: number;
   g: number;
   u: number;
-  t_score: number; // Renamed from "t" to avoid conflict
-  i_score: number; // Renamed from "i" to avoid conflict
+  t_score: number;
+  i_score: number;
   oredsX: number;
-  t_rating: number; // from the second 'T' column
+  t_rating: number;
   riscosAceitaveis: string;
   riscosNaoAceitaveis: string;
   riscosMix: string;
   statusControle: string;
   urlDoCC: string;
   possuiCC: string;
-  pilar: string;
-  pilarESG: string;
-  indicador: string;
-  subtema: string;
   tronco: string;
   englobado: string;
-  fatorDeRisco: string;
   horizonte: string;
-  ge: string;
-  gr: string;
-  observacao: string;
-  dataDaAvaliacao: string;
-  contexto: string;
-  bowtie: string;
 };
 
 
@@ -200,15 +206,16 @@ export type IdentifiedRisk = {
   // Field 10
   businessObjectives: string[];
   // Field 11
-  corporateImpact: number; // 0-10
+  corporateImpact: number; // 0-10 - IMP
   // Field 12
-  organizationalRelevance: number; // 0-10
+  organizationalRelevance: number; // 0-10 - ORG
   // Field 13
-  contextualizedProbability: number; // 0-10
+  contextualizedProbability: number; // 0-10 - PROB
   // Field 14
-  currentControlCapacity: number; // 0-10 (inverted logic)
+  currentControlCapacity: number; // 0-10 (inverted logic) - CTRL
   // Field 15
-  containmentTime: number; // 0-10 (inverted logic)
+  containmentTime: number; // 0-10 (inverted logic) - TEMPO
   // Field 16
-  technicalFeasibility: number; // 0-10
+  technicalFeasibility: number; // 0-10 - FACIL
 };
+
