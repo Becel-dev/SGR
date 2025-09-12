@@ -15,6 +15,9 @@ import { Input } from "@/components/ui/input";
 import type { Risk } from "@/lib/types";
 
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
+    'Novo': 'destructive',
+    'Em Análise': 'secondary',
+    'Analisado': 'default',
     'Aberto': 'secondary',
     'Em Tratamento': 'default',
     'Fechado': 'outline',
@@ -99,13 +102,13 @@ export default function RisksPage() {
                   <TableCell>{risk.gerencia}</TableCell>
                   <TableCell>
                     <Badge 
-                      variant={riskLevelVariantMap[risk.nivelDeRiscoResidual] || 'default'}
+                      variant={risk.nivelDeRiscoResidual ? riskLevelVariantMap[risk.nivelDeRiscoResidual] : 'outline'}
                       className={cn(
                         risk.nivelDeRiscoResidual === 'Alto' && 'bg-orange-500 text-white dark:bg-orange-500 dark:text-white',
                         risk.nivelDeRiscoResidual === 'Extremo' && 'bg-red-700 text-white dark:bg-red-700 dark:text-white'
                       )}
                     >
-                      {risk.nivelDeRiscoResidual}
+                      {risk.nivelDeRiscoResidual || 'N/A'}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -135,6 +138,7 @@ export default function RisksPage() {
     </Card>
   );
 }
+
 
 
 

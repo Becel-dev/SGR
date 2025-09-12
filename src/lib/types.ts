@@ -78,7 +78,7 @@ export type Risk = {
   impactoResidual: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico' | '';
   nivelDeRiscoResidual: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | ''; 
   
-  statusDoRisco: 'Aberto' | 'Em Tratamento' | 'Fechado' | 'Mitigado' | '';
+  statusDoRisco: 'Aberto' | 'Em Tratamento' | 'Fechado' | 'Mitigado' | 'Novo' | 'Em Análise' | 'Analisado' | '';
   planoDeAcao: string;
   responsavelPeloRisco: string;
   dataDaUltimaRevisao: string;
@@ -214,3 +214,4 @@ export type IdentifiedRisk = {
   // Field 16
   technicalFeasibility: number; // 0-10 - FACIL
 };
+
