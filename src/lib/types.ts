@@ -96,6 +96,8 @@ export type Risk = {
   dataAlteracaoCuradoria: string;
   contexto: string;
   responsavel?: string;
+  probabilidadeResidual?: "Raro" | "Improvável" | "Possível" | "Provável" | "Quase Certo";
+  impactoResidual?: "Insignificante" | "Menor" | "Moderado" | "Maior" | "Catastrófico";
 };
 
 
