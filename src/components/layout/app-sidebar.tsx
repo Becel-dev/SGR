@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import Link from 'next/link';
@@ -67,29 +66,28 @@ export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
                 const isActive = isNavItemActive(item.href);
                 
                 return (
-                  <Link href={item.href} key={item.label} passHref legacyBehavior>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                         <a
-                          className={cn(
-                            'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                            isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground',
-                            isCollapsed && !isMobile ? 'justify-center' : ''
-                          )}
-                        >
-                          <item.icon className="h-4 w-4" />
-                          <span className={cn('transition-all duration-300', isCollapsed && !isMobile ? 'hidden' : 'w-auto opacity-100')}>
-                            {item.label}
-                          </span>
-                        </a>
-                      </TooltipTrigger>
-                       {isCollapsed && !isMobile && (
-                        <TooltipContent side="right">
-                          <p>{item.label}</p>
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  </Link>
+                  <Tooltip key={item.href}>
+                    <TooltipTrigger asChild>
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                          isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground',
+                          isCollapsed && !isMobile ? 'justify-center' : ''
+                        )}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span className={cn('transition-all duration-300', isCollapsed && !isMobile ? 'hidden' : 'w-auto opacity-100')}>
+                          {item.label}
+                        </span>
+                      </Link>
+                    </TooltipTrigger>
+                    {isCollapsed && !isMobile && (
+                      <TooltipContent side="right">
+                        <p>{item.label}</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
                 );
               })}
             </nav>
