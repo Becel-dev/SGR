@@ -95,7 +95,10 @@ export default function RisksPage() {
             </TableHeader>
             <TableBody>
               {filteredRisks.map(risk => (
-                <TableRow key={risk.id}>
+                <TableRow 
+                    key={risk.id}
+                    className={cn(risk.status === 'Novo' && 'bg-yellow-100/50 dark:bg-yellow-900/20 hover:bg-yellow-100/60 dark:hover:bg-yellow-900/30')}
+                >
                   <TableCell>
                     <Badge variant={statusVariantMap[risk.status] || 'default'}>{risk.status}</Badge>
                   </TableCell>
