@@ -26,7 +26,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/
 
 const navigationItems = [
   { href: '/dashboard', icon: AreaChart, label: 'Painéis' },
-  { href: '/risks', icon: Siren, label: 'Identificação de Riscos' },
+  { href: '/risks', icon: Siren, label: 'Análise de Riscos' },
   { href: '/controls', icon: Shield, label: 'Governança de Controles' },
   { href: "/kpis", icon: GanttChartSquare, label: "Gestão de KPI's" },
   { href: '/escalation', icon: Rss, label: 'Escalonamento' },
@@ -67,10 +67,10 @@ export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
                 const isActive = isNavItemActive(item.href);
                 
                 return (
-                  <Link href={item.href} key={item.label}>
+                  <Link href={item.href} key={item.label} passHref legacyBehavior>
                     <Tooltip>
-                      <TooltipTrigger className='w-full'>
-                         <div
+                      <TooltipTrigger asChild>
+                         <a
                           className={cn(
                             'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                             isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground',
@@ -81,7 +81,7 @@ export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
                           <span className={cn('transition-all duration-300', isCollapsed && !isMobile ? 'hidden' : 'w-auto opacity-100')}>
                             {item.label}
                           </span>
-                        </div>
+                        </a>
                       </TooltipTrigger>
                        {isCollapsed && !isMobile && (
                         <TooltipContent side="right">
