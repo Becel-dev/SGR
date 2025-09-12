@@ -1,5 +1,6 @@
 
 
+
 export type Role = 'admin' | 'moderator' | 'editor' | 'viewer';
 
 export type User = {
@@ -173,4 +174,42 @@ export type BowtieData = {
   topEvent: BowtieTopEvent;
   threats: BowtieThreat[];
   consequences: BowtieConsequence[];
+};
+
+
+// New type for the Identification module
+export type IdentifiedRisk = {
+  id: string;
+  // Field 1
+  riskName: string;
+  // Field 2
+  topRisk: string;
+  // Field 3
+  riskFactor: string;
+  // Field 4
+  probableCause: string;
+  // Field 5
+  riskScenario: string;
+  // Field 6
+  expectedConsequence: string;
+  // Field 7
+  currentControls: string;
+  // Field 8
+  riskRole: 'Facilitador técnico' | 'Amplificador de impacto' | 'Estruturante' | 'De negócio direto';
+  // Field 9
+  pointingType: 'Risco efetivo' | 'Facilitador técnico' | 'Amplificador de impacto';
+  // Field 10
+  businessObjectives: string[];
+  // Field 11
+  corporateImpact: number; // 0-10
+  // Field 12
+  organizationalRelevance: number; // 0-10
+  // Field 13
+  contextualizedProbability: number; // 0-10
+  // Field 14
+  currentControlCapacity: number; // 0-10 (inverted logic)
+  // Field 15
+  containmentTime: number; // 0-10 (inverted logic)
+  // Field 16
+  technicalFeasibility: number; // 0-10
 };
