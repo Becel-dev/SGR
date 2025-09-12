@@ -76,7 +76,7 @@ export function RiskAnalysisDashboard() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Filtros */}
                     <div className="md:col-span-1 space-y-4 p-4 border rounded-lg">
                         <div className="space-y-2">
@@ -145,7 +145,7 @@ export function RiskAnalysisDashboard() {
                     </div>
 
                     {/* Tabela */}
-                    <div className="md:col-span-3 space-y-6">
+                    <div className="md:col-span-2 space-y-6">
                         <div className="max-h-[600px] overflow-auto border rounded-lg">
                             <Table>
                                 <TableHeader className="sticky top-0 bg-card">
