@@ -197,6 +197,21 @@ export default function CaptureRiskPage() {
             </Field>
           </Section>
 
+          <Section title="Outras Classificações" icon={ClipboardList}>
+              <Field label="Top Risk Associado"><Input name="topRiskAssociado" /></Field>
+              <Field label="Fator de Risco"><Input name="fatorDeRisco" /></Field>
+              <Field label="Pilar"><Input name="pilar" /></Field>
+              <Field label="Pilar ESG"><Input name="pilarESG" /></Field>
+              <Field label="Contexto"><Input name="contexto" /></Field>
+              <Field label="Bowtie"><Input name="bowtie" /></Field>
+              <Field label="Observação"><Textarea name="observacao" /></Field>
+              <Field label="Possui CC"><Input name="possuiCC" /></Field>
+              <Field label="URL do CC"><Input name="urlDoCC" /></Field>
+              <Field label="Status do Controle"><Input name="statusControle" /></Field>
+              <Field label="Horizonte"><Input name="horizonte" /></Field>
+              <Field label="Englobado"><Input name="englobado" /></Field>
+              <Field label="Tronco"><Input name="tronco" /></Field>
+          </Section>
         </form>
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
@@ -206,4 +221,3 @@ export default function CaptureRiskPage() {
     </Card>
   );
 }
-

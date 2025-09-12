@@ -54,7 +54,7 @@ export type Control = {
 
 export type Risk = {
   id: string;
-  risco: string; // Title from Identification
+  risco: string; 
   descricaoDoRisco: string;
   processo: string;
   gerencia: string;
@@ -67,44 +67,40 @@ export type Risk = {
   tipoDeRisco: string;
   processoAfetado: string;
   
-  // Inherent Risk
-  probabilidadeInerente: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo' | '';
-  impactoInerente: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico' | '';
-  nivelDeRiscoInerente: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | ''; // Calculated
-  
-  // Treatment
   estrategia: string;
   descricaoDoControle: string;
   
-  // Residual Risk
+  probabilidadeInerente: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo' | '';
+  impactoInerente: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico' | '';
+  nivelDeRiscoInerente: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | ''; 
+  
   probabilidadeResidual: 'Raro' | 'Improvável' | 'Possível' | 'Provável' | 'Quase Certo' | '';
   impactoResidual: 'Insignificante' | 'Menor' | 'Moderado' | 'Maior' | 'Catastrófico' | '';
-  nivelDeRiscoResidual: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | ''; // Calculated
+  nivelDeRiscoResidual: 'Baixo' | 'Médio' | 'Alto' | 'Crítico' | 'Extremo' | ''; 
   
-  // Management and Monitoring
   statusDoRisco: 'Aberto' | 'Em Tratamento' | 'Fechado' | 'Mitigado' | '';
   planoDeAcao: string;
   responsavelPeloRisco: string;
   dataDaUltimaRevisao: string;
   dataDaProximaRevisao: string;
   
-  // Common fields from Identification
+  // Mapeados da Identificação
   topRiskAssociado: string;
   fatorDeRisco: string;
 
-  // These might be the scores from identification
+  // Pontuações
   imp: number; // Potencial de Impacto Corporativo
   org: number; // Relevância Organizacional
   prob: number; // Probabilidade Contextualizada
   ctrl: number; // Capacidade Atual de Controle
   tempo: number; // Tempo Estimado de Contenção
   facil: number; // Facilidade Técnica de Ocorrência
+  ier: number; // Índice de Exposição ao Risco (Calculado)
 
-  // Extra fields from spreadsheet that might not be used in capture form directly
+  // Campos adicionais da planilha
   dataDaAvaliacao: string;
-  ier: number; // Seems calculated
   contexto: string;
-  bowtie: string; // Sim/Não
+  bowtie: string; 
   observacao: string;
   pilar: string;
   pilarESG: string;
@@ -113,7 +109,7 @@ export type Risk = {
   ge: string;
   gr: string;
   categoriaMP: string;
-  orig: number; // Not clear if this is imp
+  orig: number; 
   elev: number;
   filho: string;
   v: number;
@@ -218,4 +214,3 @@ export type IdentifiedRisk = {
   // Field 16
   technicalFeasibility: number; // 0-10 - FACIL
 };
-

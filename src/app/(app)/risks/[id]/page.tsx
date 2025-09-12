@@ -157,6 +157,22 @@ export default function RiskDetailPage() {
                     <DetailItem label="Data da Última Revisão" value={risk.dataDaUltimaRevisao} />
                     <DetailItem label="Próxima Revisão" value={risk.dataDaProximaRevisao} />
                 </Section>
+
+                <Section title="Outras Classificações" icon={CircleHelp}>
+                    <DetailItem label="Top Risk Associado" value={risk.topRiskAssociado} />
+                    <DetailItem label="Fator de Risco" value={risk.fatorDeRisco} />
+                    <DetailItem label="Pilar" value={risk.pilar} />
+                    <DetailItem label="Pilar ESG" value={risk.pilarESG} />
+                    <DetailItem label="Contexto" value={risk.contexto} />
+                    <DetailItem label="Bowtie" value={risk.bowtie} />
+                    <DetailItem label="Possui CC" value={risk.possuiCC} />
+                    <DetailItem label="URL do CC" value={risk.urlDoCC} />
+                    <DetailItem label="Status do Controle" value={risk.statusControle} />
+                    <DetailItem label="Horizonte" value={risk.horizonte} />
+                    <DetailItem label="Englobado" value={risk.englobado} />
+                    <DetailItem label="Tronco" value={risk.tronco} />
+                    <DetailItem label="Observação" value={risk.observacao} className="sm:col-span-4" />
+                </Section>
                 
 
                 {relatedControls.length > 0 && (
