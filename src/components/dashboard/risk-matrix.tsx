@@ -72,15 +72,15 @@ export function RiskMatrix({risks}: {risks: Risk[]}) {
         <p className="font-bold">IMPACTO</p>
         <div className="flex items-end">
             <p className="font-bold writing-mode-vertical-rl rotate-180">PROBABILIDADE</p>
-            <div className="grid grid-cols-[auto_repeat(4,_minmax(0,_1fr))] text-sm">
+            <div className="grid grid-cols-[auto_auto_repeat(4,_minmax(0,_1fr))] text-sm">
                 {/* Header Row 1: PESOS + weights */}
-                <div className="flex items-center justify-center font-bold bg-gray-200 text-black p-2">PESOS</div>
+                <div className="col-span-2 flex items-center justify-center font-bold bg-gray-200 text-black p-2">PESOS</div>
                 {matrixConfig.impacts.map(impact => (
                     <div key={impact.weight} className="flex items-center justify-center font-bold bg-gray-200 text-black p-2">{impact.weight}</div>
                 ))}
 
                 {/* Header Row 2: Empty + A, B, C, D */}
-                <div className="bg-gray-200"></div>
+                <div className="bg-gray-200 col-span-2"></div>
                 {matrixConfig.impacts.map(impact => (
                     <div key={impact.letter} className="flex items-center justify-center font-bold bg-black text-white p-2">{impact.letter}</div>
                 ))}
@@ -89,8 +89,10 @@ export function RiskMatrix({risks}: {risks: Risk[]}) {
                 {matrixConfig.probabilities.map((prob, rowIndex) => (
                     <React.Fragment key={prob.level}>
                         <div className="flex flex-col items-center justify-center font-bold bg-gray-200 text-black p-2">
-                            <span>{prob.weight.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}</span>
-                            <span className="bg-black text-white w-full text-center my-1">{prob.num}</span>
+                           <span>{prob.weight.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}</span>
+                        </div>
+                         <div className="flex flex-col items-center justify-center font-bold bg-black text-white p-2">
+                            <span>{prob.num}</span>
                         </div>
                         {matrixConfig.ierValues[rowIndex].map((ier, colIndex) => (
                             <div key={colIndex} className={`flex flex-col items-center justify-center p-1 text-sm font-bold h-16 w-20 text-center ${matrixConfig.colors[rowIndex][colIndex]}`}>
