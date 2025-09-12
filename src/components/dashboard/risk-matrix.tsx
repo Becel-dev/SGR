@@ -2,38 +2,34 @@
 
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Risk } from "@/lib/types";
 
 const probabilityLevels: Risk['probabilidadeResidual'][] = ["Pouco Provável", "Possível", "Provável", "Muito Provável"];
 const impactLevels: Risk['impactoResidual'][] = ["Baixo", "Moderado", "Significativo", "Alto"];
 
-const probabilityWeights = {
+const probabilityConfig = {
     "Muito Provável": { label: "MUITO PROVÁVEL", weight: 10, num: 4 },
-    "Provável": { label: "PROVÁVEL", weight: 8.0, num: 3 },
+    "Provável": { label: "PROVÁVEL", weight: 8, num: 3 },
     "Possível": { label: "POSSÍVEL", weight: 5, num: 2 },
     "Pouco Provável": { label: "POUCO PROVÁVEL", weight: 2.5, num: 1 },
 };
 
-const impactWeights = {
-    "Baixo": { label: "BAIXO", weight: 25 },
-    "Moderado": { label: "MODERADO", weight: 50 },
-    "Significativo": { label: "SIGNIFICATIVO", weight: 80 },
-    "Alto": { label: "ALTO", weight: 100 },
+const impactConfig = {
+    "Baixo": { label: "BAIXO", weight: 50 },
+    "Moderado": { label: "MODERADO", weight: 80 },
+    "Significativo": { label: "SIGNIFICATIVO", weight: 100 },
+    "Alto": { label: "ALTO", weight: 'A' },
 };
 
-// Using Tailwind full class names to avoid purging issues.
+
 const matrixColors = [
-    ["bg-yellow-500", "bg-orange-500", "bg-red-600", "bg-red-700"],     // Muito provável
-    ["bg-yellow-400", "bg-yellow-500", "bg-orange-500", "bg-red-600"],    // Provável
-    ["bg-green-400", "bg-yellow-400", "bg-yellow-500", "bg-orange-500"],    // Possível
-    ["bg-green-300", "bg-green-400", "bg-yellow-400", "bg-yellow-500"], // Pouco provável
-].reverse(); // Reverse to match the visual layout (Quase Certo at the top)
+    ["bg-yellow-500", "bg-orange-500", "bg-red-600", "bg-red-700"],     
+    ["bg-yellow-400", "bg-yellow-500", "bg-orange-500", "bg-red-600"],    
+    ["bg-green-400", "bg-yellow-400", "bg-yellow-500", "bg-orange-500"],    
+    ["bg-green-300", "bg-green-400", "bg-yellow-400", "bg-yellow-500"], 
+].reverse(); 
 
 const calculateRiskCounts = (risks: Risk[]) => {
-    // A matriz de probabilidade do protótipo tem 4 níveis, mas nosso tipo tem 5.
-    // Vamos mapear "Raro" para "Pouco Provável" e "Quase Certo" para "Muito Provável".
-    // "Insignificante" -> "Baixo", "Menor" -> "Baixo", "Maior" -> "Alto", "Catastrófico" -> "Alto"
     const probMap: Record<string, typeof probabilityLevels[number]> = {
         "Raro": "Pouco Provável",
         "Improvável": "Pouco Provável",
@@ -67,6 +63,12 @@ const calculateRiskCounts = (risks: Risk[]) => {
     return counts.reverse(); // Reverse to match the visual layout
 };
 
+const Cell = ({ className, children }: { className?: string, children?: React.ReactNode }) => (
+    <div className={`flex items-center justify-center p-2 border border-gray-600 text-xs font-bold ${className}`}>
+        {children}
+    </div>
+);
+
 export function RiskMatrix({risks}: {risks: Risk[]}) {
   const riskCounts = calculateRiskCounts(risks);
   const reversedProbLevels = [...probabilityLevels].reverse();
@@ -78,47 +80,44 @@ export function RiskMatrix({risks}: {risks: Risk[]}) {
         <CardDescription>Distribuição de riscos por probabilidade e impacto.</CardDescription>
       </CardHeader>
       <CardContent className="overflow-x-auto p-4 flex justify-center">
-        <div className="inline-grid grid-cols-[auto_auto_repeat(5,_minmax(0,_1fr))] grid-rows-[auto_repeat(3,_auto)] text-xs font-bold">
+        <div className="grid grid-cols-[auto_auto_auto_auto_auto_auto_auto] text-white" style={{ gridTemplateRows: 'auto auto auto auto auto auto' }}>
+            {/* Headers */}
+            <Cell className="row-span-2 bg-[#0F1E36]">MATRIZ DE RISCO</Cell>
+            <Cell className="col-span-4 bg-[#0F1E36]">IMPACTO</Cell>
+            <Cell className="bg-[#0F1E36]">25</Cell>
+            <Cell className="bg-[#0F1E36]"></Cell>
 
-            {/* Row 1: Header Principal */}
-            <div className="col-start-1 col-end-3 row-start-1 bg-gray-800 text-white flex items-center justify-center p-2 border border-gray-600">MATRIZ DE RISCO</div>
-            <div className="col-start-3 col-end-8 row-start-1 bg-gray-800 text-white flex items-center justify-center p-2 border border-gray-600">IMPACTO</div>
+            <Cell className="bg-[#1D3C67]">BAIXO</Cell>
+            <Cell className="bg-[#1D3C67]">MODERADO</Cell>
+            <Cell className="bg-[#1D3C67]">SIGNIFICATIVO</Cell>
+            <Cell className="bg-[#1D3C67]">ALTO</Cell>
+            <Cell className="bg-black">A</Cell>
+            <Cell className="bg-black">B</Cell>
 
-            {/* Row 2: Header Impacto */}
-            <div className="col-start-1 col-end-3 row-start-2 bg-gray-800 text-white flex items-center justify-center p-2 border border-gray-600"></div>
-            {Object.values(impactWeights).map(impact => (
-                <div key={impact.label} className="bg-blue-800 text-white flex items-center justify-center p-2 border border-gray-600">{impact.label}</div>
-            ))}
-            
-             {/* Row 3: Pesos Impacto */}
-            <div className="col-start-2 row-start-3 bg-gray-800 text-white flex items-center justify-center p-2 border border-gray-600">PESOS</div>
-            {Object.values(impactWeights).map(impact => (
-                <div key={impact.weight} className="bg-gray-200 text-black flex items-center justify-center p-2 border border-gray-600">{impact.weight}</div>
-            ))}
-
-            {/* Row 4: A,B,C,D */}
-            <div className="col-start-2 row-start-4 bg-gray-800 text-white flex items-center justify-center p-2 border border-gray-600"></div>
-            {["A", "B", "C", "D"].map(char => (
-                <div key={char} className="bg-black text-white flex items-center justify-center p-2 border border-gray-600">{char}</div>
-            ))}
-
-            {/* Probabilidade Labels */}
-            <div className="col-start-1 row-start-3 row-span-full bg-gray-800 text-white flex items-center justify-center p-2 writing-mode-vertical-rl rotate-180 border border-gray-600">PROBABILIDADE</div>
+            <Cell className="row-span-4 bg-[#0F1E36]"><span className="writing-mode-vertical-rl rotate-180">PROBABILIDADE</span></Cell>
+            <Cell className="bg-[#0F1E36]">PESOS</Cell>
+            <Cell className="bg-gray-200 text-black">50</Cell>
+            <Cell className="bg-gray-200 text-black">80</Cell>
+            <Cell className="bg-gray-200 text-black">100</Cell>
+            <Cell className="bg-black">C</Cell>
+            <Cell className="bg-black">D</Cell>
 
             {/* Matrix Body */}
-            {reversedProbLevels.map((probLevel, rowIndex) => (
-                <React.Fragment key={probLevel}>
-                    <div className="bg-blue-800 text-white flex items-center justify-center p-2 border border-gray-600 text-center">{probabilityWeights[probLevel as keyof typeof probabilityWeights].label}</div>
-                    <div className="bg-gray-200 text-black flex items-center justify-center p-2 border border-gray-600">{probabilityWeights[probLevel as keyof typeof probabilityWeights].weight}</div>
-                    <div className="bg-black text-white flex items-center justify-center p-2 border border-gray-600">{probabilityWeights[probLevel as keyof typeof probabilityWeights].num}</div>
-                    
-                    {impactLevels.map((_, colIndex) => (
-                        <div key={colIndex} className={`${matrixColors[rowIndex][colIndex]} text-black flex items-center justify-center text-lg p-4 border border-gray-400`}>
-                            {riskCounts[rowIndex][colIndex] > 0 ? riskCounts[rowIndex][colIndex] : '-'}
-                        </div>
-                    ))}
-                </React.Fragment>
-            ))}
+            {reversedProbLevels.map((probLevel, rowIndex) => {
+                const config = probabilityConfig[probLevel as keyof typeof probabilityConfig];
+                return (
+                    <React.Fragment key={probLevel}>
+                        <Cell className="bg-[#1D3C67]">{config.label}</Cell>
+                        {impactLevels.map((_, colIndex) => (
+                             <Cell key={colIndex} className={`${matrixColors[rowIndex][colIndex]} text-black text-lg h-14 w-14`}>
+                                {riskCounts[rowIndex][colIndex] > 0 ? riskCounts[rowIndex][colIndex] : '-'}
+                            </Cell>
+                        ))}
+                        <Cell className="bg-[#1D3C67]">{config.weight}</Cell>
+                        <Cell className="bg-black">{config.num}</Cell>
+                    </React.Fragment>
+                )
+            })}
         </div>
       </CardContent>
     </Card>
