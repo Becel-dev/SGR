@@ -14,6 +14,7 @@ import {
   Users,
   Settings,
   Rss,
+  Lightbulb,
 } from 'lucide-react';
 import { useUser } from '@/hooks/use-user';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/
 
 const navigationItems = [
   { href: '/dashboard', icon: AreaChart, label: 'Painéis' },
+  { href: '/identification', icon: Lightbulb, label: 'Identificação de Risco' },
   { href: '/risks', icon: Siren, label: 'Análise de Riscos' },
   { href: '/controls', icon: Shield, label: 'Governança de Controles' },
   { href: "/kpis", icon: GanttChartSquare, label: "Gestão de KPI's" },
