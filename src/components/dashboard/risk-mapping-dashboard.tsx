@@ -29,23 +29,17 @@ const topRisksFilters = [
     'Risco 11. Gestão de Mudança',
 ];
 
-const riskLevelMap: { [key: string]: string } = {
-    'Baixo': 'Risco Aceitável',
-    'Médio': 'Risco Gerenciável',
-    'Alto': 'Risco Prioritário',
-    'Crítico': 'Risco Crítico',
-    'Extremo': 'Risco Crítico',
-};
-
 const riskColorMap: { [key: string]: string } = {
-    'Risco Aceitável': 'hsl(var(--chart-2))', // green-500
-    'Risco Gerenciável': 'hsl(var(--chart-3))', // yellow-400
-    'Risco Prioritário': 'hsl(var(--chart-4))', // orange-500
-    'Risco Crítico': 'hsl(var(--chart-5))', // red-500
+    'Aceitável': 'hsl(var(--chart-2))',
+    'Gerenciável': 'hsl(var(--chart-3))',
+    'Prioritário': 'hsl(var(--chart-4))',
+    'Crítico': 'hsl(var(--chart-5))', 
 };
 
-const probabilityScore: Record<Risk['probabilidadeResidual'], number> = { "Raro": 1, "Improvável": 2, "Possível": 3, "Provável": 4, "Quase Certo": 5, '': 0 };
-const impactScore: Record<Risk['impactoResidual'], number> = { "Insignificante": 1, "Menor": 2, "Moderado": 3, "Maior": 4, "Catastrófico": 5, '': 0 };
+// These scores are not present in the new type definition.
+// We will use the direct numeric values from the Risk object.
+const probabilityScore: Record<string, number> = { "Raro": 1, "Improvável": 2, "Possível": 3, "Provável": 4, "Quase Certo": 5, '': 0 };
+const impactScore: Record<string, number> = { "Insignificante": 1, "Menor": 2, "Moderado": 3, "Maior": 4, "Catastrófico": 5, '': 0 };
 
 export function RiskMappingDashboard() {
     const [classificacaoFiltro, setClassificacaoFiltro] = useState<string[]>([]);
@@ -58,7 +52,7 @@ export function RiskMappingDashboard() {
 
     const filteredRisks = useMemo(() => {
         return risksData.filter(risk => {
-            const nivelDeRisco = riskLevelMap[risk.nivelDeRiscoResidual] || '';
+            const nivelDeRisco = risk.tipoIER || '';
             if (classificacaoFiltro.length > 0 && !classificacaoFiltro.includes(nivelDeRisco)) return false;
             if (fatorRiscoFiltro !== 'Todos' && risk.fatorDeRisco !== fatorRiscoFiltro) return false;
             if (riscoEspecificoFiltro !== 'Todos' && risk.risco !== riscoEspecificoFiltro) return false;
@@ -69,19 +63,19 @@ export function RiskMappingDashboard() {
 
     const chartData = useMemo(() => {
         return filteredRisks.map(risk => ({
-            x: impactScore[risk.impactoResidual] || 0,
-            y: probabilityScore[risk.probabilidadeResidual] || 0,
+            x: risk.x,
+            y: risk.y,
             z: risk.ier,
             name: risk.risco,
-            level: riskLevelMap[risk.nivelDeRiscoResidual] || 'N/A',
-            fill: riskColorMap[riskLevelMap[risk.nivelDeRiscoResidual]]
+            level: risk.tipoIER || 'N/A',
+            fill: riskColorMap[risk.tipoIER]
         }));
     }, [filteredRisks]);
 
     const classficacaoCounts = useMemo(() => {
-        const counts = { 'Risco Aceitável': 0, 'Risco Gerenciável': 0, 'Risco Prioritário': 0, 'Risco Crítico': 0 };
+        const counts = { 'Aceitável': 0, 'Gerenciável': 0, 'Prioritário': 0, 'Crítico': 0 };
         risksData.forEach(risk => {
-            const nivel = riskLevelMap[risk.nivelDeRiscoResidual];
+            const nivel = risk.tipoIER;
             if (nivel && counts.hasOwnProperty(nivel)) {
                 counts[nivel as keyof typeof counts]++;
             }
@@ -138,28 +132,28 @@ export function RiskMappingDashboard() {
                             <h3 className="font-semibold text-center mb-1">CLASSIFICAÇÃO</h3>
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="p-2 bg-green-500 text-white text-center rounded-lg">
-                                    <div className="font-bold text-xl">{classficacaoCounts['Risco Aceitável']}</div>
+                                    <div className="font-bold text-xl">{classficacaoCounts['Aceitável']}</div>
                                     <div className="text-xs">Aceitável</div>
                                 </div>
                                 <div className="p-2 bg-yellow-400 text-black text-center rounded-lg">
-                                    <div className="font-bold text-xl">{classficacaoCounts['Risco Gerenciável']}</div>
+                                    <div className="font-bold text-xl">{classficacaoCounts['Gerenciável']}</div>
                                     <div className="text-xs">Gerenciável</div>
                                 </div>
                                 <div className="p-2 bg-orange-500 text-white text-center rounded-lg">
-                                     <div className="font-bold text-xl">{classficacaoCounts['Risco Prioritário']}</div>
+                                     <div className="font-bold text-xl">{classficacaoCounts['Prioritário']}</div>
                                     <div className="text-xs">Prioritário</div>
                                 </div>
                                 <div className="p-2 bg-red-500 text-white text-center rounded-lg">
-                                    <div className="font-bold text-xl">{classficacaoCounts['Risco Crítico']}</div>
+                                    <div className="font-bold text-xl">{classficacaoCounts['Crítico']}</div>
                                     <div className="text-xs">Crítico</div>
                                 </div>
                             </div>
                         </div>
                          <div className="grid grid-cols-2 gap-2">
-                            <Button variant={classificacaoFiltro.includes('Risco Aceitável') ? 'default' : 'outline'} onClick={() => handleClassificacaoClick('Risco Aceitável')}>Risco Aceitável</Button>
-                            <Button variant={classificacaoFiltro.includes('Risco Gerenciável') ? 'default' : 'outline'} onClick={() => handleClassificacaoClick('Risco Gerenciável')}>Risco Gerenciável</Button>
-                            <Button variant={classificacaoFiltro.includes('Risco Prioritário') ? 'default' : 'outline'} onClick={() => handleClassificacaoClick('Risco Prioritário')}>Risco Prioritário</Button>
-                            <Button variant={classificacaoFiltro.includes('Risco Crítico') ? 'default' : 'outline'} onClick={() => handleClassificacaoClick('Risco Crítico')}>Risco Crítico</Button>
+                            <Button variant={classificacaoFiltro.includes('Aceitável') ? 'default' : 'outline'} onClick={() => handleClassificacaoClick('Aceitável')}>Risco Aceitável</Button>
+                            <Button variant={classificacaoFiltro.includes('Gerenciável') ? 'default' : 'outline'} onClick={() => handleClassificacaoClick('Gerenciável')}>Risco Gerenciável</Button>
+                            <Button variant={classificacaoFiltro.includes('Prioritário') ? 'default' : 'outline'} onClick={() => handleClassificacaoClick('Prioritário')}>Risco Prioritário</Button>
+                            <Button variant={classificacaoFiltro.includes('Crítico') ? 'default' : 'outline'} onClick={() => handleClassificacaoClick('Crítico')}>Risco Crítico</Button>
                         </div>
 
                         <Button variant="secondary" className="w-full" onClick={limparFiltros}>Limpar todas as segmentações</Button>
@@ -223,16 +217,16 @@ export function RiskMappingDashboard() {
                             ></div>
                             <ChartContainer 
                                 config={{
-                                    'Risco Aceitável': { label: 'Risco Aceitável', color: riskColorMap['Risco Aceitável'] },
-                                    'Risco Gerenciável': { label: 'Risco Gerenciável', color: riskColorMap['Risco Gerenciável'] },
-                                    'Risco Prioritário': { label: 'Risco Prioritário', color: riskColorMap['Risco Prioritário'] },
-                                    'Risco Crítico': { label: 'Risco Crítico', color: riskColorMap['Risco Crítico'] },
+                                    'Aceitável': { label: 'Risco Aceitável', color: riskColorMap['Aceitável'] },
+                                    'Gerenciável': { label: 'Risco Gerenciável', color: riskColorMap['Gerenciável'] },
+                                    'Prioritário': { label: 'Risco Prioritário', color: riskColorMap['Prioritário'] },
+                                    'Crítico': { label: 'Risco Crítico', color: riskColorMap['Crítico'] },
                                 }}
                                 className="w-full h-full"
                             >
                                 <ScatterChart margin={{ top: 40, right: 20, bottom: 40, left: 40 }}>
-                                    <XAxis type="number" dataKey="x" name="Impacto" domain={[0, 6]} ticks={[1,2,3,4,5]} tickFormatter={(val) => Object.keys(impactScore).find(key => impactScore[key as keyof typeof impactScore] === val) || ''} label={{ value: "Impacto", position: "bottom", offset: 20 }} />
-                                    <YAxis type="number" dataKey="y" name="Probabilidade" domain={[0, 6]} ticks={[1,2,3,4,5]} tickFormatter={(val) => Object.keys(probabilityScore).find(key => probabilityScore[key as keyof typeof probabilityScore] === val) || ''} label={{ value: "Probabilidade", angle: -90, position: "insideLeft", offset: -20 }} />
+                                    <XAxis type="number" dataKey="x" name="Impacto" domain={[0, 10]} ticks={[2,4,6,8,10]} label={{ value: "Impacto", position: "bottom", offset: 20 }} />
+                                    <YAxis type="number" dataKey="y" name="Probabilidade" domain={[0, 10]} ticks={[2,4,6,8,10]} label={{ value: "Probabilidade", angle: -90, position: "insideLeft", offset: -20 }} />
                                     <ZAxis type="number" dataKey="z" range={[100, 1000]} name="IER" />
                                     <ChartTooltip cursor={{ strokeDasharray: '3 3' }} content={<ChartTooltipContent />} />
                                     <ChartLegend 
@@ -261,7 +255,7 @@ export function RiskMappingDashboard() {
                                 <TableBody>
                                     {filteredRisks.sort((a,b) => b.ier - a.ier).map(risk => (
                                         <TableRow key={risk.id}>
-                                            <TableCell className="font-mono text-xs">{risk.categoriaDoRisco}-{risk.id.padStart(3,'0')}</TableCell>
+                                            <TableCell className="font-mono text-xs">{risk.categoria}-{risk.id.padStart(3,'0')}</TableCell>
                                             <TableCell>{risk.fatorDeRisco}</TableCell>
                                             <TableCell>{risk.risco}</TableCell>
                                             <TableCell className="text-right font-bold">

@@ -819,61 +819,67 @@ export const controlsData: Control[] = [
     },
 ];
 
-const newRisksFromIdentification: Risk[] = identifiedRisksData.map(ir => ({
-    id: ir.id,
-    risco: ir.riskName,
-    topRiskAssociado: ir.topRisk,
-    fatorDeRisco: ir.riskFactor,
-    imp: ir.corporateImpact,
-    org: ir.organizationalRelevance,
-    prob: ir.contextualizedProbability,
-    ctrl: ir.currentControlCapacity,
-    tempo: ir.containmentTime,
-    facil: ir.technicalFeasibility,
-    criado: new Date().toISOString().split('T')[0],
-    criadoPor: 'Sistema de Identificação',
-    status: 'Novo',
-    taxonomia: '',
-    gerencia: '',
-    categoria: '',
-    ier: 0,
-    responsavelBowtie: '',
-    x: 0,
-    y: 0,
-    origem: '',
-    tipoIER: '',
-    modificado: '',
-    modificadoPor: '',
-    bowtieRealizado: 'Não',
-    urlDoCC: '',
-    possuiCC: 'Não',
-    pilar: '',
-    temaMaterial: '',
-    pilarESG: '',
-    englobador: '',
-    horizonteTempo: '',
-    geOrigemRisco: '',
-    observacao: ir.currentControls,
-    dataAlteracaoCuradoria: '',
-    contexto: ir.riskScenario,
-}));
+const newRisksFromIdentification: Risk[] = identifiedRisksData.map(ir => {
+    const imp = ir.corporateImpact;
+    const org = ir.organizationalRelevance;
+    const prob = ir.contextualizedProbability;
+    const ctrl = ir.currentControlCapacity;
+    const tempo = ir.containmentTime;
+    const facil = ir.technicalFeasibility;
+    const ier = Math.round(((imp * 0.3) + (org * 0.1) + (prob * 0.2) + (ctrl * 0.15) + (tempo * 0.15) + (facil * 0.1)) * 100);
 
-newRisksFromIdentification.forEach(risk => {
-    const imp = risk.imp || 0;
-    const org = risk.org || 0;
-    const prob = risk.prob || 0;
-    const ctrl = risk.ctrl || 0;
-    const tempo = risk.tempo || 0;
-    const facil = risk.facil || 0;
-    risk.ier = Math.round(((imp * 0.3) + (org * 0.1) + (prob * 0.2) + (ctrl * 0.15) + (tempo * 0.15) + (facil * 0.1)) * 100);
+    let tipoIER: Risk['tipoIER'];
+    if (ier >= 800) tipoIER = 'Crítico';
+    else if (ier >= 700) tipoIER = 'Prioritário';
+    else if (ier >= 600) tipoIER = 'Gerenciável';
+    else tipoIER = 'Aceitável';
+
+    return {
+        id: ir.id,
+        risco: ir.riskName,
+        topRiskAssociado: ir.topRisk,
+        fatorDeRisco: ir.riskFactor,
+        imp: ir.corporateImpact,
+        org: ir.organizationalRelevance,
+        prob: ir.contextualizedProbability,
+        ctrl: ir.currentControlCapacity,
+        tempo: ir.containmentTime,
+        facil: ir.technicalFeasibility,
+        criado: new Date().toISOString().split('T')[0],
+        criadoPor: 'Sistema de Identificação',
+        status: 'Novo',
+        taxonomia: '',
+        gerencia: '',
+        categoria: '',
+        ier: ier,
+        tipoIER: tipoIER,
+        responsavelBowtie: '',
+        x: 0,
+        y: 0,
+        origem: 'Identificação de Risco',
+        modificado: '',
+        modificadoPor: '',
+        bowtieRealizado: 'Não',
+        urlDoCC: '',
+        possuiCC: 'Não',
+        pilar: '',
+        temaMaterial: '',
+        pilarESG: '',
+        englobador: '',
+        horizonteTempo: '',
+        geOrigemRisco: '',
+        observacao: ir.currentControls,
+        dataAlteracaoCuradoria: '',
+        contexto: ir.riskScenario,
+    }
 });
 
 
 const existingRisks: Risk[] = [
-  { id: '1', status: 'Em Análise', gerencia: 'Operação', risco: 'Queda de pessoa ou objeto de passarela/plataforma/escada', topRiskAssociado: 'Quedas de Risco OLN Operacional', fatorDeRisco: 'Material Rodante', imp: 8, org: 0, prob: 7, ctrl: 7, tempo: 10, facil: 8, ier: 815, contexto: '70%', bowtieRealizado: 'Não', observacao: '', pilar: 'G - Governança', pilarESG: 'S - Social', temaMaterial: 'Integridade de Ativos', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-CR-Negócio-1', englobador: 'Curto Prazo', horizonteTempo: 'Curto Prazo', tipoIER: 'Elevado', urlDoCC: '', possuiCC: 'Não', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-CR-Negócio', responsavelBowtie: 'Guilherme', x: 9, y: 9.5, dataAlteracaoCuradoria: '2025-07-15'},
-  { id: '2', status: 'Em Análise', gerencia: 'Tecnologia', risco: 'Descarrilamento em AMV durante manobra de entrada/saída do terminal', topRiskAssociado: 'Comprometimento de Risco 07. I. Tecnológico', fatorDeRisco: 'Tecnologia e Segurança da Informação', imp: 9, org: 0, prob: 8, ctrl: 8, tempo: 6, facil: 8, ier: 805, contexto: '40%', bowtieRealizado: 'Não', observacao: '', pilar: 'E - Ambiental', pilarESG: 'S - Social', temaMaterial: 'Integridade Tecnológica', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-TC-Negócio-2', englobador: 'Longo Prazo', horizonteTempo: 'Longo Prazo', tipoIER: 'Elevado', urlDoCC: '', possuiCC: 'Não', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-TC-Negócio', responsavelBowtie: 'Silvio Hesi', x: 9.5, y: 8, dataAlteracaoCuradoria: '2025-07-15'},
-  { id: '29', status: 'Em Análise', gerencia: 'Operação', risco: 'Colapso de estrutura (silo, armazém, torre de elevador, moega)', topRiskAssociado: 'Colapso de Risco OLN Operacional', fatorDeRisco: 'Terminais', imp: 6, org: 0, prob: 4, ctrl: 8, tempo: 8, facil: 4, ier: 660, contexto: '', bowtieRealizado: 'Realizado', observacao: '', pilar: 'G - Governança', pilarESG: 'S - Social', temaMaterial: 'Integridade de Ativos', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-OPE-Negócio-29', englobador: 'Longo Prazo', horizonteTempo: 'Longo Prazo', tipoIER: 'Elevado', urlDoCC: 'https://rumo.com/bowtie/29', possuiCC: 'Sim', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-OPE-Negócio', responsavelBowtie: 'Guilherme', x: 4, y: 7, dataAlteracaoCuradoria: '2025-07-15'},
-  { id: '30', status: 'Em Análise', gerencia: 'Operação', risco: 'Incêndio e explosão em terminais (silos/ armazéns/ correias transportadoras)', topRiskAssociado: 'Incêndio e Risco OLN Operacional', fatorDeRisco: 'Segurança do Trabalho', imp: 4, org: 0, prob: 4, ctrl: 4, tempo: 8, facil: 4, ier: 660, contexto: '', bowtieRealizado: 'Realizado', observacao: '', pilar: 'G - Governança', pilarESG: 'S - Social', temaMaterial: 'Integridade de Ativos', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-OPE-Negócio-30', englobador: 'Longo Prazo', horizonteTempo: 'Longo Prazo', tipoIER: 'Elevado', urlDoCC: 'https://rumo.com/bowtie/30', possuiCC: 'Sim', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-OPE-Negócio', responsavelBowtie: 'Guilherme', x: 4, y: 7, dataAlteracaoCuradoria: '2025-07-15' },
+  { id: '1', status: 'Em Análise', gerencia: 'Operação', risco: 'Queda de pessoa ou objeto de passarela/plataforma/escada', topRiskAssociado: 'Quedas de Risco OLN Operacional', fatorDeRisco: 'Material Rodante', imp: 8, org: 0, prob: 7, ctrl: 7, tempo: 10, facil: 8, ier: 815, contexto: '70%', bowtieRealizado: 'Não', observacao: '', pilar: 'G - Governança', pilarESG: 'S - Social', temaMaterial: 'Integridade de Ativos', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-CR-Negócio-1', englobador: 'Curto Prazo', horizonteTempo: 'Curto Prazo', tipoIER: 'Crítico', urlDoCC: '', possuiCC: 'Não', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-CR-Negócio', responsavelBowtie: 'Guilherme', x: 9, y: 9.5, dataAlteracaoCuradoria: '2025-07-15'},
+  { id: '2', status: 'Em Análise', gerencia: 'Tecnologia', risco: 'Descarrilamento em AMV durante manobra de entrada/saída do terminal', topRiskAssociado: 'Comprometimento de Risco 07. I. Tecnológico', fatorDeRisco: 'Tecnologia e Segurança da Informação', imp: 9, org: 0, prob: 8, ctrl: 8, tempo: 6, facil: 8, ier: 805, contexto: '40%', bowtieRealizado: 'Não', observacao: '', pilar: 'E - Ambiental', pilarESG: 'S - Social', temaMaterial: 'Integridade Tecnológica', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-TC-Negócio-2', englobador: 'Longo Prazo', horizonteTempo: 'Longo Prazo', tipoIER: 'Crítico', urlDoCC: '', possuiCC: 'Não', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-TC-Negócio', responsavelBowtie: 'Silvio Hesi', x: 9.5, y: 8, dataAlteracaoCuradoria: '2025-07-15'},
+  { id: '29', status: 'Em Análise', gerencia: 'Operação', risco: 'Colapso de estrutura (silo, armazém, torre de elevador, moega)', topRiskAssociado: 'Colapso de Risco OLN Operacional', fatorDeRisco: 'Terminais', imp: 6, org: 0, prob: 4, ctrl: 8, tempo: 8, facil: 4, ier: 660, contexto: '', bowtieRealizado: 'Realizado', observacao: '', pilar: 'G - Governança', pilarESG: 'S - Social', temaMaterial: 'Integridade de Ativos', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-OPE-Negócio-29', englobador: 'Longo Prazo', horizonteTempo: 'Longo Prazo', tipoIER: 'Gerenciável', urlDoCC: 'https://rumo.com/bowtie/29', possuiCC: 'Sim', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-OPE-Negócio', responsavelBowtie: 'Guilherme', x: 4, y: 7, dataAlteracaoCuradoria: '2025-07-15'},
+  { id: '30', status: 'Em Análise', gerencia: 'Operação', risco: 'Incêndio e explosão em terminais (silos/ armazéns/ correias transportadoras)', topRiskAssociado: 'Incêndio e Risco OLN Operacional', fatorDeRisco: 'Segurança do Trabalho', imp: 4, org: 0, prob: 4, ctrl: 4, tempo: 8, facil: 4, ier: 660, contexto: '', bowtieRealizado: 'Realizado', observacao: '', pilar: 'G - Governança', pilarESG: 'S - Social', temaMaterial: 'Integridade de Ativos', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-OPE-Negócio-30', englobador: 'Longo Prazo', horizonteTempo: 'Longo Prazo', tipoIER: 'Gerenciável', urlDoCC: 'https://rumo.com/bowtie/30', possuiCC: 'Sim', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-OPE-Negócio', responsavelBowtie: 'Guilherme', x: 4, y: 7, dataAlteracaoCuradoria: '2025-07-15' },
 ];
 
 

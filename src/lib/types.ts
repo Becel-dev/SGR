@@ -74,7 +74,7 @@ export type Risk = {
   x: number;
   y: number;
   origem: string;
-  tipoIER: string;
+  tipoIER: 'Crítico' | 'Prioritário' | 'Gerenciável' | 'Aceitável' | '';
   
   modificado: string;
   criado: string;
