@@ -26,7 +26,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/
 
 const navigationItems = [
   { href: '/dashboard', icon: AreaChart, label: 'Painéis' },
-  { href: '/risks', icon: Siren, label: 'Captura de Riscos' },
+  { href: '/risks', icon: Siren, label: 'Identificação de Riscos' },
   { href: '/controls', icon: Shield, label: 'Governança de Controles' },
   { href: "/kpis", icon: GanttChartSquare, label: "Gestão de KPI's" },
   { href: '/escalation', icon: Rss, label: 'Escalonamento' },
@@ -65,34 +65,31 @@ export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
                   return null;
                 }
                 const isActive = isNavItemActive(item.href);
-                const linkContent = (
-                   <div
-                    className={cn(
-                      'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-                      isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground',
-                       isCollapsed && !isMobile ? 'justify-center' : ''
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span className={cn('transition-all duration-300', isCollapsed && !isMobile ? 'hidden' : 'w-auto opacity-100')}>
-                      {item.label}
-                    </span>
-                  </div>
-                );
-
+                
                 return (
-                  <Tooltip key={item.label}>
-                    <TooltipTrigger asChild>
-                       <Link href={item.href}>
-                         {linkContent}
-                      </Link>
-                    </TooltipTrigger>
-                    {isCollapsed && !isMobile && (
-                      <TooltipContent side="right">
-                        <p>{item.label}</p>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
+                  <Link href={item.href} key={item.label}>
+                    <Tooltip>
+                      <TooltipTrigger className='w-full'>
+                         <div
+                          className={cn(
+                            'flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                            isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground',
+                            isCollapsed && !isMobile ? 'justify-center' : ''
+                          )}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          <span className={cn('transition-all duration-300', isCollapsed && !isMobile ? 'hidden' : 'w-auto opacity-100')}>
+                            {item.label}
+                          </span>
+                        </div>
+                      </TooltipTrigger>
+                       {isCollapsed && !isMobile && (
+                        <TooltipContent side="right">
+                          <p>{item.label}</p>
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </Link>
                 );
               })}
             </nav>
