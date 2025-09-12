@@ -32,16 +32,35 @@ const riskLevelVariantMap: { [key: string]: "default" | "secondary" | "destructi
     'Baixo': 'outline',
 };
 
+// Define a sort order for statuses
+const statusOrder: { [key: string]: number } = {
+  'Novo': 1,
+  'Em Análise': 2,
+  'Analisado': 3,
+  'Aberto': 4,
+  'Em Tratamento': 5,
+  'Mitigado': 6,
+  'Fechado': 7,
+};
+
+
 export default function RisksPage() {
   const [searchTerm, setSearchTerm] = useState("");
   
-  const filteredRisks = risksData.filter((risk: Risk) => {
-    const term = searchTerm.toLowerCase();
-    // Search through all string values of the risk object
-    return Object.values(risk).some(value => 
-      String(value).toLowerCase().includes(term)
-    );
-  });
+  const filteredRisks = risksData
+    .filter((risk: Risk) => {
+        const term = searchTerm.toLowerCase();
+        // Search through all string values of the risk object
+        return Object.values(risk).some(value => 
+        String(value).toLowerCase().includes(term)
+        );
+    })
+    .sort((a, b) => {
+        const statusA = statusOrder[a.statusDoRisco] || 99;
+        const statusB = statusOrder[b.statusDoRisco] || 99;
+        return statusA - statusB;
+    });
+
 
   return (
     <Card>
@@ -138,6 +157,7 @@ export default function RisksPage() {
     </Card>
   );
 }
+
 
 
 
