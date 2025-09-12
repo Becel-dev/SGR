@@ -157,8 +157,3 @@ export default function RisksPage() {
     </Card>
   );
 }
-
-
-
-
-

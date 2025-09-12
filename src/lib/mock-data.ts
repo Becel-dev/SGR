@@ -839,22 +839,28 @@ const newRisksFromIdentification: Risk[] = identifiedRisksData.map(ir => ({
     consequenciaDoRisco: ir.expectedConsequence,
     categoriaDoRisco: '',
     tipoDeRisco: '',
-    processoAfetado: '',
+    processoAfetado: ir.businessObjectives.join(', '),
+    
     estrategia: '',
     descricaoDoControle: ir.currentControls,
+    
     probabilidadeInerente: '' as any,
     impactoInerente: '' as any,
     nivelDeRiscoInerente: '' as any,
+    
     probabilidadeResidual: '' as any,
     impactoResidual: '' as any,
     nivelDeRiscoResidual: '' as any,
+    
     statusDoRisco: 'Novo',
     planoDeAcao: '',
     responsavelPeloRisco: '',
     dataDaUltimaRevisao: '',
     dataDaProximaRevisao: '',
+    
     topRiskAssociado: ir.topRisk,
     fatorDeRisco: ir.riskFactor,
+
     imp: ir.corporateImpact,
     org: ir.organizationalRelevance,
     prob: ir.contextualizedProbability,
@@ -862,9 +868,10 @@ const newRisksFromIdentification: Risk[] = identifiedRisksData.map(ir => ({
     tempo: ir.containmentTime,
     facil: ir.technicalFeasibility,
     ier: 0, 
+
     dataDaAvaliacao: '',
     contexto: '',
-    bowtie: '',
+    bowtie: '', 
     observacao: '',
     pilar: '',
     pilarESG: '',
@@ -873,7 +880,7 @@ const newRisksFromIdentification: Risk[] = identifiedRisksData.map(ir => ({
     ge: '',
     gr: '',
     categoriaMP: '',
-    orig: 0,
+    orig: 0, 
     elev: 0,
     filho: '',
     v: 0,
@@ -1062,4 +1069,3 @@ export const getEmptyBowtie = (risk?: Risk): BowtieData => {
         consequences: [newConsequence],
     };
 };
-
