@@ -4,7 +4,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  AreaChart,
   Shield,
   GanttChartSquare,
   Siren,
@@ -25,7 +24,6 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/
 
 
 const navigationItems = [
-  { href: '/dashboard', icon: AreaChart, label: 'Painéis' },
   { href: '/identification', icon: Lightbulb, label: 'Identificação de Risco' },
   { href: '/risks', icon: Siren, label: 'Análise de Riscos' },
   { href: '/controls', icon: Shield, label: 'Governança de Controles' },

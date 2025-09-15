@@ -915,37 +915,6 @@ export const complianceChartData = [
   { month: 'Jul', compliance: 85.7, target: 90 },
 ];
 
-export const recentActivityData: RecentActivity[] = [
-    {
-        id: '1',
-        user: { name: 'Alice Johnson', avatarUrl: 'https://picsum.photos/seed/101/32/32' },
-        action: 'criou um novo risco',
-        target: 'Falha no sistema de freios',
-        timestamp: '2 horas atrás',
-    },
-    {
-        id: '2',
-        user: { name: 'Bob Williams', avatarUrl: 'https://picsum.photos/seed/102/32/32' },
-        action: 'atualizou o controle',
-        target: 'Inspeção de via semanal',
-        timestamp: '5 horas atrás',
-    },
-    {
-        id: '3',
-        user: { name: 'Carla Davis', avatarUrl: 'https://picsum.photos/seed/103/32/32' },
-        action: 'aprovou o risco',
-        target: 'Descarrilamento em pátio',
-        timestamp: '1 dia atrás',
-    },
-    {
-        id: '4',
-        user: { name: 'David Miller', avatarUrl: 'https://picsum.photos/seed/104/32/32' },
-        action: 'comentou no KPI',
-        target: '% de conformidade de inspeção',
-        timestamp: '2 dias atrás',
-    },
-];
-
 const getStatusCounts = (risks: Risk[]) => {
   const counts: { [key: string]: number } = {
     'Novo': 0,
