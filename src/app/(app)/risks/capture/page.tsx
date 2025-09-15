@@ -280,8 +280,7 @@ export default function CaptureRiskPage() {
                     </SelectContent>
                 </Select>
               </Field>
-              <Field label="Pilar ESG"><Input name="pilarESG" /></Field>
-              <Field label="Tema Material">
+              <Field label="Tema Material" className="sm:col-span-2">
                 <Select name="temaMaterial">
                     <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
                     <SelectContent>
@@ -289,7 +288,7 @@ export default function CaptureRiskPage() {
                     </SelectContent>
                 </Select>
               </Field>
-              <Field label="GE de Origem do Risco">
+              <Field label="GE de Origem do Risco" className="sm:col-span-2">
                 <Select name="geOrigemRisco">
                     <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
                     <SelectContent>
