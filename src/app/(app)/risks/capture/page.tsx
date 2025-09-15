@@ -103,7 +103,17 @@ const categoriaOptions = [
 const tipoIerOptions = ['Crítico', 'Prioritário', 'Gerenciável', 'Aceitável'];
 const origemOptions = ['Técnico', 'Negócio'];
 const pilarOptions = ['G - Governança', 'E - Ambiente', 'S - Social'];
-
+const bowtieRealizadoOptions = ['Realizado', 'Não Realizado', 'Em Andamento'];
+const temaMaterialOptions = [
+    'Integridade de Ativos',
+    'Não Aplicável',
+    'Governança e Ética',
+    'Meio Ambiente',
+    'Saúde e Segurança Pessoal',
+    'Direitos Humanos',
+    'Mudanças Climáticas e Gestão de Emissões',
+    'Diversidade, Equidade e Inclusão'
+];
 
 const Section = ({ title, children, icon: Icon, defaultOpen = false }: { title: string, children: React.ReactNode, icon?: React.ElementType, defaultOpen?: boolean }) => (
     <Accordion type="single" collapsible defaultValue={defaultOpen ? "item-1" : ""}>
@@ -232,7 +242,14 @@ export default function CaptureRiskPage() {
                 </Select>
               </Field>
               <Field label="Pilar ESG"><Input name="pilarESG" /></Field>
-              <Field label="Tema Material"><Input name="temaMaterial" /></Field>
+              <Field label="Tema Material">
+                <Select name="temaMaterial">
+                    <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
+                    <SelectContent>
+                        {temaMaterialOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+              </Field>
               <Field label="GE de Origem do Risco"><Input name="geOrigemRisco" /></Field>
           </Section>
 
@@ -289,9 +306,7 @@ export default function CaptureRiskPage() {
               <Field label="Bowtie Realizado">
                 <Select name="bowtieRealizado"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="Realizado">Realizado</SelectItem>
-                        <SelectItem value="Não Realizado">Não Realizado</SelectItem>
-                        <SelectItem value="Em Andamento">Em Andamento</SelectItem>
+                        {bowtieRealizadoOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                     </SelectContent>
                 </Select>
               </Field>
