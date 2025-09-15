@@ -28,7 +28,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar as CalendarIcon, Siren, Activity, BarChart3, Briefcase, ClipboardList } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
@@ -169,6 +169,37 @@ export default function CaptureRiskPage() {
     const router = useRouter();
     const [dataAlteracaoCuradoria, setDataAlteracaoCuradoria] = useState<Date>();
     
+    // States for IER calculation
+    const [imp, setImp] = useState(0);
+    const [org, setOrg] = useState(0);
+    const [prob, setProb] = useState(0);
+    const [ctrl, setCtrl] = useState(0);
+    const [tempo, setTempo] = useState(0);
+    const [facil, setFacil] = useState(0);
+    const [ier, setIer] = useState(0);
+
+    // Calculate IER whenever a dependency changes
+    useEffect(() => {
+        const impWeight = 0.25;
+        const orgWeight = 0.10;
+        const probWeight = 0.15;
+        const ctrlWeight = 0.20;
+        const tempoWeight = 0.15;
+        const facilWeight = 0.15;
+
+        const calculatedIer = (
+            (imp * impWeight) +
+            (org * orgWeight) +
+            (prob * probWeight) +
+            (ctrl * ctrlWeight) +
+            (tempo * tempoWeight) +
+            (facil * facilWeight)
+        ) * 100;
+
+        setIer(Math.round(calculatedIer));
+    }, [imp, org, prob, ctrl, tempo, facil]);
+
+
   return (
     <Card>
       <CardHeader>
@@ -234,13 +265,13 @@ export default function CaptureRiskPage() {
           </Section>
           
           <Section title="Análise e Classificação" icon={BarChart3}>
-                <Field label="IMP"><Input name="imp" type="number" /></Field>
-                <Field label="ORG"><Input name="org" type="number" /></Field>
-                <Field label="PROB"><Input name="prob" type="number" /></Field>
-                <Field label="CTRL"><Input name="ctrl" type="number" /></Field>
-                <Field label="TEMPO"><Input name="tempo" type="number" /></Field>
-                <Field label="FACIL"><Input name="facil" type="number" /></Field>
-                <Field label="IER"><Input name="ier" type="number" disabled placeholder="Calculado" /></Field>
+                <Field label="IMP"><Input name="imp" type="number" value={imp} onChange={e => setImp(Number(e.target.value))} /></Field>
+                <Field label="ORG"><Input name="org" type="number" value={org} onChange={e => setOrg(Number(e.target.value))} /></Field>
+                <Field label="PROB"><Input name="prob" type="number" value={prob} onChange={e => setProb(Number(e.target.value))} /></Field>
+                <Field label="CTRL"><Input name="ctrl" type="number" value={ctrl} onChange={e => setCtrl(Number(e.target.value))} /></Field>
+                <Field label="TEMPO"><Input name="tempo" type="number" value={tempo} onChange={e => setTempo(Number(e.target.value))} /></Field>
+                <Field label="FACIL"><Input name="facil" type="number" value={facil} onChange={e => setFacil(Number(e.target.value))} /></Field>
+                <Field label="IER"><Input name="ier" type="number" value={ier} disabled placeholder="Calculado" /></Field>
                 <Field label="Origem">
                     <Select name="origem">
                         <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
