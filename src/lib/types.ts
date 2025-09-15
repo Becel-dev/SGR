@@ -81,7 +81,7 @@ export type Risk = {
   criadoPor: string;
   modificadoPor: string;
 
-  bowtieRealizado: string;
+  bowtieRealizado: 'Realizado' | 'Não Realizado' | 'Em Andamento' | 'Não' | 'Sim';
   urlDoCC: string;
   possuiCC: string;
   

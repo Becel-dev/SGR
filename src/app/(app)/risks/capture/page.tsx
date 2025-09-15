@@ -281,9 +281,9 @@ export default function CaptureRiskPage() {
               <Field label="Bowtie Realizado">
                 <Select name="bowtieRealizado"><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="Sim">Sim</SelectItem>
-                        <SelectItem value="Não">Não</SelectItem>
                         <SelectItem value="Realizado">Realizado</SelectItem>
+                        <SelectItem value="Não Realizado">Não Realizado</SelectItem>
+                        <SelectItem value="Em Andamento">Em Andamento</SelectItem>
                     </SelectContent>
                 </Select>
               </Field>
