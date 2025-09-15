@@ -101,6 +101,8 @@ const categoriaOptions = [
 ];
 
 const tipoIerOptions = ['Crítico', 'Prioritário', 'Gerenciável', 'Aceitável'];
+const origemOptions = ['Técnico', 'Negócio'];
+const pilarOptions = ['G - Governança', 'E - Ambiente', 'S - Social'];
 
 
 const Section = ({ title, children, icon: Icon, defaultOpen = false }: { title: string, children: React.ReactNode, icon?: React.ElementType, defaultOpen?: boolean }) => (
@@ -203,8 +205,7 @@ export default function CaptureRiskPage() {
                     <Select name="origem">
                         <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="Técnico">Técnico</SelectItem>
-                            <SelectItem value="Negócio">Negócio</SelectItem>
+                            {origemOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </Field>
@@ -222,7 +223,14 @@ export default function CaptureRiskPage() {
 
           <Section title="ESG e Governança" icon={ClipboardList}>
               <Field label="Englobador"><Input name="englobador" /></Field>
-              <Field label="Pilar"><Input name="pilar" /></Field>
+              <Field label="Pilar">
+                <Select name="pilar">
+                    <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
+                    <SelectContent>
+                        {pilarOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+              </Field>
               <Field label="Pilar ESG"><Input name="pilarESG" /></Field>
               <Field label="Tema Material"><Input name="temaMaterial" /></Field>
               <Field label="GE de Origem do Risco"><Input name="geOrigemRisco" /></Field>
