@@ -100,6 +100,8 @@ const categoriaOptions = [
     'Estratégico', 'Financeiro', 'Sustentabilidade', 'Não Aplicável'
 ];
 
+const tipoIerOptions = ['Crítico', 'Prioritário', 'Gerenciável', 'Aceitável'];
+
 
 const Section = ({ title, children, icon: Icon, defaultOpen = false }: { title: string, children: React.ReactNode, icon?: React.ElementType, defaultOpen?: boolean }) => (
     <Accordion type="single" collapsible defaultValue={defaultOpen ? "item-1" : ""}>
@@ -206,7 +208,14 @@ export default function CaptureRiskPage() {
                         </SelectContent>
                     </Select>
                 </Field>
-                <Field label="Tipo IER"><Input name="tipoIER" /></Field>
+                <Field label="Tipo IER">
+                    <Select name="tipoIER">
+                        <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
+                        <SelectContent>
+                            {tipoIerOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                    </Select>
+                </Field>
                 <Field label="X"><Input name="x" /></Field>
                 <Field label="Y"><Input name="y" /></Field>
           </Section>
