@@ -31,7 +31,6 @@ const navigationItems = [
   { href: '/escalation', icon: Rss, label: 'Escalonamento' },
   { href: '/bowtie', icon: GitFork, label: 'Visualização Bowtie' },
   { href: '/reports/generate', icon: Bot, label: 'Gerador de Relatório IA' },
-  { href: '/improvement', icon: Sparkles, label: 'Melhoria Contínua' },
   { href: '/administration', icon: Users, label: 'Administração', roles: ['admin'] },
 ];
 
