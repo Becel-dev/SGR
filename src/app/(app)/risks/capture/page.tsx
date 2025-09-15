@@ -115,6 +115,7 @@ const temaMaterialOptions = [
     'Diversidade, Equidade e Inclusão'
 ];
 const englobadorOptions = ['Negócio', 'Operacional'];
+const horizonteTempoOptions = ['Curto Prazo', 'Longo Prazo', 'Médio Prazo'];
 
 
 const Section = ({ title, children, icon: Icon, defaultOpen = false }: { title: string, children: React.ReactNode, icon?: React.ElementType, defaultOpen?: boolean }) => (
@@ -273,7 +274,14 @@ export default function CaptureRiskPage() {
                 </Select>
             </Field>
             <Field label="Responsável pelo Bowtie"><Input name="responsavelBowtie" /></Field>
-            <Field label="Horizonte Tempo"><Input name="horizonteTempo" /></Field>
+            <Field label="Horizonte Tempo">
+                <Select name="horizonteTempo">
+                    <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
+                    <SelectContent>
+                        {horizonteTempoOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            </Field>
             <Field label="Data Alteração Curadoria">
                  <Popover>
                     <PopoverTrigger asChild>
