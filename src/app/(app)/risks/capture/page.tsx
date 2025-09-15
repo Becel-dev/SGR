@@ -197,7 +197,15 @@ export default function CaptureRiskPage() {
                 <Field label="TEMPO"><Input name="tempo" type="number" /></Field>
                 <Field label="FACIL"><Input name="facil" type="number" /></Field>
                 <Field label="IER"><Input name="ier" type="number" disabled placeholder="Calculado" /></Field>
-                <Field label="Origem"><Input name="origem" /></Field>
+                <Field label="Origem">
+                    <Select name="origem">
+                        <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Técnico">Técnico</SelectItem>
+                            <SelectItem value="Negócio">Negócio</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </Field>
                 <Field label="Tipo IER"><Input name="tipoIER" /></Field>
                 <Field label="X"><Input name="x" /></Field>
                 <Field label="Y"><Input name="y" /></Field>
