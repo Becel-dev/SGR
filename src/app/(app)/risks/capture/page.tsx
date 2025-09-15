@@ -89,6 +89,22 @@ const riskFactorOptions = [
     '11.2. Gestão inadequada do conhecimento'
 ];
 
+const gerenciaOptions = [
+    'Operação',
+    'Tecnologia',
+    'Ambiental',
+    'GesMud',
+    'Compliance',
+    'Regulatório',
+    'Suprimentos',
+    'Jurídico',
+    'Comercial',
+    'DHO',
+    'Expansão',
+    'Seg. Trabalho',
+    'Cultura e Comunicação'
+];
+
 
 const Section = ({ title, children, icon: Icon, defaultOpen = false }: { title: string, children: React.ReactNode, icon?: React.ElementType, defaultOpen?: boolean }) => (
     <Accordion type="single" collapsible defaultValue={defaultOpen ? "item-1" : ""}>
@@ -137,7 +153,14 @@ export default function CaptureRiskPage() {
           
           <Section title="Identificação e Contexto" icon={Briefcase} defaultOpen>
             <Field label="ID"><Input name="id" placeholder="Ex: 1" /></Field>
-            <Field label="Gerência"><Input name="gerencia" /></Field>
+            <Field label="Gerência">
+              <Select name="gerencia">
+                <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
+                <SelectContent>
+                  {gerenciaOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </Field>
             <Field label="Risco (Nome)" className="sm:col-span-2"><Input name="risco" placeholder="Nome do Risco" /></Field>
             
             <Field label="TopRisk Associado" className="sm:col-span-2">
