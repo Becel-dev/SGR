@@ -137,6 +137,8 @@ const geOrigemRiscoOptions = [
     'Segurança Pessoal'
 ];
 
+const contextoOptions = ['WIP', '100%'];
+
 
 const Section = ({ title, children, icon: Icon, defaultOpen = false }: { title: string, children: React.ReactNode, icon?: React.ElementType, defaultOpen?: boolean }) => (
     <Accordion type="single" collapsible defaultValue={defaultOpen ? "item-1" : ""}>
@@ -222,7 +224,14 @@ export default function CaptureRiskPage() {
                     </SelectContent>
                 </Select>
             </Field>
-            <Field label="Contexto" className="sm:col-span-2"><Textarea name="contexto" /></Field>
+            <Field label="Contexto" className="sm:col-span-2">
+                <Select name="contexto">
+                    <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
+                    <SelectContent>
+                        {contextoOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            </Field>
             <Field label="Observação" className="sm:col-span-2"><Textarea name="observacao" /></Field>
           </Section>
           
