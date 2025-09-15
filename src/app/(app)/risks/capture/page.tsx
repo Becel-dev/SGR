@@ -116,6 +116,26 @@ const temaMaterialOptions = [
 ];
 const englobadorOptions = ['Negócio', 'Operacional'];
 const horizonteTempoOptions = ['Curto Prazo', 'Longo Prazo', 'Médio Prazo'];
+const geOrigemRiscoOptions = [
+    'Controles Internos',
+    'Tecnologia e Segurança da Informação',
+    'Segurança e Riscos Operacionais',
+    'Material Rodante',
+    'Meio Ambiente',
+    'Expansão - Portos e Terminais',
+    'EXP - Malha Paulista',
+    'Expansão - FMT',
+    'Financeiro',
+    'Terminais',
+    'Segurança do Trabalho',
+    'Operação',
+    'Seguros',
+    'Via Permanente',
+    'Jurídico',
+    'Regulatório',
+    'Manutenção - CIM',
+    'Segurança Pessoal'
+];
 
 
 const Section = ({ title, children, icon: Icon, defaultOpen = false }: { title: string, children: React.ReactNode, icon?: React.ElementType, defaultOpen?: boolean }) => (
@@ -260,7 +280,14 @@ export default function CaptureRiskPage() {
                     </SelectContent>
                 </Select>
               </Field>
-              <Field label="GE de Origem do Risco"><Input name="geOrigemRisco" /></Field>
+              <Field label="GE de Origem do Risco">
+                <Select name="geOrigemRisco">
+                    <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
+                    <SelectContent>
+                        {geOrigemRiscoOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+              </Field>
           </Section>
 
           <Section title="Gestão e Prazos" icon={Activity}>
