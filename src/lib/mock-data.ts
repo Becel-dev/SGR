@@ -1,6 +1,6 @@
 
 
-import type { Risk, RecentActivity, BowtieData, BowtieThreat, BowtieConsequence, Control, Kpi } from './types';
+import type { Risk, BowtieData, BowtieThreat, BowtieConsequence, Control, Kpi } from './types';
 import { identifiedRisksData } from './identified-risks-data';
 
 export const kpisData: Kpi[] = [
@@ -885,25 +885,6 @@ const existingRisks: Risk[] = [
 
 export const risksData: Risk[] = [...existingRisks, ...newRisksFromIdentification];
 
-
-export const kpiData = {
-  compliance: {
-    value: 85.7,
-    change: -5.2,
-  },
-  overdueItems: {
-    value: kpisData.filter(k => k.status === 'Atrasado').length,
-    change: 15,
-  },
-  criticalRisks: {
-    value: risksData.filter(r => (r.status === 'Novo') && r.ier > 700).length,
-    change: 4,
-  },
-  controlDeviations: {
-    value: controlsData.filter(c => c.status === 'Implementado com Pendência').length,
-    change: 5,
-  },
-};
 
 export const complianceChartData = [
   { month: 'Jan', compliance: 88, target: 90 },
