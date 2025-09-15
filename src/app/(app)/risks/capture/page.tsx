@@ -90,19 +90,14 @@ const riskFactorOptions = [
 ];
 
 const gerenciaOptions = [
-    'Operação',
-    'Tecnologia',
-    'Ambiental',
-    'GesMud',
-    'Compliance',
-    'Regulatório',
-    'Suprimentos',
-    'Jurídico',
-    'Comercial',
-    'DHO',
-    'Expansão',
-    'Seg. Trabalho',
-    'Cultura e Comunicação'
+    'Operação', 'Tecnologia', 'Ambiental', 'GesMud', 'Compliance',
+    'Regulatório', 'Suprimentos', 'Jurídico', 'Comercial', 'DHO',
+    'Expansão', 'Seg. Trabalho', 'Cultura e Comunicação'
+];
+
+const categoriaOptions = [
+    'Operacional', 'Tecnologia', 'Compliance', 'Regulatório',
+    'Estratégico', 'Financeiro', 'Sustentabilidade', 'Não Aplicável'
 ];
 
 
@@ -182,7 +177,14 @@ export default function CaptureRiskPage() {
             </Field>
             
             <Field label="Taxonomia (Código)"><Input name="taxonomia" placeholder="RISK-CR-Negócio-1" /></Field>
-            <Field label="Categoria"><Input name="categoriaDoRisco" placeholder="RISK-CR-Negócio"/></Field>
+            <Field label="Categoria">
+                <Select name="categoria">
+                    <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
+                    <SelectContent>
+                        {categoriaOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            </Field>
             <Field label="Contexto" className="sm:col-span-2"><Textarea name="contexto" /></Field>
             <Field label="Observação" className="sm:col-span-2"><Textarea name="observacao" /></Field>
           </Section>
