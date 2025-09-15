@@ -100,10 +100,10 @@ const categoriaOptions = [
     'Estratégico', 'Financeiro', 'Sustentabilidade', 'Não Aplicável'
 ];
 
-const tipoIerOptions = ['Crítico', 'Prioritário', 'Gerenciável', 'Aceitável'];
 const origemOptions = ['Técnico', 'Negócio'];
-const pilarOptions = ['G - Governança', 'E - Ambiente', 'S - Social'];
+const tipoIerOptions = ['Crítico', 'Prioritário', 'Gerenciável', 'Aceitável'];
 const bowtieRealizadoOptions = ['Realizado', 'Não Realizado', 'Em Andamento'];
+const pilarOptions = ['G - Governança', 'E - Ambiente', 'S - Social'];
 const temaMaterialOptions = [
     'Integridade de Ativos',
     'Não Aplicável',
@@ -114,6 +114,8 @@ const temaMaterialOptions = [
     'Mudanças Climáticas e Gestão de Emissões',
     'Diversidade, Equidade e Inclusão'
 ];
+const englobadorOptions = ['Negócio', 'Operacional'];
+
 
 const Section = ({ title, children, icon: Icon, defaultOpen = false }: { title: string, children: React.ReactNode, icon?: React.ElementType, defaultOpen?: boolean }) => (
     <Accordion type="single" collapsible defaultValue={defaultOpen ? "item-1" : ""}>
@@ -232,7 +234,14 @@ export default function CaptureRiskPage() {
           </Section>
 
           <Section title="ESG e Governança" icon={ClipboardList}>
-              <Field label="Englobador"><Input name="englobador" /></Field>
+              <Field label="Englobador">
+                <Select name="englobador">
+                    <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
+                    <SelectContent>
+                        {englobadorOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+              </Field>
               <Field label="Pilar">
                 <Select name="pilar">
                     <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
