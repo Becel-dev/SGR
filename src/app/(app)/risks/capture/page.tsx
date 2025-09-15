@@ -167,8 +167,6 @@ const Field = ({ label, children, className }: {label: string, children: React.R
 
 export default function CaptureRiskPage() {
     const router = useRouter();
-    const [criadoDate, setCriadoDate] = useState<Date>();
-    const [modificadoDate, setModificadoDate] = useState<Date>();
     const [dataAlteracaoCuradoria, setDataAlteracaoCuradoria] = useState<Date>();
     
   return (
@@ -224,7 +222,7 @@ export default function CaptureRiskPage() {
                     </SelectContent>
                 </Select>
             </Field>
-            <Field label="Contexto" className="sm:col-span-2">
+            <Field label="Contexto">
                 <Select name="contexto">
                     <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
                     <SelectContent>
@@ -328,30 +326,6 @@ export default function CaptureRiskPage() {
                     <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dataAlteracaoCuradoria} onSelect={setDataAlteracaoCuradoria}/></PopoverContent>
                 </Popover>
             </Field>
-            <Field label="Criado">
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {criadoDate ? <span>{criadoDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={criadoDate} onSelect={setCriadoDate} initialFocus/></PopoverContent>
-                </Popover>
-            </Field>
-            <Field label="Criado Por"><Input name="criadoPor" /></Field>
-            <Field label="Modificado">
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {modificadoDate ? <span>{modificadoDate.toLocaleDateString()}</span> : <span>Selecione uma data</span>}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={modificadoDate} onSelect={setModificadoDate} /></PopoverContent>
-                </Popover>
-            </Field>
-            <Field label="Modificado Por"><Input name="modificadoPor" /></Field>
           </Section>
 
            <Section title="Controles e Bowtie" icon={ClipboardList}>
