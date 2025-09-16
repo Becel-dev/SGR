@@ -16,9 +16,20 @@ import type { IdentifiedRisk } from '@/lib/types';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Lightbulb, Info, SlidersHorizontal, BarChart, CheckSquare, Target } from 'lucide-react';
+import { ArrowLeft, Lightbulb, Info, SlidersHorizontal, BarChart, CheckSquare, Target, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 
 const DetailItem = ({ label, value, className }: { label: string, value: React.ReactNode, className?: string }) => {
@@ -67,6 +78,13 @@ export default function IdentifiedRiskDetailPage() {
         }
         setLoading(false);
     }, [id]);
+
+    const handleDelete = () => {
+        // Lógica de exclusão aqui
+        console.log(`Risco ${risk?.id} excluído.`);
+        // Idealmente, redirecionar o usuário após a exclusão
+        // router.push('/identification');
+    }
 
     if (loading) {
         return <div>Carregando...</div>;
@@ -134,7 +152,24 @@ export default function IdentifiedRiskDetailPage() {
             </div>
         </Section>
       </CardContent>
-       <CardFooter>
+       <CardFooter className="flex justify-between">
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="destructive-outline"><Trash2 className="mr-2 h-4 w-4" /> Excluir Risco</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Tem certeza que deseja excluir o registro?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Esta ação não pode ser desfeita. Isso excluirá permanentemente a ficha de identificação de risco "{risk.riskName}".
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Não</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete}>Sim</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <Button asChild>
                 <Link href={`/identification/capture?id=${risk.id}`}>Editar Ficha</Link>
             </Button>
@@ -142,4 +177,3 @@ export default function IdentifiedRiskDetailPage() {
     </Card>
   );
 }
-

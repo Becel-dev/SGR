@@ -1,17 +1,27 @@
 
-
 'use client'
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { controlsData, initialBowtieData, risksData } from "@/lib/mock-data";
 import { notFound, useParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Siren, DollarSign, Target, Shield, Activity, BarChart3, Briefcase, Users, CircleHelp, ClipboardList, TrendingUp, PlusCircle, ArrowRight, GitFork } from "lucide-react";
+import { ArrowLeft, Siren, DollarSign, Target, Shield, Activity, BarChart3, Briefcase, Users, CircleHelp, ClipboardList, TrendingUp, PlusCircle, ArrowRight, GitFork, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { Control, Risk } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const riskLevelVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
     'Crítico': 'destructive',
@@ -87,6 +97,14 @@ export default function RiskDetailPage() {
         }
         setLoading(false);
     }, [id]);
+
+    const handleDelete = () => {
+        // Lógica de exclusão aqui
+        console.log(`Risco ${risk?.id} excluído.`);
+        // Idealmente, redirecionar o usuário após a exclusão
+        // router.push('/risks');
+    }
+
 
     if (loading) {
         return <div>Carregando...</div>;
@@ -215,7 +233,7 @@ export default function RiskDetailPage() {
                 )}
 
             </CardContent>
-            <CardFooter className="flex justify-between flex-wrap gap-2">
+            <CardFooter className="flex justify-between flex-wrap gap-4">
                 <div className="flex gap-2 flex-wrap">
                      <Button asChild>
                         <Link href={`/controls/capture?riskId=${risk.id}`}>
@@ -239,9 +257,28 @@ export default function RiskDetailPage() {
                         </Button>
                     )}
                 </div>
-                 <Button asChild>
-                    <Link href={`/risks/capture?id=${risk.id}`}>Editar Risco</Link>
-                </Button>
+                <div className="flex gap-2 flex-wrap">
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive-outline"><Trash2 className="mr-2 h-4 w-4" />Excluir Risco</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Tem certeza que deseja excluir o registro?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Esta ação não pode ser desfeita. Isso excluirá permanentemente o risco "{risk.risco}".
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Não</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDelete}>Sim</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                    <Button asChild>
+                        <Link href={`/risks/capture?id=${risk.id}`}>Editar Risco</Link>
+                    </Button>
+                </div>
             </CardFooter>
         </Card>
     );
