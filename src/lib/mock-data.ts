@@ -859,7 +859,7 @@ const newRisksFromIdentification: Risk[] = identifiedRisksData.map(ir => {
         origem: 'Identificação de Risco',
         modificado: '',
         modificadoPor: '',
-        bowtieRealizado: 'Não',
+        bowtieRealizado: 'Não Realizado',
         urlDoCC: '',
         possuiCC: 'Não',
         pilar: '',
@@ -876,8 +876,8 @@ const newRisksFromIdentification: Risk[] = identifiedRisksData.map(ir => {
 
 
 const existingRisks: Risk[] = [
-  { id: '1', status: 'Em Análise', gerencia: 'Operação', risco: 'Queda de pessoa ou objeto de passarela/plataforma/escada', topRiskAssociado: 'Quedas de Risco OLN Operacional', fatorDeRisco: 'Material Rodante', imp: 8, org: 0, prob: 7, ctrl: 7, tempo: 10, facil: 8, ier: 815, contexto: '70%', bowtieRealizado: 'Não', observacao: '', pilar: 'G - Governança', pilarESG: 'S - Social', temaMaterial: 'Integridade de Ativos', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-CR-Negócio-1', englobador: 'Curto Prazo', horizonteTempo: 'Curto Prazo', tipoIER: 'Crítico', urlDoCC: '', possuiCC: 'Não', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-CR-Negócio', responsavelBowtie: 'Guilherme', x: 9, y: 9.5, dataAlteracaoCuradoria: '2025-07-15'},
-  { id: '2', status: 'Em Análise', gerencia: 'Tecnologia', risco: 'Descarrilamento em AMV durante manobra de entrada/saída do terminal', topRiskAssociado: 'Comprometimento de Risco 07. I. Tecnológico', fatorDeRisco: 'Tecnologia e Segurança da Informação', imp: 9, org: 0, prob: 8, ctrl: 8, tempo: 6, facil: 8, ier: 805, contexto: '40%', bowtieRealizado: 'Não', observacao: '', pilar: 'E - Ambiental', pilarESG: 'S - Social', temaMaterial: 'Integridade Tecnológica', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-TC-Negócio-2', englobador: 'Longo Prazo', horizonteTempo: 'Longo Prazo', tipoIER: 'Crítico', urlDoCC: '', possuiCC: 'Não', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-TC-Negócio', responsavelBowtie: 'Silvio Hesi', x: 9.5, y: 8, dataAlteracaoCuradoria: '2025-07-15'},
+  { id: '1', status: 'Em Análise', gerencia: 'Operação', risco: 'Queda de pessoa ou objeto de passarela/plataforma/escada', topRiskAssociado: 'Quedas de Risco OLN Operacional', fatorDeRisco: 'Material Rodante', imp: 8, org: 0, prob: 7, ctrl: 7, tempo: 10, facil: 8, ier: 815, contexto: '70%', bowtieRealizado: 'Não Realizado', observacao: '', pilar: 'G - Governança', pilarESG: 'S - Social', temaMaterial: 'Integridade de Ativos', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-CR-Negócio-1', englobador: 'Curto Prazo', horizonteTempo: 'Curto Prazo', tipoIER: 'Crítico', urlDoCC: '', possuiCC: 'Não', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-CR-Negócio', responsavelBowtie: 'Guilherme', x: 9, y: 9.5, dataAlteracaoCuradoria: '2025-07-15'},
+  { id: '2', status: 'Em Análise', gerencia: 'Tecnologia', risco: 'Descarrilamento em AMV durante manobra de entrada/saída do terminal', topRiskAssociado: 'Comprometimento de Risco 07. I. Tecnológico', fatorDeRisco: 'Tecnologia e Segurança da Informação', imp: 9, org: 0, prob: 8, ctrl: 8, tempo: 6, facil: 8, ier: 805, contexto: '40%', bowtieRealizado: 'Não Realizado', observacao: '', pilar: 'E - Ambiental', pilarESG: 'S - Social', temaMaterial: 'Integridade Tecnológica', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-TC-Negócio-2', englobador: 'Longo Prazo', horizonteTempo: 'Longo Prazo', tipoIER: 'Crítico', urlDoCC: '', possuiCC: 'Não', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-TC-Negócio', responsavelBowtie: 'Silvio Hesi', x: 9.5, y: 8, dataAlteracaoCuradoria: '2025-07-15'},
   { id: '29', status: 'Em Análise', gerencia: 'Operação', risco: 'Colapso de estrutura (silo, armazém, torre de elevador, moega)', topRiskAssociado: 'Colapso de Risco OLN Operacional', fatorDeRisco: 'Terminais', imp: 6, org: 0, prob: 4, ctrl: 8, tempo: 8, facil: 4, ier: 660, contexto: '', bowtieRealizado: 'Realizado', observacao: '', pilar: 'G - Governança', pilarESG: 'S - Social', temaMaterial: 'Integridade de Ativos', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-OPE-Negócio-29', englobador: 'Longo Prazo', horizonteTempo: 'Longo Prazo', tipoIER: 'Gerenciável', urlDoCC: 'https://rumo.com/bowtie/29', possuiCC: 'Sim', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-OPE-Negócio', responsavelBowtie: 'Guilherme', x: 4, y: 7, dataAlteracaoCuradoria: '2025-07-15'},
   { id: '30', status: 'Em Análise', gerencia: 'Operação', risco: 'Incêndio e explosão em terminais (silos/ armazéns/ correias transportadoras)', topRiskAssociado: 'Incêndio e Risco OLN Operacional', fatorDeRisco: 'Segurança do Trabalho', imp: 4, org: 0, prob: 4, ctrl: 4, tempo: 8, facil: 4, ier: 660, contexto: '', bowtieRealizado: 'Realizado', observacao: '', pilar: 'G - Governança', pilarESG: 'S - Social', temaMaterial: 'Integridade de Ativos', geOrigemRisco: 'Controles Internos', origem: 'GR - Observação', taxonomia: 'RISK-OPE-Negócio-30', englobador: 'Longo Prazo', horizonteTempo: 'Longo Prazo', tipoIER: 'Gerenciável', urlDoCC: 'https://rumo.com/bowtie/30', possuiCC: 'Sim', modificado: '2025-07-15', criado: '2025-07-15', criadoPor: 'Admin', modificadoPor: 'Admin', categoria: 'RISK-OPE-Negócio', responsavelBowtie: 'Guilherme', x: 4, y: 7, dataAlteracaoCuradoria: '2025-07-15' },
 ];
@@ -896,33 +896,14 @@ export const complianceChartData = [
   { month: 'Jul', compliance: 85.7, target: 90 },
 ];
 
-const getStatusCounts = (risks: Risk[]) => {
-  const counts: { [key: string]: number } = {
-    'Novo': 0,
-    'Em Análise': 0,
-    'Analisado': 0,
-  };
-  risks.forEach(risk => {
-    const status = risk.status;
-    if (counts.hasOwnProperty(status)) {
-      counts[status]++;
-    }
-  });
-  return counts;
-};
-
-const statusCounts = getStatusCounts(risksData);
-
-export const statusBreakdownChartData = [
-  { name: 'Novo', value: statusCounts['Novo'], fill: 'hsl(var(--chart-5))' },
-  { name: 'Em Análise', value: statusCounts['Em Análise'], fill: 'hsl(var(--chart-2))' },
-  { name: 'Analisado', value: statusCounts['Analisado'], fill: 'hsl(var(--chart-1))' },
-];
-
 export const initialBowtieData: BowtieData[] = [
     {
         id: 'B001',
         riskId: '29',
+        createdAt: '2024-07-20',
+        responsible: 'Admin Rumo',
+        approvalStatus: 'Aprovado',
+        version: 2,
         topEvent: {
             title: "Colapso de estrutura",
             description: "Armazenagem"
@@ -948,7 +929,7 @@ export const initialBowtieData: BowtieData[] = [
     }
 ];
 
-export const getEmptyBowtie = (risk?: Risk): BowtieData => {
+export const getEmptyBowtie = (risk: Risk): BowtieData => {
     const newId = `B${Math.random().toString(36).substr(2, 9)}`;
     const newThreat: BowtieThreat = {
         id: 'T1',
@@ -973,22 +954,13 @@ export const getEmptyBowtie = (risk?: Risk): BowtieData => {
         }]
     };
 
-    if (!risk) {
-        return {
-            id: newId,
-            riskId: `R-GENERIC-${newId}`,
-            topEvent: {
-                title: 'Novo Evento de Topo',
-                description: 'Descreva o processo',
-            },
-            threats: [newThreat],
-            consequences: [newConsequence],
-        };
-    }
-
     return {
         id: newId,
         riskId: risk.id,
+        createdAt: new Date().toISOString().split('T')[0],
+        responsible: risk.responsavelBowtie || 'Não definido',
+        approvalStatus: 'Em aprovação',
+        version: 1,
         topEvent: {
             title: risk.risco,
             description: risk.gerencia,

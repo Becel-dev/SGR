@@ -81,7 +81,7 @@ export type Risk = {
   criadoPor: string;
   modificadoPor: string;
 
-  bowtieRealizado: 'Realizado' | 'Não Realizado' | 'Em Andamento' | 'Não' | 'Sim';
+  bowtieRealizado: 'Realizado' | 'Não Realizado' | 'Em Andamento';
   urlDoCC: string;
   possuiCC: string;
   
@@ -144,6 +144,10 @@ export type BowtieData = {
   topEvent: BowtieTopEvent;
   threats: BowtieThreat[];
   consequences: BowtieConsequence[];
+  createdAt: string;
+  responsible: string;
+  approvalStatus: 'Em aprovação' | 'Aprovado';
+  version: number;
 };
 
 
