@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { BowtieData, BowtieBarrierNode, BowtieThreat, BowtieConsequence, BowtieTopEvent } from "@/lib/types";
+import type { BowtieData, BowtieBarrierNode, BowtieThreat, BowtieConsequence, BowtieTopEvent, Control } from "@/lib/types";
 import { ArrowRight, ChevronRight, GitFork, Shield, Siren, Zap, Edit, Trash2, PlusCircle, Palette, AlertTriangle } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import {
@@ -33,12 +33,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { controlsData } from '@/lib/mock-data';
 
 
 const statusColors: Record<BowtieBarrierNode['status'], string> = {
   'Implementado': 'bg-green-200 text-green-800',
   'Pendente': 'bg-yellow-200 text-yellow-800',
   'Não Implementado': 'bg-red-200 text-red-800',
+  'Implementado com Pendência': 'bg-blue-200 text-blue-800',
+  'Implementação Futura': 'bg-gray-200 text-gray-800',
 };
 
 const effectivenessColors: Record<BowtieBarrierNode['effectiveness'], string> = {
@@ -49,14 +52,26 @@ const effectivenessColors: Record<BowtieBarrierNode['effectiveness'], string> = 
 
 // --- Editor Popovers ---
 const BarrierEditor = ({ barrier, onUpdate, trigger }: { barrier: BowtieBarrierNode, onUpdate: (updatedBarrier: BowtieBarrierNode) => void, trigger: React.ReactNode }) => {
-    const [title, setTitle] = React.useState(barrier.title);
-    const [responsible, setResponsible] = React.useState(barrier.responsible);
+    const [selectedControlId, setSelectedControlId] = React.useState<string | undefined>(barrier.controlId?.toString());
     const [effectiveness, setEffectiveness] = React.useState(barrier.effectiveness);
-    const [status, setStatus] = React.useState(barrier.status);
 
     const handleSave = () => {
-        onUpdate({ ...barrier, title, responsible, effectiveness, status });
+        const control = controlsData.find(c => c.id.toString() === selectedControlId);
+        if (control) {
+            onUpdate({ 
+                ...barrier, 
+                controlId: control.id,
+                title: control.nomeControle,
+                responsible: control.donoControle,
+                status: control.status as BowtieBarrierNode['status'], // Type assertion
+                effectiveness: effectiveness,
+            });
+        }
     };
+    
+    const handleControlSelect = (controlId: string) => {
+        setSelectedControlId(controlId);
+    }
 
     return (
          <Popover>
@@ -64,33 +79,34 @@ const BarrierEditor = ({ barrier, onUpdate, trigger }: { barrier: BowtieBarrierN
             <PopoverContent className="w-80">
                 <div className="grid gap-4">
                     <div className="space-y-2">
-                        <h4 className="font-medium leading-none">Editar Barreira</h4>
+                        <h4 className="font-medium leading-none">Editar Barreira (Controle)</h4>
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="b-title">Título</Label>
-                        <Input id="b-title" value={title} onChange={(e) => setTitle(e.target.value)} />
-                        <Label htmlFor="b-resp">Responsável</Label>
-                        <Input id="b-resp" value={responsible} onChange={(e) => setResponsible(e.target.value)} />
+                        <Label htmlFor="b-control">Controle</Label>
+                        <Select value={selectedControlId} onValueChange={handleControlSelect}>
+                            <SelectTrigger id="b-control">
+                                <SelectValue placeholder="Selecione um controle..." />
+                            </SelectTrigger>
+                            <SelectContent position="popper">
+                                {controlsData.map(c => (
+                                    <SelectItem key={c.id} value={c.id.toString()}>
+                                       {`[${c.id}] ${c.nomeControle}`}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
                         <Label htmlFor="b-eff">Eficácia</Label>
                         <Select value={effectiveness} onValueChange={(v: BowtieBarrierNode['effectiveness']) => setEffectiveness(v)}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectTrigger id="b-eff"><SelectValue /></SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="Eficaz">Eficaz</SelectItem>
                                 <SelectItem value="Pouco Eficaz">Pouco Eficaz</SelectItem>
                                 <SelectItem value="Ineficaz">Ineficaz</SelectItem>
                             </SelectContent>
                         </Select>
-                        <Label htmlFor="b-status">Status</Label>
-                        <Select value={status} onValueChange={(v: BowtieBarrierNode['status']) => setStatus(v)}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Implementado">Implementado</SelectItem>
-                                <SelectItem value="Pendente">Pendente</SelectItem>
-                                <SelectItem value="Não Implementado">Não Implementado</SelectItem>
-                            </SelectContent>
-                        </Select>
                     </div>
-                    <Button onClick={handleSave}>Salvar</Button>
+                    <Button onClick={handleSave} disabled={!selectedControlId}>Salvar</Button>
                 </div>
             </PopoverContent>
         </Popover>
@@ -137,7 +153,7 @@ const BarrierNode = ({ barrier, onUpdate, onDelete }: { barrier: BowtieBarrierNo
             <div className={`p-1.5 border-b text-center truncate ${effectivenessColors[barrier.effectiveness]}`}>
                 {barrier.effectiveness}
             </div>
-            <div className={`p-1.5 rounded-b-md text-center truncate ${statusColors[barrier.status]}`}>
+            <div className={`p-1.5 rounded-b-md text-center truncate ${statusColors[barrier.status] || 'bg-gray-200 text-gray-800'}`}>
                 {barrier.status}
             </div>
         </div>
@@ -291,7 +307,14 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
     };
     
     const addBarrier = (side: 'threat' | 'consequence', ownerId: string) => {
-        const newBarrier: BowtieBarrierNode = { id: `B${Date.now()}`, title: 'Nova Barreira', responsible: 'Indefinido', effectiveness: 'Eficaz', status: 'Pendente' };
+        const newBarrier: BowtieBarrierNode = { 
+            id: `B${Date.now()}`,
+            controlId: undefined, 
+            title: 'Selecione um Controle', 
+            responsible: 'Indefinido', 
+            effectiveness: 'Eficaz', 
+            status: 'Pendente' 
+        };
         if (side === 'threat') {
             const updatedThreats = data.threats.map(t => t.id === ownerId ? { ...t, barriers: [...t.barriers, newBarrier] } : t);
             handleUpdate({ threats: updatedThreats });

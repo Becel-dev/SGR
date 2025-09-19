@@ -1,6 +1,6 @@
 
 
-import type { Risk, BowtieData, BowtieThreat, BowtieConsequence, Control, Kpi, EscalationRule } from './types';
+import type { Risk, BowtieData, BowtieThreat, BowtieConsequence, Control, Kpi, EscalationRule, BowtieBarrierNode } from './types';
 import { identifiedRisksData } from './identified-risks-data';
 
 export const kpisData: Kpi[] = [
@@ -168,7 +168,7 @@ export const initialBowtieData: BowtieData[] = [
                 id: 'T1', 
                 title: 'Sobrecarga da estrutura',
                 barriers: [
-                    { id: 'B1-1', title: 'Controle de Peso', responsible: 'Operação', effectiveness: 'Eficaz', status: 'Implementado' },
+                    { id: 'B1-1', controlId: 1, title: 'Controle de Peso', responsible: 'Operação', effectiveness: 'Eficaz', status: 'Implementado' },
                 ]
             },
         ],
@@ -177,7 +177,7 @@ export const initialBowtieData: BowtieData[] = [
                 id: 'C1',
                 title: 'Perda de material',
                 barriers: [
-                    { id: 'B3-1', title: 'Seguro Patrimonial', responsible: 'Financeiro', effectiveness: 'Eficaz', status: 'Implementado' },
+                    { id: 'B3-1', controlId: 3, title: 'Seguro Patrimonial', responsible: 'Financeiro', effectiveness: 'Eficaz', status: 'Implementado' },
                 ]
             },
         ]
@@ -191,7 +191,8 @@ export const getEmptyBowtie = (risk: Risk): BowtieData => {
         title: 'Nova Ameaça',
         barriers: [{
             id: 'B1-1',
-            title: 'Nova Barreira Preventiva',
+            controlId: undefined,
+            title: 'Selecione um Controle',
             responsible: 'Indefinido',
             effectiveness: 'Eficaz',
             status: 'Pendente'
@@ -202,7 +203,8 @@ export const getEmptyBowtie = (risk: Risk): BowtieData => {
         title: 'Nova Consequência',
         barriers: [{
             id: 'B2-1',
-            title: 'Nova Barreira Mitigatória',
+            controlId: undefined,
+            title: 'Selecione um Controle',
             responsible: 'Indefinido',
             effectiveness: 'Eficaz',
             status: 'Pendente'

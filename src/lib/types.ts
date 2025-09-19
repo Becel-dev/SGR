@@ -116,10 +116,11 @@ export type RecentActivity = {
 // Bowtie V2 Types
 export type BowtieBarrierNode = {
   id: string;
+  controlId?: number; // Link to the actual Control
   title: string;
   responsible: string;
   effectiveness: 'Eficaz' | 'Pouco Eficaz' | 'Ineficaz';
-  status: 'Implementado' | 'Não Implementado' | 'Pendente';
+  status: 'Implementado' | 'Não Implementado' | 'Pendente' | 'Implementado com Pendência' | 'Implementação Futura';
 };
 
 export type BowtieThreat = {
