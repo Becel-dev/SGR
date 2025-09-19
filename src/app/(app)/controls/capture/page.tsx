@@ -140,8 +140,8 @@ export default function CaptureControlPage() {
                             </Button>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                <Field label="ID do Risco" className='md:col-span-3'>
-                                    <Select key={index} value={assocRisk.riskId} onValueChange={(value) => handleRiskChange(index, 'riskId', value)}>
-                                        <SelectTrigger><SelectValue placeholder="Selecione um risco..."/></SelectTrigger>
+                                    <Select value={assocRisk.riskId} onValueChange={(value) => handleRiskChange(index, 'riskId', value)}>
+                                        <SelectTrigger key={`select-trigger-${index}`}><SelectValue placeholder="Selecione um risco..."/></SelectTrigger>
                                         <SelectContent>
                                             {risksData.map(risk => (
                                                 <SelectItem key={risk.id} value={risk.id}>
