@@ -40,6 +40,8 @@ import { cn } from '@/lib/utils';
 import type { AssociatedRisk } from '@/lib/types';
 import { risksData } from '@/lib/mock-data';
 
+// Add a 'key' property for React's reconciliation process
+type AssociatedRiskWithKey = AssociatedRisk & { key: number };
 
 const areaOptions = ['OPERAÇÃO', 'MANUTENÇÃO', 'SEGURANÇA', 'FINANCEIRO', 'RH', 'JURÍDICO', 'COMPLIANCE', 'TI'];
 const tipoOptions = ['Preventivo', 'Mitigatório'];
@@ -78,33 +80,34 @@ export default function CaptureControlPage() {
     const [creationDate, setCreationDate] = useState<Date>();
     const [lastCheckDate, setLastCheckDate] = useState<Date>();
     const [nextCheckDate, setNextCheckDate] = useState<Date>();
-    const [associatedRisks, setAssociatedRisks] = useState<AssociatedRisk[]>([]);
+    const [associatedRisks, setAssociatedRisks] = useState<AssociatedRiskWithKey[]>([]);
 
     const handleAddRisk = () => {
-        setAssociatedRisks([...associatedRisks, { riskId: '', codigoMUE: '', titulo: '' }]);
+        // Add a unique key for each new item
+        setAssociatedRisks([...associatedRisks, { key: Date.now(), riskId: '', codigoMUE: '', titulo: '' }]);
     };
 
-    const handleRemoveRisk = (index: number) => {
-        const newRisks = [...associatedRisks];
-        newRisks.splice(index, 1);
-        setAssociatedRisks(newRisks);
+    const handleRemoveRisk = (key: number) => {
+        setAssociatedRisks(associatedRisks.filter(risk => risk.key !== key));
     };
 
-    const handleRiskChange = (index: number, field: keyof AssociatedRisk, value: string) => {
-        const newRisks = [...associatedRisks];
-        const currentRisk = { ...newRisks[index], [field]: value };
-        
-        // If the riskId is changing, populate the related fields
-        if (field === 'riskId') {
-            const selectedRiskData = risksData.find(r => r.id === value);
-            if (selectedRiskData) {
-                // You can decide what default values to use here
-                currentRisk.codigoMUE = selectedRiskData.taxonomia || `RUMO-${selectedRiskData.id}`;
-                currentRisk.titulo = selectedRiskData.risco || 'Título não encontrado';
+    const handleRiskChange = (key: number, field: keyof AssociatedRisk, value: string) => {
+        const newRisks = associatedRisks.map(risk => {
+            if (risk.key === key) {
+                const currentRisk = { ...risk, [field]: value };
+                
+                // If the riskId is changing, populate the related fields
+                if (field === 'riskId') {
+                    const selectedRiskData = risksData.find(r => r.id === value);
+                    if (selectedRiskData) {
+                        currentRisk.codigoMUE = selectedRiskData.taxonomia || `RUMO-${selectedRiskData.id}`;
+                        currentRisk.titulo = selectedRiskData.risco || 'Título não encontrado';
+                    }
+                }
+                return currentRisk;
             }
-        }
-        
-        newRisks[index] = currentRisk;
+            return risk;
+        });
         setAssociatedRisks(newRisks);
     };
     
@@ -131,16 +134,16 @@ export default function CaptureControlPage() {
                     <AlertTriangle className='h-5 w-5 text-primary'/>
                     Riscos Associados
                 </h3>
-                 {associatedRisks.map((assocRisk, index) => {
+                 {associatedRisks.map((assocRisk) => {
                     const selectedRiskData = risksData.find(r => r.id === assocRisk.riskId);
                     return (
-                        <div key={index} className="border p-4 rounded-lg space-y-4 relative">
-                            <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => handleRemoveRisk(index)}>
+                        <div key={assocRisk.key} className="border p-4 rounded-lg space-y-4 relative">
+                            <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => handleRemoveRisk(assocRisk.key)}>
                                 <Trash2 className="h-4 w-4 text-destructive"/>
                             </Button>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                <Field label="ID do Risco" className='md:col-span-3'>
-                                    <Select value={assocRisk.riskId} onValueChange={(value) => handleRiskChange(index, 'riskId', value)}>
+                                    <Select value={assocRisk.riskId} onValueChange={(value) => handleRiskChange(assocRisk.key, 'riskId', value)}>
                                         <SelectTrigger><SelectValue placeholder="Selecione um risco..."/></SelectTrigger>
                                         <SelectContent position="popper">
                                             {risksData.map(risk => (
@@ -158,13 +161,13 @@ export default function CaptureControlPage() {
                                      <Field label="Gerência do Risco"><Input value={selectedRiskData.gerencia} disabled /></Field>
                                    </>
                                 )}
-                                <Field label="Código do MUE"><Input value={assocRisk.codigoMUE} onChange={(e) => handleRiskChange(index, 'codigoMUE', e.target.value)} placeholder="Ex: RUMO 01" /></Field>
-                                <Field label="Título"><Input value={assocRisk.titulo} onChange={(e) => handleRiskChange(index, 'titulo', e.target.value)} placeholder="Ex: RUMO 01-01" /></Field>
+                                <Field label="Código do MUE"><Input value={assocRisk.codigoMUE} onChange={(e) => handleRiskChange(assocRisk.key, 'codigoMUE', e.target.value)} placeholder="Ex: RUMO 01" /></Field>
+                                <Field label="Título"><Input value={assocRisk.titulo} onChange={(e) => handleRiskChange(assocRisk.key, 'titulo', e.target.value)} placeholder="Ex: RUMO 01-01" /></Field>
                             </div>
                         </div>
                     )
                  })}
-                 <Button variant="outline" onClick={handleAddRisk}>
+                 <Button type="button" variant="outline" onClick={handleAddRisk}>
                     <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Associação de Risco
                  </Button>
             </div>
