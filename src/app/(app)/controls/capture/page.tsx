@@ -91,24 +91,12 @@ export default function CaptureControlPage() {
         setAssociatedRisks(associatedRisks.filter(risk => risk.key !== key));
     };
 
-    const handleRiskChange = (key: number, field: keyof AssociatedRisk, value: string) => {
-        const newRisks = associatedRisks.map(risk => {
-            if (risk.key === key) {
-                const currentRisk = { ...risk, [field]: value };
-                
-                // If the riskId is changing, populate the related fields
-                if (field === 'riskId') {
-                    const selectedRiskData = risksData.find(r => r.id === value);
-                    if (selectedRiskData) {
-                        currentRisk.codigoMUE = selectedRiskData.taxonomia || `RUMO-${selectedRiskData.id}`;
-                        currentRisk.titulo = selectedRiskData.risco || 'Título não encontrado';
-                    }
-                }
-                return currentRisk;
-            }
-            return risk;
-        });
-        setAssociatedRisks(newRisks);
+    const handleRiskChange = (key: number, field: keyof Omit<AssociatedRiskWithKey, 'key'>, value: string) => {
+        setAssociatedRisks(prevRisks =>
+            prevRisks.map(risk =>
+                risk.key === key ? { ...risk, [field]: value } : risk
+            )
+        );
     };
     
   return (
