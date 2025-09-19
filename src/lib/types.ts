@@ -98,6 +98,7 @@ export type Risk = {
   responsavel?: string;
   probabilidadeResidual?: "Raro" | "Improvável" | "Possível" | "Provável" | "Quase Certo";
   impactoResidual?: "Insignificante" | "Menor" | "Moderado" | "Maior" | "Catastrófico";
+  escalationRule?: EscalationRule;
 };
 
 
@@ -186,4 +187,19 @@ export type IdentifiedRisk = {
   containmentTime: number; // 0-10 (inverted logic) - TEMPO
   // Field 16
   technicalFeasibility: number; // 0-10 - FACIL
+};
+
+// Escalation Module Types
+export type EscalationLevel = {
+  level: number;
+  triggerDays: number; // X, Y, Z dias
+  triggerPercentage: number; // N% fora da meta
+  role: string;
+  responsible: string;
+  enabled: boolean;
+};
+
+export type EscalationRule = {
+  metricType: 'days' | 'percentage';
+  levels: EscalationLevel[];
 };
