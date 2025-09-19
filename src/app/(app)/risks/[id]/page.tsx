@@ -91,7 +91,9 @@ export default function RiskDetailPage() {
             const foundRisk = risksData.find(r => r.id === id);
             setRisk(foundRisk);
              if(foundRisk) {
-                const foundControls = controlsData.filter(c => c.idRiscoMUE && c.idRiscoMUE.toString() === foundRisk.id);
+                const foundControls = controlsData.filter(c => 
+                    c.associatedRisks.some(ar => ar.riskId === foundRisk.id)
+                );
                 setRelatedControls(foundControls);
             }
         }
@@ -199,7 +201,6 @@ export default function RiskDetailPage() {
                                 <TableHeader>
                                 <TableRow>
                                     <TableHead>ID</TableHead>
-                                    <TableHead>Título</TableHead>
                                     <TableHead>Nome do Controle</TableHead>
                                     <TableHead>Dono</TableHead>
                                     <TableHead>Status</TableHead>
@@ -210,8 +211,7 @@ export default function RiskDetailPage() {
                                 {relatedControls.map(control => (
                                     <TableRow key={control.id}>
                                     <TableCell className="font-mono">{control.id}</TableCell>
-                                    <TableCell className="font-medium">{control.titulo}</TableCell>
-                                    <TableCell>{control.nomeControle}</TableCell>
+                                    <TableCell className="font-medium">{control.nomeControle}</TableCell>
                                     <TableCell>{control.donoControle}</TableCell>
                                     <TableCell>
                                         <Badge variant={controlStatusVariantMap[control.status] || 'default'}>{control.status}</Badge>

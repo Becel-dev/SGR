@@ -26,7 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Calendar as CalendarIcon, Shield } from 'lucide-react';
+import { Calendar as CalendarIcon, Shield, AlertTriangle, PlusCircle, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -36,6 +36,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { cn } from '@/lib/utils';
+import type { AssociatedRisk } from '@/lib/types';
+import { risksData } from '@/lib/mock-data';
 
 
 const areaOptions = ['OPERAÇÃO', 'MANUTENÇÃO', 'SEGURANÇA', 'FINANCEIRO', 'RH', 'JURÍDICO', 'COMPLIANCE', 'TI'];
@@ -75,31 +77,86 @@ export default function CaptureControlPage() {
     const [creationDate, setCreationDate] = useState<Date>();
     const [lastCheckDate, setLastCheckDate] = useState<Date>();
     const [nextCheckDate, setNextCheckDate] = useState<Date>();
+    const [associatedRisks, setAssociatedRisks] = useState<AssociatedRisk[]>([]);
+
+    const handleAddRisk = () => {
+        setAssociatedRisks([...associatedRisks, { riskId: '', codigoMUE: '', titulo: '' }]);
+    };
+
+    const handleRemoveRisk = (index: number) => {
+        const newRisks = [...associatedRisks];
+        newRisks.splice(index, 1);
+        setAssociatedRisks(newRisks);
+    };
+
+    const handleRiskChange = (index: number, field: keyof AssociatedRisk, value: string) => {
+        const newRisks = [...associatedRisks];
+        newRisks[index] = { ...newRisks[index], [field]: value };
+        setAssociatedRisks(newRisks);
+    };
     
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <Shield />
-            Cadastro de Novo Controle (MUE)
+            Cadastro de Novo Controle
         </CardTitle>
         <CardDescription>
-          Preencha os campos abaixo para registrar um novo controle.
+          Preencha os campos abaixo para registrar um novo controle e associá-lo a um ou mais riscos.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-4">
-            <Section title="Identificação" defaultOpen>
-                <Field label="ID"><Input name="id" placeholder="Gerado automaticamente" disabled /></Field>
-                <Field label="Código do MUE"><Input name="codigoMUE" placeholder="Ex: RUMO 01" /></Field>
-                <Field label="Título"><Input name="titulo" placeholder="Ex: RUMO 01-01" /></Field>
-                <Field label="ID Risco Associado"><Input name="idRiscoMUE" placeholder="Ex: 30" /></Field>
-                <Field label="Top Risk Associado"><Input name="topRiskAssociado" placeholder="Ex: Risco 01.Não integridade..." /></Field>
-                <Field label="Descrição do MUE" className="sm:col-span-2 md:col-span-3"><Textarea name="descricaoMUE" placeholder="Descrição completa do risco associado" /></Field>
+            <Section title="Identificação do Controle" defaultOpen>
+                <Field label="ID do Controle"><Input name="id" placeholder="Gerado automaticamente" disabled /></Field>
+                <Field label="Nome do Controle (CC)" className="sm:col-span-3"><Textarea name="nomeControle" placeholder="Nome descritivo do controle" /></Field>
             </Section>
 
+            <div className='space-y-4'>
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                    <AlertTriangle className='h-5 w-5 text-primary'/>
+                    Riscos Associados
+                </h3>
+                 {associatedRisks.map((assocRisk, index) => {
+                    const selectedRiskData = risksData.find(r => r.id === assocRisk.riskId);
+                    return (
+                        <div key={index} className="border p-4 rounded-lg space-y-4 relative">
+                            <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => handleRemoveRisk(index)}>
+                                <Trash2 className="h-4 w-4 text-destructive"/>
+                            </Button>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                               <Field label="ID do Risco" className='md:col-span-3'>
+                                    <Select value={assocRisk.riskId} onValueChange={(value) => handleRiskChange(index, 'riskId', value)}>
+                                        <SelectTrigger><SelectValue placeholder="Selecione um risco..."/></SelectTrigger>
+                                        <SelectContent>
+                                            {risksData.map(risk => (
+                                                <SelectItem key={risk.id} value={risk.id}>
+                                                    {`[${risk.id}] ${risk.risco}`}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </Field>
+                                {selectedRiskData && (
+                                   <>
+                                     <Field label="Nome do Risco"><Input value={selectedRiskData.risco} disabled /></Field>
+                                     <Field label="TopRisk Associado"><Input value={selectedRiskData.topRiskAssociado} disabled /></Field>
+                                     <Field label="Gerência do Risco"><Input value={selectedRiskData.gerencia} disabled /></Field>
+                                   </>
+                                )}
+                                <Field label="Código do MUE"><Input value={assocRisk.codigoMUE} onChange={(e) => handleRiskChange(index, 'codigoMUE', e.target.value)} placeholder="Ex: RUMO 01" /></Field>
+                                <Field label="Título"><Input value={assocRisk.titulo} onChange={(e) => handleRiskChange(index, 'titulo', e.target.value)} placeholder="Ex: RUMO 01-01" /></Field>
+                            </div>
+                        </div>
+                    )
+                 })}
+                 <Button variant="outline" onClick={handleAddRisk}>
+                    <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Associação de Risco
+                 </Button>
+            </div>
+
             <Section title="Detalhes do Controle">
-                <Field label="Nome do Controle (CC)" className="sm:col-span-2"><Textarea name="nomeControle" placeholder="Nome descritivo do controle" /></Field>
                 <Field label="Tipo">
                     <Select name="tipo">
                         <SelectTrigger><SelectValue placeholder="Selecione"/></SelectTrigger>

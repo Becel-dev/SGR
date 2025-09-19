@@ -21,13 +21,15 @@ export type Kpi = {
   emailResponsavel: string;
 };
 
+export type AssociatedRisk = {
+  riskId: string;
+  codigoMUE: string;
+  titulo: string;
+};
+
 export type Control = {
   criadoEm: string;
   id: number;
-  codigoMUE: string;
-  titulo: string;
-  idRiscoMUE: number;
-  descricaoMUE: string;
   nomeControle: string;
   tipo: string;
   classificacao: string;
@@ -45,10 +47,8 @@ export type Control = {
   modificadoEm: string;
   modificadoPor: string;
   preenchimentoKPI: string;
-  gerenciaRisco: string;
-  topRiskAssociado: string;
-  idRiscos: string;
   criticidade: string;
+  associatedRisks: AssociatedRisk[];
 };
 
 

@@ -12,12 +12,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { controlsData, kpisData } from '@/lib/mock-data';
-import type { Control, Kpi } from '@/lib/types';
+import { controlsData, kpisData, risksData } from '@/lib/mock-data';
+import type { Control, Kpi, AssociatedRisk, Risk } from '@/lib/types';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Shield, GanttChartSquare, ClipboardList, User, Calendar, Info, PlusCircle, ArrowRight, FileText } from 'lucide-react';
+import { ArrowLeft, Shield, GanttChartSquare, ClipboardList, User, Calendar, Info, PlusCircle, ArrowRight, FileText, AlertTriangle } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 
@@ -108,7 +108,7 @@ export default function ControlDetailPage() {
                     Detalhes do Controle: {control.id}
                 </CardTitle>
                 <CardDescription>
-                    {control.titulo}
+                    {control.nomeControle}
                 </CardDescription>
             </div>
             <Button variant="outline" asChild>
@@ -122,26 +122,48 @@ export default function ControlDetailPage() {
       <CardContent className="space-y-6">
 
         <Section title="Identificação do Controle" icon={Info}>
-            <DetailItem label="ID" value={control.id} />
-            <DetailItem label="Código do MUE" value={control.codigoMUE} />
-            <DetailItem label="Título" value={control.titulo} />
-            <DetailItem label="Nome do Controle (CC)" value={control.nomeControle} className="sm:col-span-2 md:col-span-3"/>
-        </Section>
-        
-        <Section title="Risco Associado" icon={GanttChartSquare}>
-            <DetailItem 
-                label="ID do Risco" 
-                value={
-                    <Button variant="link" asChild className="p-0 h-auto text-base">
-                        <Link href={`/risks/${control.idRiscoMUE}`}>{control.idRiscoMUE}</Link>
-                    </Button>
-                } 
-            />
-            <DetailItem label="Top Risk Associado" value={control.topRiskAssociado} />
-            <DetailItem label="Gerência do Risco" value={control.gerenciaRisco} />
-            <DetailItem label="Descrição do Risco (MUE)" value={control.descricaoMUE} className="sm:col-span-4"/>
+            <DetailItem label="ID do Controle" value={control.id} />
+            <DetailItem label="Nome do Controle (CC)" value={control.nomeControle} className="sm:col-span-3"/>
         </Section>
 
+        <div className="space-y-4 rounded-lg border p-4">
+            <h3 className="font-semibold text-lg flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-primary" />
+                Riscos Associados
+            </h3>
+            <div className="overflow-x-auto">
+                 <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>ID Risco</TableHead>
+                            <TableHead>Nome do Risco</TableHead>
+                            <TableHead>Código MUE</TableHead>
+                            <TableHead>Título</TableHead>
+                            <TableHead>Top Risk</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {control.associatedRisks.map(assocRisk => {
+                            const risk = risksData.find(r => r.id === assocRisk.riskId);
+                            return (
+                                <TableRow key={assocRisk.riskId}>
+                                    <TableCell>
+                                        <Button variant="link" asChild className="p-0 h-auto">
+                                            <Link href={`/risks/${assocRisk.riskId}`}>{assocRisk.riskId}</Link>
+                                        </Button>
+                                    </TableCell>
+                                    <TableCell>{risk?.risco}</TableCell>
+                                    <TableCell>{assocRisk.codigoMUE}</TableCell>
+                                    <TableCell>{assocRisk.titulo}</TableCell>
+                                    <TableCell>{risk?.topRiskAssociado}</TableCell>
+                                </TableRow>
+                            )
+                        })}
+                    </TableBody>
+                </Table>
+            </div>
+        </div>
+        
         <Section title="Classificação e Status" icon={ClipboardList}>
             <DetailItem label="Tipo (Preventivo/Mitigatório)" value={control.tipo} />
             <DetailItem label="Classificação" value={control.classificacao} />
@@ -157,14 +179,14 @@ export default function ControlDetailPage() {
             <DetailItem label="E-mail do Dono" value={control.emailDono} />
             <DetailItem label="Área" value={control.area} />
             <DetailItem label="Frequência (em meses)" value={control.frequenciaMeses} />
-            <DetailItem label="Data da Última Verificação" value={control.dataUltimaVerificacao} />
-            <DetailItem label="Próxima Verificação" value={control.proximaVerificacao} />
+            <DetailItem label="Data da Última Verificação" value={formatDate(control.dataUltimaVerificacao)} />
+            <DetailItem label="Próxima Verificação" value={formatDate(control.proximaVerificacao)} />
         </Section>
 
         <Section title="Metadados de Cadastro" icon={Calendar}>
-             <DetailItem label="Data de Criação" value={control.criadoEm} />
+             <DetailItem label="Data de Criação" value={formatDate(control.criadoEm)} />
              <DetailItem label="Criado Por" value={control.criadoPor} />
-             <DetailItem label="Data de Modificação" value={control.modificadoEm} />
+             <DetailItem label="Data de Modificação" value={formatDate(control.modificadoEm)} />
              <DetailItem label="Modificado Por" value={control.modificadoPor} />
              <DetailItem label="E-mails para KPI" value={control.preenchimentoKPI} className="sm:col-span-4" />
         </Section>
