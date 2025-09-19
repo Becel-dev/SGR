@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import {
@@ -91,7 +92,19 @@ export default function CaptureControlPage() {
 
     const handleRiskChange = (index: number, field: keyof AssociatedRisk, value: string) => {
         const newRisks = [...associatedRisks];
-        newRisks[index] = { ...newRisks[index], [field]: value };
+        const currentRisk = { ...newRisks[index], [field]: value };
+        
+        // If the riskId is changing, populate the related fields
+        if (field === 'riskId') {
+            const selectedRiskData = risksData.find(r => r.id === value);
+            if (selectedRiskData) {
+                // You can decide what default values to use here
+                currentRisk.codigoMUE = selectedRiskData.taxonomia || `RUMO-${selectedRiskData.id}`;
+                currentRisk.titulo = selectedRiskData.risco || 'Título não encontrado';
+            }
+        }
+        
+        newRisks[index] = currentRisk;
         setAssociatedRisks(newRisks);
     };
     
