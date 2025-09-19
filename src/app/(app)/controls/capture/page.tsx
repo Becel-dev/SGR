@@ -143,6 +143,8 @@ export default function CaptureControlPage() {
                                     <Select value={assocRisk.riskId} onValueChange={(value) => handleRiskChange(index, 'riskId', value)}>
                                         <SelectTrigger><SelectValue placeholder="Selecione um risco..."/></SelectTrigger>
                                         <SelectContent position="popper">
+                                            {/* Hidden item to handle the initial empty state */}
+                                            <SelectItem value="" disabled className="hidden">Selecione um risco...</SelectItem>
                                             {risksData.map(risk => (
                                                 <SelectItem key={risk.id} value={risk.id}>
                                                     {`[${risk.id}] ${risk.risco}`}
