@@ -124,8 +124,8 @@ export default function CaptureControlPage() {
                         <SelectContent>{criticidadeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                     </Select>
                 </Field>
-                <Field label="OnePager"><Input name="onePager" /></Field>
-                <Field label="Evidência"><Input name="evidencia" placeholder="Link ou nome do arquivo" /></Field>
+                <Field label="OnePager"><Input name="onePager" type="file" /></Field>
+                <Field label="Evidência"><Input name="evidencia" type="file" /></Field>
             </Section>
             
             <Section title="Responsabilidade e Prazos">

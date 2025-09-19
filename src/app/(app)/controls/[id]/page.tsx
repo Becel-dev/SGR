@@ -17,7 +17,7 @@ import type { Control, Kpi } from '@/lib/types';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Shield, GanttChartSquare, ClipboardList, User, Calendar, Info, PlusCircle, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Shield, GanttChartSquare, ClipboardList, User, Calendar, Info, PlusCircle, ArrowRight, FileText } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 
@@ -88,6 +88,15 @@ export default function ControlDetailPage() {
     if (!control) {
         return notFound();
     }
+    
+    const fileDisplay = (fileName: string) => (
+        <Button variant="link" asChild className="p-0 h-auto text-base">
+            <a href="#" download={fileName}>
+                <FileText className="mr-2 h-4 w-4" />
+                {fileName}
+            </a>
+        </Button>
+    )
 
     return (
     <Card>
@@ -139,8 +148,8 @@ export default function ControlDetailPage() {
             <DetailItem label="Status" value={control.status} />
             <DetailItem label="Criticidade" value={control.criticidade} />
             <DetailItem label="Validação" value={control.validacao} />
-            <DetailItem label="OnePager" value={control.onePager} />
-            <DetailItem label="Evidência" value={control.evidencia} />
+            <DetailItem label="OnePager" value={control.onePager ? fileDisplay(control.onePager) : '-'} />
+            <DetailItem label="Evidência" value={control.evidencia ? fileDisplay(control.evidencia) : '-'} />
         </Section>
         
         <Section title="Responsabilidade e Prazos" icon={User}>
