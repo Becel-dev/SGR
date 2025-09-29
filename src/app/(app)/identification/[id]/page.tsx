@@ -73,23 +73,42 @@ export default function IdentifiedRiskDetailPage() {
     const { id } = params;
     const [risk, setRisk] = useState<IdentifiedRisk | undefined>(undefined);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState(false);
+
+    const fetchRisk = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            if (typeof id === 'string') {
+                const foundRisk = await getIdentifiedRiskById(id);
+                setRisk(foundRisk);
+            } else {
+                setRisk(undefined);
+            }
+        } catch (err: any) {
+            setError("Erro ao carregar dados do risco. Tente novamente.");
+            toast({
+                variant: "destructive",
+                title: "Erro ao carregar risco",
+                description: err?.message || "Não foi possível conectar ao banco de dados."
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (id && typeof id === 'string') {
-            const fetchRisk = async () => {
-                setLoading(true);
-                const foundRisk = await getIdentifiedRiskById(id);
-                setRisk(foundRisk);
-                setLoading(false);
-            }
             fetchRisk();
         }
     }, [id]);
 
     const handleDelete = async () => {
         if (!risk) return;
+        setDeleting(true);
+        setError(null);
         try {
-            // A partitionKey é necessária para a exclusão. Pegamos do risco carregado.
             const partitionKey = risk.topRisk.replace(/[^a-zA-Z0-9]/g, '') || "Default";
             await deleteIdentifiedRisk(risk.id, partitionKey);
             toast({
@@ -97,14 +116,17 @@ export default function IdentifiedRiskDetailPage() {
                 description: "O risco foi excluído.",
             });
             router.push('/identification');
-            router.refresh(); // Força a atualização da lista na página anterior
-        } catch (error) {
-             toast({
+            router.refresh();
+        } catch (err: any) {
+            setError("Não foi possível excluir o risco. Tente novamente.");
+            toast({
                 variant: "destructive",
                 title: "Erro ao excluir",
-                description: "Não foi possível excluir o risco. Tente novamente.",
+                description: err?.message || "Não foi possível excluir o risco. Tente novamente."
             });
-            console.error(error);
+            console.error(err);
+        } finally {
+            setDeleting(false);
         }
     }
 
@@ -112,6 +134,17 @@ export default function IdentifiedRiskDetailPage() {
         return (
             <div className="flex h-64 w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center h-64">
+                <div className="text-center p-4 text-destructive border border-destructive rounded mb-4">
+                    {error}
+                </div>
+                <Button variant="outline" onClick={fetchRisk}>Tentar novamente</Button>
             </div>
         );
     }
@@ -132,6 +165,13 @@ export default function IdentifiedRiskDetailPage() {
                 <CardDescription>
                     {risk.riskName}
                 </CardDescription>
+                {/* Campos de auditoria */}
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-muted-foreground">
+                  <div><b>Criado por:</b> {risk.createdBy || 'Sistema'}</div>
+                  <div><b>Data de criação:</b> {risk.createdAt ? new Date(risk.createdAt).toLocaleString('pt-BR') : '-'}</div>
+                  <div><b>Última alteração por:</b> {risk.updatedBy || 'Sistema'}</div>
+                  <div><b>Data da última alteração:</b> {risk.updatedAt ? new Date(risk.updatedAt).toLocaleString('pt-BR') : '-'}</div>
+                </div>
             </div>
             <Button variant="outline" asChild>
                 <Link href="/identification">
@@ -181,7 +221,7 @@ export default function IdentifiedRiskDetailPage() {
        <CardFooter className="flex justify-between">
             <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button variant="destructive"><Trash2 className="mr-2 h-4 w-4" /> Excluir Risco</Button>
+                    <Button variant="destructive" disabled={deleting}><Trash2 className="mr-2 h-4 w-4" /> {deleting ? "Excluindo..." : "Excluir Risco"}</Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -191,12 +231,12 @@ export default function IdentifiedRiskDetailPage() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Não</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete}>Sim, excluir</AlertDialogAction>
+                        <AlertDialogCancel disabled={deleting}>Não</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} disabled={deleting}>Sim, excluir</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            <Button asChild>
+            <Button asChild disabled={deleting}>
                 <Link href={`/identification/capture?id=${risk.id}`}>Editar Ficha</Link>
             </Button>
        </CardFooter>

@@ -188,6 +188,11 @@ export type IdentifiedRisk = {
   containmentTime: number; // 0-10 (inverted logic) - TEMPO
   // Field 16
   technicalFeasibility: number; // 0-10 - FACIL
+  // Auditoria
+  createdBy: string; // Usuário criador
+  createdAt: string; // Data de criação (ISO)
+  updatedBy: string; // Usuário da última alteração
+  updatedAt: string; // Data da última alteração (ISO)
 };
 
 // Escalation Module Types

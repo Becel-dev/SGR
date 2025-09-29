@@ -3,7 +3,7 @@
 'use server';
 
 import { TableClient, TableEntity, AzureNamedKeyCredential } from "@azure/data-tables";
-import { identifiedRisksData as mockData } from './identified-risks-data';
+// Removido mockData: integração 100% Azure
 import type { IdentifiedRisk } from './types';
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -18,7 +18,6 @@ const toTableEntity = (risk: Omit<IdentifiedRisk, 'id'> & { id?: string }): Tabl
         partitionKey,
         rowKey,
         ...risk,
-        id: rowKey, // Garante que o id está na entidade
         businessObjectives: JSON.stringify(risk.businessObjectives), // Arrays precisam ser serializados
     };
 };
@@ -49,27 +48,17 @@ const fromTableEntity = (entity: TableEntity<any>): IdentifiedRisk => {
 };
 
 
-const getClient = (): TableClient | null => {
+const getClient = (): TableClient => {
     if (!connectionString) {
-        console.warn("String de conexão do Azure não configurada. Usando dados mockados.");
-        return null;
+        throw new Error("String de conexão do Azure não configurada. Configure a variável de ambiente AZURE_STORAGE_CONNECTION_STRING.");
     }
-    try {
-        // A criação do TableClient é síncrona
-        return TableClient.fromConnectionString(connectionString, tableName);
-    } catch (error) {
-        console.error("Erro ao criar o cliente da tabela do Azure:", error);
-        return null;
-    }
+    return TableClient.fromConnectionString(connectionString, tableName);
 }
 
 // ---- Funções CRUD ----
 
 export async function getIdentifiedRisks(): Promise<IdentifiedRisk[]> {
     const client = getClient();
-    if (!client) {
-        return Promise.resolve(mockData); // Retorna dados mockados se o cliente não for criado
-    }
     try {
         await client.createTable(); // Cria a tabela se ela não existir
         const entities = client.listEntities();
@@ -86,9 +75,6 @@ export async function getIdentifiedRisks(): Promise<IdentifiedRisk[]> {
 
 export async function getIdentifiedRiskById(id: string): Promise<IdentifiedRisk | undefined> {
     const client = getClient();
-    if (!client) {
-        return Promise.resolve(mockData.find(r => r.id === id));
-    }
     try {
         // Para buscar por ID (rowKey), precisamos de um partitionKey. 
         // Como não temos essa informação aqui, teremos que listar e filtrar.
@@ -103,20 +89,21 @@ export async function getIdentifiedRiskById(id: string): Promise<IdentifiedRisk 
 
 export async function addOrUpdateIdentifiedRisk(riskData: IdentifiedRisk): Promise<IdentifiedRisk> {
     const client = getClient();
-    if (!client) {
-        console.log("Modo mock: Risco 'salvo' no console", riskData);
-        // Simula a adição/atualização nos dados mockados (não persistirá)
-        const index = mockData.findIndex(r => r.id === riskData.id);
-        if (index > -1) {
-            mockData[index] = riskData;
-        } else {
-            mockData.push(riskData);
-        }
-        return Promise.resolve(riskData);
-    }
     try {
         await client.createTable();
-        const entity = toTableEntity(riskData);
+        // Preencher campos de auditoria
+        const now = new Date().toISOString();
+        let risk = { ...riskData };
+        if (!risk.createdAt) {
+            risk.createdAt = now;
+        }
+        if (!risk.createdBy) {
+            risk.createdBy = "Sistema";
+        }
+        // Sempre atualiza os campos de modificação
+        risk.updatedAt = now;
+        risk.updatedBy = "Sistema";
+        const entity = toTableEntity(risk);
         await client.upsertEntity(entity, "Merge");
         return fromTableEntity(entity);
     } catch (error) {
@@ -127,14 +114,6 @@ export async function addOrUpdateIdentifiedRisk(riskData: IdentifiedRisk): Promi
 
 export async function deleteIdentifiedRisk(id: string, partitionKey: string): Promise<void> {
     const client = getClient();
-    if (!client) {
-        console.log(`Modo mock: Risco com ID ${id} 'excluído'`);
-        const index = mockData.findIndex(r => r.id === id);
-        if (index > -1) {
-            mockData.splice(index, 1);
-        }
-        return Promise.resolve();
-    }
     try {
         await client.deleteEntity(partitionKey, id);
         console.log(`Risco com ID ${id} e PartitionKey ${partitionKey} excluído com sucesso.`);
