@@ -11,12 +11,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { identifiedRisksData } from '@/lib/identified-risks-data';
+import { getIdentifiedRiskById, deleteIdentifiedRisk } from '@/lib/azure-table-storage';
 import type { IdentifiedRisk } from '@/lib/types';
 import Link from 'next/link';
-import { notFound, useParams } from 'next/navigation';
+import { notFound, useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Lightbulb, Info, SlidersHorizontal, BarChart, CheckSquare, Target, Trash2 } from 'lucide-react';
+import { ArrowLeft, Lightbulb, Info, SlidersHorizontal, BarChart, Trash2, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { useToast } from '@/hooks/use-toast';
 
 
 const DetailItem = ({ label, value, className }: { label: string, value: React.ReactNode, className?: string }) => {
@@ -67,27 +68,52 @@ const RatingItem = ({ label, value }: {label:string, value: number}) => (
 
 export default function IdentifiedRiskDetailPage() {
     const params = useParams();
+    const router = useRouter();
+    const { toast } = useToast();
     const { id } = params;
     const [risk, setRisk] = useState<IdentifiedRisk | undefined>(undefined);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (id) {
-            const foundRisk = identifiedRisksData.find(c => c.id.toString() === id);
-            setRisk(foundRisk);
+        if (id && typeof id === 'string') {
+            const fetchRisk = async () => {
+                setLoading(true);
+                const foundRisk = await getIdentifiedRiskById(id);
+                setRisk(foundRisk);
+                setLoading(false);
+            }
+            fetchRisk();
         }
-        setLoading(false);
     }, [id]);
 
-    const handleDelete = () => {
-        // Lógica de exclusão aqui
-        console.log(`Risco ${risk?.id} excluído.`);
-        // Idealmente, redirecionar o usuário após a exclusão
-        // router.push('/identification');
+    const handleDelete = async () => {
+        if (!risk) return;
+        try {
+            // A partitionKey é necessária para a exclusão. Pegamos do risco carregado.
+            const partitionKey = risk.topRisk.replace(/[^a-zA-Z0-9]/g, '') || "Default";
+            await deleteIdentifiedRisk(risk.id, partitionKey);
+            toast({
+                title: "Sucesso",
+                description: "O risco foi excluído.",
+            });
+            router.push('/identification');
+            router.refresh(); // Força a atualização da lista na página anterior
+        } catch (error) {
+             toast({
+                variant: "destructive",
+                title: "Erro ao excluir",
+                description: "Não foi possível excluir o risco. Tente novamente.",
+            });
+            console.error(error);
+        }
     }
 
     if (loading) {
-        return <div>Carregando...</div>;
+        return (
+            <div className="flex h-64 w-full items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
     }
 
     if (!risk) {
@@ -134,7 +160,7 @@ export default function IdentifiedRiskDetailPage() {
                 label="10. Objetivos de Negócio Afetados" 
                 value={
                     <div className="flex flex-wrap gap-2">
-                        {risk.businessObjectives.map(obj => <Badge key={obj} variant="secondary">{obj}</Badge>)}
+                        {Array.isArray(risk.businessObjectives) && risk.businessObjectives.map(obj => <Badge key={obj} variant="secondary">{obj}</Badge>)}
                     </div>
                 } 
                 className="sm:col-span-2"
@@ -155,7 +181,7 @@ export default function IdentifiedRiskDetailPage() {
        <CardFooter className="flex justify-between">
             <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button variant="destructive-outline"><Trash2 className="mr-2 h-4 w-4" /> Excluir Risco</Button>
+                    <Button variant="destructive"><Trash2 className="mr-2 h-4 w-4" /> Excluir Risco</Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -166,7 +192,7 @@ export default function IdentifiedRiskDetailPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Não</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete}>Sim</AlertDialogAction>
+                        <AlertDialogAction onClick={handleDelete}>Sim, excluir</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
