@@ -13,6 +13,10 @@ const ptSans = PT_Sans({
 export const metadata: Metadata = {
   title: 'SGR: Sistema de Gestão de Riscos',
   description: 'Portal de Gestão de Riscos',
+  icons: {
+    // 1x1 transparent PNG data URI to effectively show no favicon in browser tabs
+    icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQYV2NgYAAAAAMAAWgmWQ0AAAAASUVORK5CYII=',
+  },
 };
 
 export default function RootLayout({
