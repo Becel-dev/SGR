@@ -230,7 +230,7 @@ export type RiskAnalysis = IdentifiedRisk & {
   // --- Analysis & Classification ---
   ier?: number;
   origem?: string; // e.g., 'Identificação de Risco'
-  tipoIER?: 'Crítico' | 'Prioritário' | 'Gerenciável' | 'Aceitável' | '';
+  tipoIER?: 'Risco Crítico' | 'Risco Prioritário' | 'Risco Gerenciável' | 'Risco Aceitável' | '';
   x?: number; // Coordinate
   y?: number; // Coordinate
   englobador?: string;
