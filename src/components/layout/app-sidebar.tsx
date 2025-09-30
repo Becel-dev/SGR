@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -25,7 +24,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/
 
 const navigationItems = [
   { href: '/identification', icon: Lightbulb, label: 'Identificação de Risco' },
-  { href: '/risks', icon: Siren, label: 'Análise de Riscos' },
+  { href: '/analysis', icon: Siren, label: 'Análise de Riscos' },
   { href: '/controls', icon: Shield, label: 'Governança de Controles' },
   { href: "/kpis", icon: GanttChartSquare, label: "Gestão de KPI's" },
   { href: '/escalation', icon: Rss, label: 'Escalonamento' },
@@ -40,6 +39,7 @@ export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
   const { isCollapsed } = useSidebar();
 
   const isNavItemActive = (href: string) => {
+    if (!pathname) return false;
     // For dashboard, we want an exact match. For others, we want to match the parent path.
     return href === '/dashboard' ? pathname === href : pathname.startsWith(href);
   };
@@ -108,3 +108,4 @@ export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {
     </div>
   );
 }
+

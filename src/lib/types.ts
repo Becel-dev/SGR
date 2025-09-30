@@ -1,5 +1,3 @@
-
-
 export type Role = 'admin' | 'moderator' | 'editor' | 'viewer';
 
 export type User = {
@@ -208,4 +206,52 @@ export type EscalationLevel = {
 export type EscalationRule = {
   metricType: 'days' | 'percentage';
   levels: EscalationLevel[];
+};
+
+// Risk Analysis Module Types
+export type RiskAnalysis = IdentifiedRisk & {
+  // --- Fields from Identification (Mapped) ---
+  // id, riskName, topRisk, riskFactor, riskScenario, corporateImpact (IMP), 
+  // organizationalRelevance (ORG), contextualizedProbability (PROB), 
+  // currentControlCapacity (CTRL), containmentTime (TEMPO), technicalFeasibility (FACIL)
+  // createdBy, createdAt, updatedBy, updatedAt
+  
+  // --- Status and ID ---
+  status: 'Novo' | 'Em Análise' | 'Analisado';
+  analysisId: string; // PartitionKey for the new table
+
+  // --- Identification & Context (Complementary) ---
+  gerencia?: string;
+  categoria?: string;
+  taxonomia?: string;
+  observacao?: string;
+  contexto?: string; // This seems to be the same as riskScenario, can be clarified.
+
+  // --- Analysis & Classification ---
+  ier?: number;
+  origem?: string; // e.g., 'Identificação de Risco'
+  tipoIER?: 'Crítico' | 'Prioritário' | 'Gerenciável' | 'Aceitável' | '';
+  x?: number; // Coordinate
+  y?: number; // Coordinate
+  englobador?: string;
+
+  // --- ESG & Governance ---
+  pilar?: string;
+  temaMaterial?: string;
+  pilarESG?: string;
+  geOrigemRisco?: string;
+
+  // --- Management & Deadlines ---
+  responsavelBowtie?: string;
+  horizonteTempo?: string;
+  dataAlteracaoCuradoria?: string; // Date as string (ISO)
+  
+  // --- Controls & Bowtie ---
+  bowtieRealizado?: 'Realizado' | 'Não Realizado' | 'Em Andamento';
+  possuiCC?: 'Sim' | 'Não';
+  urlDoCC?: string; // URL
+  
+  // --- Residual Risk (Example) ---
+  residualRiskProbability?: "Raro" | "Improvável" | "Possível" | "Provável" | "Quase Certo";
+  residualRiskImpact?: "Insignificante" | "Menor" | "Moderado" | "Maior" | "Catastrófico";
 };
