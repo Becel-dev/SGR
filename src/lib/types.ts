@@ -230,7 +230,7 @@ export type RiskAnalysis = IdentifiedRisk & {
   // --- Analysis & Classification ---
   ier?: number;
   origem?: string; // e.g., 'Identificação de Risco'
-  tipoIER?: 'Risco Crítico' | 'Risco Prioritário' | 'Risco Gerenciável' | 'Risco Aceitável' | '';
+  tipoIER?: 'Risco Crítico' | 'Risco Prioritário' | 'Risco Gerenciável' | 'Risco Aceitável';
   x?: number; // Coordinate
   y?: number; // Coordinate
   englobador?: string;
@@ -247,8 +247,8 @@ export type RiskAnalysis = IdentifiedRisk & {
   dataAlteracaoCuradoria?: string; // Date as string (ISO)
   
   // --- Controls & Bowtie ---
-  bowtieRealizado?: 'Realizado' | 'Não Realizado' | 'Em Andamento';
-  possuiCC?: 'Sim' | 'Não';
+  bowtieRealizado?: string; // 'Realizado' | 'Não Realizado' | 'Em Andamento';
+  possuiCC?: string;
   urlDoCC?: string; // URL
   
   // --- Residual Risk (Example) ---

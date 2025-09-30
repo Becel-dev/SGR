@@ -16,7 +16,7 @@ import {
   deleteRiskAnalysis,
 } from "@/lib/azure-table-storage";
 import type { RiskAnalysis, IdentifiedRisk } from "@/lib/types";
-import { Loader2, Save, ArrowLeft, Trash2 } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Trash2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -80,8 +80,8 @@ const analysisSchema = z.object({
   responsavelBowtie: z.string().optional().default(""),
   horizonteTempo: z.string().optional().default(""),
   dataAlteracaoCuradoria: z.string().optional().default(""),
-  bowtieRealizado: z.enum(['Realizado', 'Não Realizado', 'Em Andamento']).optional().default("Não Realizado"),
-  possuiCC: z.enum(['Sim', 'Não']).optional().default("Não"),
+  bowtieRealizado: z.string().optional(),
+  possuiCC: z.string().optional(),
   urlDoCC: z.string().optional().default(""), // Validação de URL removida
   ier: z.number().optional().default(0),
 });
@@ -97,9 +97,10 @@ export default function RiskAnalysisCapturePage() {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMarkingAsAnalyzed, setIsMarkingAsAnalyzed] = useState(false);
   const [calculatedIer, setCalculatedIer] = useState(0);
 
-  const { control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<z.infer<typeof analysisSchema>>({
+  const { control, handleSubmit, reset, watch, setValue, getValues, trigger, formState: { errors } } = useForm<z.infer<typeof analysisSchema>>({
     resolver: zodResolver(analysisSchema),
     defaultValues: {
         riskName: '',
@@ -249,11 +250,14 @@ export default function RiskAnalysisCapturePage() {
 
     setIsSaving(true);
     try {
+      // Se o risco já estava 'Analisado', qualquer nova edição o reverte para 'Em Análise'
+      const newStatus = risk && 'status' in risk && risk.status === 'Analisado' ? 'Em Análise' : 'Em Análise';
+
       const analysisData: RiskAnalysis = {
         ...risk,
         ...data,
         ier: calculatedIer,
-        status: 'Em Análise', // Adicionado para corrigir o erro de tipo
+        status: newStatus,
         analysisId: data.topRisk.replace(/[^a-zA-Z0-9]/g, '') || "Default", // Adicionado para corrigir o erro de tipo
         updatedAt: new Date().toISOString(),
         updatedBy: 'current.user@example.com', // TODO: Substituir pelo usuário logado
@@ -305,6 +309,55 @@ export default function RiskAnalysisCapturePage() {
     }
   };
 
+  const handleMarkAsAnalyzed = async () => {
+    if (!risk) return;
+
+    // Força a validação do formulário antes de prosseguir
+    const isValid = await trigger();
+    if (!isValid) {
+      toast({
+        title: "Erro de Validação",
+        description: "Verifique os campos do formulário antes de marcar como analisado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsMarkingAsAnalyzed(true);
+    try {
+      const formData = getValues(); // Pega os dados atuais e validados do formulário
+      const analysisData: RiskAnalysis = {
+        ...risk,
+        ...formData,
+        ier: calculatedIer,
+        status: 'Analisado', // Força a mudança de status
+        analysisId: formData.topRisk.replace(/[^a-zA-Z0-9]/g, '') || "Default",
+        updatedAt: new Date().toISOString(),
+        updatedBy: 'current.user@example.com', // TODO: Substituir pelo usuário logado
+      };
+
+      await addOrUpdateRiskAnalysis(analysisData);
+      
+      toast({
+        title: "Status Atualizado",
+        description: "O risco foi marcado como 'Analisado'.",
+      });
+
+      router.refresh(); // Invalida o cache do servidor
+      router.push('/analysis'); // Redireciona para a página de listagem
+
+    } catch (error) {
+      console.error("Erro ao marcar como analisado:", error);
+      toast({
+        title: "Erro ao Atualizar",
+        description: "Não foi possível atualizar o status. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsMarkingAsAnalyzed(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -330,15 +383,15 @@ export default function RiskAnalysisCapturePage() {
               <CardDescription>Preencha os campos adicionais para analisar o risco identificado.</CardDescription>
             </div>
             <div className="flex gap-2 flex-wrap justify-end">
-                <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSaving || isDeleting}>
+                <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSaving || isDeleting || isMarkingAsAnalyzed}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Voltar
                 </Button>
                 
-                {risk && 'status' in risk && risk.status !== 'Novo' && (
+                {risk && 'status' in risk && risk.status === 'Em Análise' && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button type="button" variant="destructive" disabled={isSaving || isDeleting}>
+                      <Button type="button" variant="destructive" disabled={isSaving || isDeleting || isMarkingAsAnalyzed}>
                         {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
                         Excluir Análise
                       </Button>
@@ -358,7 +411,19 @@ export default function RiskAnalysisCapturePage() {
                   </AlertDialog>
                 )}
 
-                <Button type="submit" disabled={isSaving || isDeleting}>
+                {risk && 'status' in risk && risk.status === 'Em Análise' && (
+                  <Button 
+                    type="button" 
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={handleMarkAsAnalyzed} 
+                    disabled={isSaving || isDeleting || isMarkingAsAnalyzed}
+                  >
+                    {isMarkingAsAnalyzed ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                    Marcar como Analisado
+                  </Button>
+                )}
+
+                <Button type="submit" disabled={isSaving || isDeleting || isMarkingAsAnalyzed}>
                     {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                     Salvar Análise
                 </Button>

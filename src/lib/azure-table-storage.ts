@@ -195,23 +195,20 @@ export async function getRiskAnalysisById(id: string): Promise<RiskAnalysis | un
     }
 }
 
-// Nova função para verificar se um risco já foi analisado
-export async function isRiskInAnalysis(riskId: string): Promise<boolean> {
-    const client = getClient(riskAnalysisTableName);
+// Nova função para verificar o status de um risco na tabela de análise
+export async function getRiskAnalysisStatus(riskId: string): Promise<'Novo' | 'Em Análise' | 'Analisado' | null> {
     try {
-        await client.createTable(); // Garante que a tabela exista
-        const entities = client.listEntities({
-            queryOptions: { filter: `RowKey eq '${riskId}'` }
-        });
-        for await (const entity of entities) {
-            // Se encontrarmos qualquer entidade com o RowKey, significa que já existe na tabela de análise
-            return true;
+        const analysis = await getRiskAnalysisById(riskId);
+        if (analysis) {
+            // Se a análise existir, retorna seu status.
+            return analysis.status;
         }
-        return false;
+        // Se não existir na tabela de análise, consideramos como 'Novo' para fins de lógica de negócio.
+        return 'Novo';
     } catch (error) {
-        console.error(`Erro ao verificar se o risco ${riskId} está em análise:`, error);
-        // Em caso de erro, assumimos que não está em análise para não bloquear o usuário indevidamente
-        return false;
+        console.error(`Erro ao verificar o status do risco ${riskId}:`, error);
+        // Em caso de erro, retornamos null para não bloquear o usuário indevidamente.
+        return null;
     }
 }
 

@@ -15,13 +15,27 @@ import { getRisksForAnalysis } from "@/lib/azure-table-storage";
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
     'Novo': 'destructive',
     'Em Análise': 'secondary',
-    'Analisado': 'default',
+    'Analisado': 'default', // Temporariamente 'default' para visualização
 };
 
 const statusOrder: { [key: string]: number } = {
   'Novo': 1,
   'Em Análise': 2,
   'Analisado': 3,
+};
+
+// Função para determinar a variante do Badge com base no status
+const getBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+  switch (status) {
+    case 'Novo':
+      return 'destructive';
+    case 'Em Análise':
+      return 'secondary';
+    case 'Analisado':
+      return 'default'; // Será estilizado via className
+    default:
+      return 'default';
+  }
 };
 
 export default function RiskAnalysisPage() {
@@ -128,7 +142,14 @@ export default function RiskAnalysisPage() {
                       className={cn(risk.status === 'Novo' && 'bg-yellow-100/50 dark:bg-yellow-900/20 hover:bg-yellow-100/60 dark:hover:bg-yellow-900/30')}
                   >
                     <TableCell>
-                      <Badge variant={statusVariantMap[risk.status] || 'default'}>{risk.status}</Badge>
+                      <Badge 
+                        variant={getBadgeVariant(risk.status)}
+                        className={cn({
+                          'bg-green-600 text-white hover:bg-green-700': risk.status === 'Analisado',
+                        })}
+                      >
+                        {risk.status}
+                      </Badge>
                     </TableCell>
                     <TableCell className="font-mono text-xs">{risk.id}</TableCell>
                     <TableCell>{risk.riskName}</TableCell>

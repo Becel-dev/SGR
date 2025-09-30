@@ -35,7 +35,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { IdentifiedRisk } from '@/lib/types';
-import { getIdentifiedRiskById, addOrUpdateIdentifiedRisk, isRiskInAnalysis } from '@/lib/azure-table-storage';
+import { getIdentifiedRiskById, addOrUpdateIdentifiedRisk, getRiskAnalysisStatus } from '@/lib/azure-table-storage';
 import { topRiskOptions, riskFactorOptions, businessObjectivesOptions } from '@/lib/form-options';
 import { useToast } from '@/hooks/use-toast';
 
@@ -130,12 +130,13 @@ export default function CaptureIdentifiedRiskPage() {
             setError(null);
             const fetchRisk = async () => {
                 try {
-                    const [risk, inAnalysis] = await Promise.all([
+                    const [risk, status] = await Promise.all([
                         getIdentifiedRiskById(riskId),
-                        isRiskInAnalysis(riskId)
+                        getRiskAnalysisStatus(riskId)
                     ]);
 
-                    setIsLocked(inAnalysis);
+                    // Bloqueia se o status for 'Em Análise' ou 'Analisado'
+                    setIsLocked(status === 'Em Análise' || status === 'Analisado');
 
                     if (risk) {
                         // Só atualiza os campos que existem no schema
