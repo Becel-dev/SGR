@@ -66,7 +66,10 @@ const analysisSchema = z.object({
   observacao: z.string().optional().default(""),
   contexto: z.string().optional().default(""),
   origem: z.string().optional().default(""),
-  tipoIER: z.enum(['Crítico', 'Prioritário', 'Gerenciável', 'Aceitável', '']).optional().default(""),
+  tipoIER: z.preprocess(
+    (val) => (val === "" ? undefined : val),
+    z.enum(['Risco Crítico', 'Risco Prioritário', 'Risco Gerenciável', 'Risco Aceitável']).optional()
+  ),
   x: z.coerce.number().optional().default(0),
   y: z.coerce.number().optional().default(0),
   englobador: z.string().optional().default(""),
@@ -116,7 +119,7 @@ export default function RiskAnalysisCapturePage() {
         contexto: '',
         ier: 0,
         origem: 'Identificação de Risco',
-        tipoIER: '',
+        tipoIER: undefined,
         x: 0,
         y: 0,
         englobador: '',
@@ -206,14 +209,14 @@ export default function RiskAnalysisCapturePage() {
           const completeData = {
             ...{ // Valores padrão para garantir a forma completa
               gerencia: '', categoria: '', taxonomia: '', observacao: '', contexto: '',
-              ier: 0, origem: 'Identificação de Risco', tipoIER: '', x: 0, y: 0,
+              ier: 0, origem: 'Identificação de Risco', tipoIER: undefined, x: 0, y: 0,
               englobador: '', pilar: '', temaMaterial: '', pilarESG: '', geOrigemRisco: '',
               responsavelBowtie: '', horizonteTempo: '', dataAlteracaoCuradoria: '',
               bowtieRealizado: 'Não Realizado', possuiCC: 'Não', urlDoCC: '',
             },
             ...riskData, // Sobrescreve com os dados carregados (seja da análise ou identificação)
           };
-
+          console.log("Dados completos sendo enviados para o formulário (reset):", completeData);
           reset(completeData);
         } else {
             toast({
@@ -238,7 +241,7 @@ export default function RiskAnalysisCapturePage() {
   }, [id, reset, toast]);
 
   const onSubmit = async (data: z.infer<typeof analysisSchema>) => {
-    console.log("Iniciando onSubmit. Dados recebidos:", data);
+    console.log("Dados do formulário no momento da submissão (onSubmit):", data);
     if (!risk) {
         console.error("Tentativa de salvar sem um risco carregado.");
         return;
@@ -439,7 +442,7 @@ export default function RiskAnalysisCapturePage() {
                     
                     <Controller name="tipoIER" control={control} render={({ field }) => (
                         <div><Label>Tipo IER</Label>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value ?? ''}>
                             <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                             <SelectContent>
                                 {tipoIerOptions.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
