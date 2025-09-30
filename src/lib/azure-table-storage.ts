@@ -160,6 +160,23 @@ export async function deleteIdentifiedRisk(id: string, partitionKey: string): Pr
 
 // ---- Funções para o Módulo de Análise de Risco ----
 
+export async function deleteRiskAnalysis(id: string, partitionKey: string): Promise<void> {
+    const client = getClient(riskAnalysisTableName);
+    try {
+        await client.deleteEntity(partitionKey, id);
+        console.log(`Análise de risco com ID ${id} e PartitionKey ${partitionKey} excluída com sucesso.`);
+    } catch (error: any) {
+        // Se o erro for 'ResourceNotFound', significa que o registro já foi excluído ou nunca existiu.
+        // Podemos tratar isso como um sucesso para a UI não ficar travada.
+        if (error.statusCode === 404) {
+            console.warn(`Tentativa de excluir análise de risco não encontrada (ID: ${id}).`);
+            return;
+        }
+        console.error("Erro ao excluir a análise de risco:", error);
+        throw new Error("Falha ao excluir a análise de risco no Azure Table Storage.");
+    }
+}
+
 export async function getRiskAnalysisById(id: string): Promise<RiskAnalysis | undefined> {
     const client = getClient(riskAnalysisTableName);
     try {
