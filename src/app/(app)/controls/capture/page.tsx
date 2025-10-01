@@ -190,7 +190,7 @@ export default function CaptureControlPage() {
 
             const newControl: Control = {
                 ...data,
-                id: Date.now(), // Gerando um ID único
+                id: `CTRL-${Date.now()}`, // Gerando um ID único
                 onePager: onePagerUrl || '',
                 evidencia: evidenciaUrl || '',
                 dataUltimaVerificacao: data.dataUltimaVerificacao?.toISOString() || '',
@@ -423,23 +423,9 @@ export default function CaptureControlPage() {
 
             <Section title="Metadados">
                 <Field label="Data de Criação">
-                    <Controller
-                        name="criadoEm"
-                        control={control}
-                        render={({ field }) => (
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {field.value ? <span>{field.value.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span> : <span>Selecione</span>}
-                                </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus/></PopoverContent>
-                            </Popover>
-                        )}
-                    />
+                    <Input disabled placeholder="Definido automaticamente" />
                 </Field>
-                <Field label="Criado Por"><Input {...register("criadoPor")} /></Field>
+                <Field label="Criado Por"><Input disabled placeholder="Definido automaticamente" /></Field>
                 <Field label="Modificado Por"><Input disabled placeholder="Definido na edição" /></Field>
                 <Field label="E-mails para KPI" className="sm:col-span-2">
                     <Textarea {...register("preenchimentoKPI")} placeholder="email1@rumo.com;email2@rumo.com" />

@@ -88,6 +88,11 @@ const fromRiskAnalysisTableEntity = (entity: TableEntity<any>): RiskAnalysis => 
     // Garante que o IER seja um número
     analysis.ier = Number(entity.ier) || 0;
 
+    // Garante que o campo 'risco' (usado na UI) seja preenchido a partir de 'riskName'
+    if (entity.riskName) {
+        analysis.risco = entity.riskName;
+    }
+
     return analysis as RiskAnalysis;
 };
 

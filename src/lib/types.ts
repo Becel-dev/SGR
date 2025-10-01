@@ -27,7 +27,7 @@ export type AssociatedRisk = {
 
 export type Control = {
   criadoEm: string;
-  id: number;
+  id: string;
   nomeControle: string;
   tipo: string;
   classificacao: string;
