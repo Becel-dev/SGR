@@ -4,11 +4,13 @@
 
 import { TableClient, TableEntity, AzureNamedKeyCredential } from "@azure/data-tables";
 // Removido mockData: integração 100% Azure
-import type { IdentifiedRisk, RiskAnalysis } from './types';
+import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk } from './types';
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const identifiedRisksTableName = "identifiedrisks";
 const riskAnalysisTableName = "riskanalysis"; // Nova tabela
+const controlsTableName = "controls";
+const kpisTableName = "kpis";
 
 // Helper para converter o tipo da aplicação para o tipo da entidade da tabela (IdentifiedRisk)
 const toIdentifiedRiskTableEntity = (risk: Omit<IdentifiedRisk, 'id'> & { id?: string }): TableEntity<Omit<IdentifiedRisk, 'id' | 'businessObjectives'> & { businessObjectives: string }> => {
@@ -89,12 +91,183 @@ const fromRiskAnalysisTableEntity = (entity: TableEntity<any>): RiskAnalysis => 
     return analysis as RiskAnalysis;
 };
 
+// --- Novas Funções para Control ---
+
+const toControlTableEntity = (control: Control): TableEntity<any> => {
+    const { id, associatedRisks, ...rest } = control;
+    return {
+        partitionKey: control.area.replace(/[^a-zA-Z0-9]/g, '') || "Default",
+        rowKey: id,
+        ...rest,
+        associatedRisks: JSON.stringify(associatedRisks || []),
+    };
+};
+
+const fromControlTableEntity = (entity: TableEntity<any>): Control => {
+    const control: any = {};
+    for (const key in entity) {
+        if (key !== 'partitionKey' && key !== 'rowKey' && key !== 'etag' && key !== 'timestamp' && !key.endsWith('@odata.type')) {
+            control[key] = entity[key];
+        }
+    }
+    control.id = entity.rowKey;
+
+    if (control.associatedRisks && typeof control.associatedRisks === 'string') {
+        try {
+            control.associatedRisks = JSON.parse(control.associatedRisks);
+        } catch (e) {
+            control.associatedRisks = [];
+        }
+    } else {
+        control.associatedRisks = [];
+    }
+
+    return control as Control;
+};
+
+// --- Novas Funções para Kpi ---
+const fromKpiTableEntity = (entity: TableEntity<any>): Kpi => {
+    const kpi: any = {};
+    for (const key in entity) {
+        if (key !== 'partitionKey' && key !== 'rowKey' && key !== 'etag' && key !== 'timestamp' && !key.endsWith('@odata.type')) {
+            kpi[key] = entity[key];
+        }
+    }
+    kpi.id = entity.rowKey;
+    return kpi as Kpi;
+};
+
 
 const getClient = (tableName: string): TableClient => {
     if (!connectionString) {
         throw new Error("String de conexão do Azure não configurada. Configure a variável de ambiente AZURE_STORAGE_CONNECTION_STRING.");
     }
     return TableClient.fromConnectionString(connectionString, tableName);
+}
+
+// ---- Funções CRUD para Controls ----
+
+export async function createControlsTable(): Promise<void> {
+    const client = getClient(controlsTableName);
+    try {
+        await client.createTable();
+        console.log(`Tabela "${controlsTableName}" criada ou já existente.`);
+    } catch (error) {
+        console.error(`Erro ao criar a tabela "${controlsTableName}":`, error);
+    }
+}
+
+export async function getAllControls(): Promise<Control[]> {
+    const client = getClient(controlsTableName);
+    try {
+        const entities = client.listEntities();
+        const controls: Control[] = [];
+        for await (const entity of entities) {
+            controls.push(fromControlTableEntity(entity));
+        }
+        return controls;
+    } catch (error) {
+        console.error("Erro ao buscar controles:", error);
+        return [];
+    }
+}
+
+export async function getControlById(id: string): Promise<Control | undefined> {
+    const client = getClient(controlsTableName);
+    try {
+        const entities = client.listEntities<TableEntity<any>>({
+            queryOptions: { filter: `RowKey eq '${id}'` }
+        });
+        for await (const entity of entities) {
+            return fromControlTableEntity(entity);
+        }
+        return undefined;
+    } catch (error) {
+        console.error(`Erro ao buscar controle com ID ${id}:`, error);
+        return undefined;
+    }
+}
+
+export async function addOrUpdateControl(controlData: Control): Promise<Control> {
+    const client = getClient(controlsTableName);
+    try {
+        await client.createTable();
+        const now = new Date().toISOString();
+        let control = { ...controlData };
+        if (!control.criadoEm) {
+            control.criadoEm = now;
+            control.criadoPor = "Sistema"; // Substituir pelo usuário logado
+        }
+        control.modificadoEm = now;
+        control.modificadoPor = "Sistema"; // Substituir pelo usuário logado
+
+        const entity = toControlTableEntity(control);
+        await client.upsertEntity(entity, "Merge");
+        return fromControlTableEntity(entity);
+    } catch (error) {
+        console.error("Erro ao salvar o controle:", error);
+        throw new Error("Falha ao salvar o controle no Azure Table Storage.");
+    }
+}
+
+// ---- Funções para buscar dados relacionados ----
+
+export async function getRisksByIds(riskIds: string[]): Promise<RiskAnalysis[]> {
+    if (!riskIds || riskIds.length === 0) {
+        return [];
+    }
+    const client = getClient(riskAnalysisTableName);
+    try {
+        const filter = riskIds.map(id => `RowKey eq '${id}'`).join(' or ');
+        const entities = client.listEntities<TableEntity<any>>({
+            queryOptions: { filter }
+        });
+        const risks: RiskAnalysis[] = [];
+        for await (const entity of entities) {
+            risks.push(fromRiskAnalysisTableEntity(entity));
+        }
+        return risks;
+    } catch (error) {
+        console.error("Erro ao buscar riscos por IDs:", error);
+        return [];
+    }
+}
+
+export async function getKpisByControlId(controlId: string): Promise<Kpi[]> {
+    const client = getClient(kpisTableName);
+    try {
+        await client.createTable(); // Garante que a tabela de KPIs exista
+        const filter = `controlId eq '${controlId}'`;
+        const entities = client.listEntities<TableEntity<any>>({
+            queryOptions: { filter }
+        });
+        const kpis: Kpi[] = [];
+        for await (const entity of entities) {
+            kpis.push(fromKpiTableEntity(entity));
+        }
+        return kpis;
+    } catch (error) {
+        console.error(`Erro ao buscar KPIs para o controle ${controlId}:`, error);
+        return [];
+    }
+}
+
+export async function getRisksForAssociation(): Promise<RiskAnalysis[]> {
+    const client = getClient(riskAnalysisTableName);
+    try {
+        const filter = `status eq 'Analisado' or status eq 'Em Análise'`;
+        const entities = client.listEntities<TableEntity<any>>({
+            queryOptions: { filter }
+        });
+        const risks: RiskAnalysis[] = [];
+        for await (const entity of entities) {
+            risks.push(fromRiskAnalysisTableEntity(entity));
+        }
+        return risks;
+    } catch (error) {
+        console.error("Erro ao buscar riscos para associação:", error);
+        return [];
+    }
 }
 
 // ---- Funções CRUD para IdentifiedRisk ----

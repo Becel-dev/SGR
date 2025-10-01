@@ -1,16 +1,15 @@
-
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Shield, ArrowRight, Search } from "lucide-react";
-import { controlsData } from "@/lib/mock-data";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import type { Control } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
     'Implementado': 'default',
@@ -40,8 +39,31 @@ const formatDate = (dateString: string | undefined) => {
 
 export default function ControlsPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [controls, setControls] = useState<Control[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchControls = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('/api/controls');
+        if (!response.ok) {
+          throw new Error('Failed to fetch controls');
+        }
+        const data = await response.json();
+        setControls(data);
+      } catch (error) {
+        console.error("Error fetching controls:", error);
+        // Optionally, set an error state to show in the UI
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchControls();
+  }, []);
   
-  const filteredControls = controlsData.filter((control: Control) => {
+  const filteredControls = controls.filter((control: Control) => {
     const term = searchTerm.toLowerCase();
     return Object.values(control).some(value => 
       String(value).toLowerCase().includes(term)
@@ -90,7 +112,6 @@ export default function ControlsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>ID</TableHead>
-                <TableHead>Título</TableHead>
                 <TableHead>Nome do Controle</TableHead>
                 <TableHead>Área</TableHead>
                 <TableHead>Dono do Controle</TableHead>
@@ -100,35 +121,49 @@ export default function ControlsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredControls.map(control => (
-                <TableRow key={control.id}>
-                  <TableCell className="font-mono">{control.id}</TableCell>
-                  <TableCell className="font-medium">{control.titulo}</TableCell>
-                  <TableCell>{control.nomeControle}</TableCell>
-                  <TableCell>{control.area}</TableCell>
-                  <TableCell>{control.donoControle}</TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariantMap[control.status] || 'default'}>{control.status}</Badge>
-                  </TableCell>
-                  <TableCell>{formatDate(control.proximaVerificacao)}</TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link href={`/controls/${control.id}`}>
-                        <ArrowRight className="h-4 w-4" />
-                        <span className="sr-only">Ver Detalhes</span>
-                      </Link>
-                    </Button>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell><Skeleton className="h-4 w-10" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                  </TableRow>
+                ))
+              ) : filteredControls.length > 0 ? (
+                filteredControls.map(control => (
+                  <TableRow key={control.id}>
+                    <TableCell className="font-mono">{control.id}</TableCell>
+                    <TableCell>{control.nomeControle}</TableCell>
+                    <TableCell>{control.area}</TableCell>
+                    <TableCell>{control.donoControle}</TableCell>
+                    <TableCell>
+                      <Badge variant={statusVariantMap[control.status] || 'default'}>{control.status}</Badge>
+                    </TableCell>
+                    <TableCell>{formatDate(control.proximaVerificacao)}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" asChild>
+                        <Link href={`/controls/${control.id}`}>
+                          <ArrowRight className="h-4 w-4" />
+                          <span className="sr-only">Ver Detalhes</span>
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center p-8 text-muted-foreground">
+                    {searchTerm ? `Nenhum controle encontrado para "${searchTerm}".` : "Nenhum controle encontrado."}
                   </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </div>
-         {filteredControls.length === 0 && (
-          <div className="text-center p-8 text-muted-foreground">
-            Nenhum controle encontrado para &quot;{searchTerm}&quot;.
-          </div>
-        )}
       </CardContent>
     </Card>
   );

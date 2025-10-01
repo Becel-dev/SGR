@@ -70,7 +70,7 @@ export default function IdentifiedRiskDetailPage() {
     const params = useParams();
     const router = useRouter();
     const { toast } = useToast();
-    const { id } = params;
+    const id = params?.id;
     const [risk, setRisk] = useState<IdentifiedRisk | undefined>(undefined);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

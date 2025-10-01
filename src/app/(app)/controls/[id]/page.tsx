@@ -1,5 +1,3 @@
-
-
 'use client'
 
 import * as React from 'react';
@@ -12,14 +10,14 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { controlsData, kpisData, risksData } from '@/lib/mock-data';
-import type { Control, Kpi, AssociatedRisk, Risk } from '@/lib/types';
+import type { Control, Kpi, Risk } from '@/lib/types';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Shield, GanttChartSquare, ClipboardList, User, Calendar, Info, PlusCircle, ArrowRight, FileText, AlertTriangle } from 'lucide-react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 const DetailItem = ({ label, value, className }: { label: string, value: React.ReactNode, className?: string }) => {
@@ -64,25 +62,58 @@ const formatDate = (dateString: string | undefined) => {
 
 export default function ControlDetailPage() {
     const params = useParams();
-    const { id } = params;
-    const [control, setControl] = useState<Control | undefined>(undefined);
+    const id = params && typeof params.id === 'string' ? params.id : '';
+    const [control, setControl] = useState<Control | null>(null);
     const [relatedKpis, setRelatedKpis] = useState<Kpi[]>([]);
+    const [associatedRisks, setAssociatedRisks] = useState<Risk[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (id) {
-            const foundControl = controlsData.find(c => c.id.toString() === id);
-            setControl(foundControl);
-            if (foundControl) {
-                const foundKpis = kpisData.filter(k => k.controlId === foundControl.id);
-                setRelatedKpis(foundKpis);
-            }
+            const fetchControlDetails = async () => {
+                setLoading(true);
+                try {
+                    const res = await fetch(`/api/controls/${id}`);
+                    if (!res.ok) {
+                        throw new Error('Failed to fetch control details');
+                    }
+                    const data = await res.json();
+                    setControl(data.control);
+                    setAssociatedRisks(data.associatedRisks || []);
+                    setRelatedKpis(data.relatedKpis || []);
+                } catch (error) {
+                    console.error(error);
+                    setControl(null);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchControlDetails();
         }
-        setLoading(false);
     }, [id]);
 
     if (loading) {
-        return <div>Carregando...</div>;
+        return (
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-8 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <div key={i} className="space-y-4 rounded-lg border p-4">
+                            <Skeleton className="h-6 w-1/4" />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-10 w-full" />
+                            </div>
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+        );
     }
 
     if (!control) {
@@ -137,28 +168,28 @@ export default function ControlDetailPage() {
                         <TableRow>
                             <TableHead>ID Risco</TableHead>
                             <TableHead>Nome do Risco</TableHead>
-                            <TableHead>Código MUE</TableHead>
-                            <TableHead>Título</TableHead>
+                            <TableHead>Status</TableHead>
                             <TableHead>Top Risk</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {control.associatedRisks.map(assocRisk => {
-                            const risk = risksData.find(r => r.id === assocRisk.riskId);
-                            return (
-                                <TableRow key={assocRisk.riskId}>
-                                    <TableCell>
-                                        <Button variant="link" asChild className="p-0 h-auto">
-                                            <Link href={`/risks/${assocRisk.riskId}`}>{assocRisk.riskId}</Link>
-                                        </Button>
-                                    </TableCell>
-                                    <TableCell>{risk?.risco}</TableCell>
-                                    <TableCell>{assocRisk.codigoMUE}</TableCell>
-                                    <TableCell>{assocRisk.titulo}</TableCell>
-                                    <TableCell>{risk?.topRiskAssociado}</TableCell>
-                                </TableRow>
-                            )
-                        })}
+                        {associatedRisks.map(risk => (
+                            <TableRow key={risk.id}>
+                                <TableCell>
+                                    <Button variant="link" asChild className="p-0 h-auto">
+                                        <Link href={`/analysis/risks/${risk.id}`}>{risk.id}</Link>
+                                    </Button>
+                                </TableCell>
+                                <TableCell>{risk.risco}</TableCell>
+                                <TableCell>{risk.status}</TableCell>
+                                <TableCell>{risk.topRiskAssociado}</TableCell>
+                            </TableRow>
+                        ))}
+                         {associatedRisks.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={4} className="text-center">Nenhum risco associado.</TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
                 </Table>
             </div>

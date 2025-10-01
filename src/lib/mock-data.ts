@@ -33,35 +33,7 @@ export const kpisData: Kpi[] = [
     { id: "KPI-27", controlId: 27, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Edson Yassuo Abe", emailResponsavel: "edson.abe@rumolog.com" }
 ];
 
-export const controlsData: Control[] = Array.from({ length: 27 }, (_, i) => ({
-    criadoEm: '2024-06-24',
-    id: i + 1,
-    nomeControle: `Controle Exemplo ${i + 1}`,
-    tipo: (i % 2 === 0) ? 'Preventivo' : 'Mitigatório',
-    classificacao: ['Procedimento', 'Equipamento', 'Pessoa', 'Sistema'][i % 4],
-    status: ['Implementado', 'Implementado com Pendência', 'Não Implementado', 'Implementação Futura'][i % 4],
-    donoControle: ['Kaio Farias', 'Pablo Aguiar', 'Bruno Dalosto', 'Edson Abe', 'Victor Zolotareff'][i % 5],
-    emailDono: 'exemplo@rumolog.com',
-    area: ['OPERAÇÃO', 'MANUTENÇÃO', 'SEGURANÇA', 'VIA PERMANENTE', 'FINANCEIRO'][i % 5],
-    dataUltimaVerificacao: '2024-06-10',
-    frequenciaMeses: [1, 3, 6, 12][i % 4],
-    proximaVerificacao: '2024-12-10',
-    validacao: ['DENTRO DO PRAZO', 'ATRASADO', 'PENDENTE'][i % 3],
-    onePager: `onepager-0${i + 1}.pdf`,
-    evidencia: `evidencia-0${i + 1}.pdf`,
-    criadoPor: 'Admin',
-    modificadoEm: '2024-07-01',
-    modificadoPor: 'Admin',
-    preenchimentoKPI: 'kpi@rumolog.com',
-    criticidade: (i % 2 === 0) ? 'Sim' : 'Não',
-    associatedRisks: [
-        {
-            riskId: `${[30, 29, 2, 1, 18, 14, 21, 13, 27, 25, 22][i % 11]}`,
-            codigoMUE: `RUMO ${String(i + 1).padStart(2, '0')}`,
-            titulo: `RUMO ${String(i + 1).padStart(2, '0')}-01`,
-        }
-    ]
-}));
+
 
 
 const newRisksFromIdentification: Risk[] = identifiedRisksData.map(ir => {
