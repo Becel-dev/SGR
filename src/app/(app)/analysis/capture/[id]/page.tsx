@@ -22,6 +22,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
 import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction
+} from '@/components/ui/alert-dialog';
+import {
   gerenciaOptions,
   tipoIerOptions,
   bowtieRealizadoOptions,
@@ -30,24 +41,11 @@ import {
   englobadorOptions,
   horizonteTempoOptions,
   geOrigemRiscoOptions,
-  topRiskOptions, // Adicionado
-  riskFactorOptions, // Adicionado
+  topRiskOptions,
+  riskFactorOptions,
 } from '@/lib/form-options';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
-// Validação com Zod para todos os campos da análise
 const analysisSchema = z.object({
-  // --- Campos da Identificação (editáveis ou não) ---
   riskName: z.string().min(1, "O nome do risco é obrigatório."),
   topRisk: z.string().min(1, "O Top Risk é obrigatório."),
   riskFactor: z.string().min(1, "O Fator de Risco é obrigatório."),
@@ -58,14 +56,12 @@ const analysisSchema = z.object({
   currentControlCapacity: z.coerce.number().min(0).max(10),
   containmentTime: z.coerce.number().min(0).max(10),
   technicalFeasibility: z.coerce.number().min(0).max(10),
-  
-  // --- Campos da Análise (a maioria opcionais) ---
   gerencia: z.string().optional().default(""),
   categoria: z.string().optional().default(""),
   taxonomia: z.string().optional().default(""),
   observacao: z.string().optional().default(""),
   contexto: z.string().optional().default(""),
-  origem: z.string().optional().default(""),
+  origem: z.string().optional().default("Identificação de Risco"),
   tipoIER: z.preprocess(
     (val) => (val === "" ? undefined : val),
     z.enum(['Risco Crítico', 'Risco Prioritário', 'Risco Gerenciável', 'Risco Aceitável']).optional()
@@ -80,14 +76,117 @@ const analysisSchema = z.object({
   responsavelBowtie: z.string().optional().default(""),
   horizonteTempo: z.string().optional().default(""),
   dataAlteracaoCuradoria: z.string().optional().default(""),
-  bowtieRealizado: z.string().optional(),
-  possuiCC: z.string().optional(),
-  urlDoCC: z.string().optional().default(""), // Validação de URL removida
-  ier: z.number().optional().default(0),
+  bowtieRealizado: z.string().optional().default("") ,
+  possuiCC: z.string().optional().default("") ,
+  urlDoCC: z.string().optional().default(""),
+  ier: z.number().optional().default(0)
 });
 
 
 export default function RiskAnalysisCapturePage() {
+  // Função para deletar análise
+  const handleDelete = async () => {
+    if (!risk) return;
+    setIsDeleting(true);
+    try {
+      const partitionKey = risk.topRisk.replace(/[^a-zA-Z0-9]/g, '') || "Default";
+      await deleteRiskAnalysis(risk.id, partitionKey);
+      toast({
+        title: "Análise Excluída",
+        description: "A análise de risco foi removida com sucesso.",
+      });
+      router.push('/analysis');
+    } catch (error) {
+      console.error("Erro ao excluir análise:", error);
+      toast({
+        title: "Erro ao Excluir",
+        description: "Não foi possível remover a análise. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Função para marcar como analisado
+  const handleMarkAsAnalyzed = async () => {
+    if (!risk) return;
+    const isValid = await trigger();
+    if (!isValid) {
+      toast({
+        title: "Erro de Validação",
+        description: "Verifique os campos do formulário antes de marcar como analisado.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsMarkingAsAnalyzed(true);
+    try {
+      const formData = getValues();
+      const analysisData: RiskAnalysis = {
+        id: risk.id,
+        riskName: formData.riskName,
+        topRisk: formData.topRisk,
+        riskFactor: formData.riskFactor,
+        riskScenario: formData.riskScenario,
+        corporateImpact: formData.corporateImpact,
+        organizationalRelevance: formData.organizationalRelevance,
+        contextualizedProbability: formData.contextualizedProbability,
+        currentControlCapacity: formData.currentControlCapacity,
+        containmentTime: formData.containmentTime,
+        technicalFeasibility: formData.technicalFeasibility,
+        gerencia: formData.gerencia,
+        categoria: formData.categoria,
+        taxonomia: formData.taxonomia,
+        observacao: formData.observacao,
+        contexto: formData.contexto,
+        origem: formData.origem,
+        tipoIER: formData.tipoIER,
+        x: formData.x,
+        y: formData.y,
+        englobador: formData.englobador,
+        pilar: formData.pilar,
+        temaMaterial: formData.temaMaterial,
+        pilarESG: formData.pilarESG,
+        geOrigemRisco: formData.geOrigemRisco,
+        responsavelBowtie: formData.responsavelBowtie,
+        horizonteTempo: formData.horizonteTempo,
+        dataAlteracaoCuradoria: formData.dataAlteracaoCuradoria,
+        bowtieRealizado: formData.bowtieRealizado,
+        possuiCC: formData.possuiCC,
+        urlDoCC: formData.urlDoCC,
+        ier: calculatedIer,
+        status: 'Analisado',
+        analysisId: formData.topRisk.replace(/[^a-zA-Z0-9]/g, '') || "Default",
+        createdAt: risk.createdAt || new Date().toISOString(),
+        createdBy: risk.createdBy || 'current.user@example.com',
+        updatedAt: new Date().toISOString(),
+        updatedBy: 'current.user@example.com',
+        probableCause: (risk as any).probableCause ?? '',
+        expectedConsequence: (risk as any).expectedConsequence ?? '',
+        currentControls: (risk as any).currentControls ?? '',
+        riskRole: (risk as any).riskRole ?? '',
+        pointingType: (risk as any).pointingType ?? '',
+        businessObjectives: (risk as any).businessObjectives ?? '',
+      };
+      await addOrUpdateRiskAnalysis(analysisData);
+      toast({
+        title: "Status Atualizado",
+        description: "O risco foi marcado como 'Analisado'.",
+      });
+      router.refresh();
+      router.push('/analysis');
+    } catch (error) {
+      console.error("Erro ao marcar como analisado:", error);
+      toast({
+        title: "Erro ao Atualizar",
+        description: "Não foi possível atualizar o status. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsMarkingAsAnalyzed(false);
+    }
+  };
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
@@ -279,82 +378,8 @@ export default function RiskAnalysisCapturePage() {
         variant: "destructive",
       });
     } finally {
-        console.log("Finalizando onSubmit.");
-        setIsSaving(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!risk) return;
-
-    setIsDeleting(true);
-    try {
-      // Para deletar, precisamos do partitionKey, que é o topRisk formatado.
-      const partitionKey = risk.topRisk.replace(/[^a-zA-Z0-9]/g, '') || "Default";
-      await deleteRiskAnalysis(risk.id, partitionKey);
-      toast({
-        title: "Análise Excluída",
-        description: "A análise de risco foi removida com sucesso.",
-      });
-      router.push('/analysis');
-    } catch (error) {
-      console.error("Erro ao excluir análise:", error);
-      toast({
-        title: "Erro ao Excluir",
-        description: "Não foi possível remover a análise. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleMarkAsAnalyzed = async () => {
-    if (!risk) return;
-
-    // Força a validação do formulário antes de prosseguir
-    const isValid = await trigger();
-    if (!isValid) {
-      toast({
-        title: "Erro de Validação",
-        description: "Verifique os campos do formulário antes de marcar como analisado.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsMarkingAsAnalyzed(true);
-    try {
-      const formData = getValues(); // Pega os dados atuais e validados do formulário
-      const analysisData: RiskAnalysis = {
-        ...risk,
-        ...formData,
-        ier: calculatedIer,
-        status: 'Analisado', // Força a mudança de status
-        analysisId: formData.topRisk.replace(/[^a-zA-Z0-9]/g, '') || "Default",
-        updatedAt: new Date().toISOString(),
-        updatedBy: 'current.user@example.com', // TODO: Substituir pelo usuário logado
-      };
-
-      await addOrUpdateRiskAnalysis(analysisData);
-      
-      toast({
-        title: "Status Atualizado",
-        description: "O risco foi marcado como 'Analisado'.",
-      });
-
-      router.refresh(); // Invalida o cache do servidor
-      router.push('/analysis'); // Redireciona para a página de listagem
-
-    } catch (error) {
-      console.error("Erro ao marcar como analisado:", error);
-      toast({
-        title: "Erro ao Atualizar",
-        description: "Não foi possível atualizar o status. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsMarkingAsAnalyzed(false);
+      console.log("Finalizando onSubmit.");
+      setIsSaving(false);
     }
   };
 
@@ -366,16 +391,20 @@ export default function RiskAnalysisCapturePage() {
     );
   }
 
+  // Ajuste de layout: garantir que o formulário ocupe altura mínima e não "corra para cima"
   return (
-    <form onSubmit={handleSubmit(onSubmit, (formErrors) => {
-      console.error("Falha na validação do formulário. Erros:", formErrors);
-      toast({
-        title: "Erro de Validação",
-        description: "Por favor, verifique os campos do formulário. Há erros ou campos obrigatórios não preenchidos.",
-        variant: "destructive",
-      });
-    })}>
-      <Card>
+    <form
+      onSubmit={handleSubmit(onSubmit, (formErrors) => {
+        console.error("Falha na validação do formulário. Erros:", formErrors);
+        toast({
+          title: "Erro de Validação",
+          description: "Por favor, verifique os campos do formulário. Há erros ou campos obrigatórios não preenchidos.",
+          variant: "destructive",
+        });
+      })}
+      style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
+    >
+      <Card className="flex-1 flex flex-col">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -613,37 +642,49 @@ export default function RiskAnalysisCapturePage() {
                 </div>
             </section>
         </CardContent>
-        <CardFooter className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSaving || isDeleting}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar
+        <CardFooter className="flex flex-wrap justify-end gap-2">
+          <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSaving || isDeleting || isMarkingAsAnalyzed}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+          {risk && 'status' in risk && risk.status !== 'Novo' && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button type="button" variant="destructive" disabled={isSaving || isDeleting || isMarkingAsAnalyzed}>
+                  {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                  Excluir Análise
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação não pode ser desfeita. Isso excluirá permanentemente a análise de risco, e o risco voltará ao status 'Novo' na lista de análise.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          {/* Botão Marcar como Analisado também no rodapé */}
+          {risk && 'status' in risk && risk.status === 'Em Análise' && (
+            <Button
+              type="button"
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={handleMarkAsAnalyzed}
+              disabled={isSaving || isDeleting || isMarkingAsAnalyzed}
+            >
+              {isMarkingAsAnalyzed ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+              Marcar como Analisado
             </Button>
-            {risk && 'status' in risk && risk.status !== 'Novo' && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button type="button" variant="destructive" disabled={isSaving || isDeleting}>
-                    {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
-                    Excluir Análise
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta ação não pode ser desfeita. Isso excluirá permanentemente a análise de risco, e o risco voltará ao status 'Novo' na lista de análise.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-            <Button type="submit" disabled={isSaving || isDeleting}>
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                Salvar Análise
-            </Button>
+          )}
+          <Button type="submit" disabled={isSaving || isDeleting || isMarkingAsAnalyzed}>
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+            Salvar Análise
+          </Button>
         </CardFooter>
       </Card>
     </form>

@@ -258,10 +258,11 @@ export async function addOrUpdateRiskAnalysis(analysisData: RiskAnalysis): Promi
     const client = getClient(riskAnalysisTableName);
     try {
         await client.createTable();
-        
+        // Só força 'Em Análise' se não for 'Analisado'
+        const statusToSave = analysisData.status === 'Analisado' ? 'Analisado' : 'Em Análise';
         const analysisToSave: RiskAnalysis = {
             ...analysisData,
-            status: 'Em Análise', // Ao salvar, o status muda
+            status: statusToSave,
             updatedAt: new Date().toISOString(),
             updatedBy: "Sistema", // Adicionar o usuário logado aqui posteriormente
         };
