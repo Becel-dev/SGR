@@ -1,9 +1,6 @@
-
-
 'use client';
 
 import { BowtieDiagram } from "@/components/bowtie/bowtie-diagram";
-import { initialBowtieData as diagrams, risksData, getEmptyBowtie } from "@/lib/mock-data";
 import { useEffect, useState } from "react";
 import type { BowtieData, Risk } from "@/lib/types";
 import {
@@ -31,6 +28,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from 'uuid';
 
 
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
@@ -46,58 +45,210 @@ const formatDate = (dateString: string | undefined) => {
 
 
 export default function BowtiePage() {
-  const [bowtieDiagrams, setBowtieDiagrams] = useState<BowtieData[]>(diagrams);
+  const [bowtieDiagrams, setBowtieDiagrams] = useState<BowtieData[]>([]);
+  const [risksData, setRisksData] = useState<Risk[]>([]);
   const [selectedDiagram, setSelectedDiagram] = useState<BowtieData | null>(null);
+  const { toast } = useToast();
   
   const searchParams = useSearchParams();
-  const riskIdFromQuery = searchParams.get('riskId');
-  const createNewFromQuery = searchParams.get('create') === 'true';
+  const riskIdFromQuery = searchParams?.get('riskId');
+  const createNewFromQuery = searchParams?.get('create') === 'true';
+
+  const fetchData = async () => {
+    try {
+      const [bowtiesRes, risksRes] = await Promise.all([
+        fetch('/api/bowtie'),
+        fetch('/api/risks/for-association')
+      ]);
+
+      if (!bowtiesRes.ok || !risksRes.ok) {
+        throw new Error('Falha ao buscar dados');
+      }
+
+      const bowties = await bowtiesRes.json();
+      const risks = await risksRes.json();
+
+      setBowtieDiagrams(bowties);
+      setRisksData(risks);
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os dados para a página de Bowtie.",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   useEffect(() => {
-    if (riskIdFromQuery && createNewFromQuery) {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (riskIdFromQuery && createNewFromQuery && risksData.length > 0) {
         const riskForNewDiagram = risksData.find(r => r.id === riskIdFromQuery);
         if(riskForNewDiagram && !bowtieDiagrams.some(d => d.riskId === riskIdFromQuery)) {
-            const newDiagram = getEmptyBowtie(riskForNewDiagram);
-            setBowtieDiagrams(prev => [...prev, newDiagram]);
-            setSelectedDiagram(newDiagram);
+            handleCreateNew(riskIdFromQuery);
         }
     }
-  }, [riskIdFromQuery, createNewFromQuery, bowtieDiagrams]);
+  }, [riskIdFromQuery, createNewFromQuery, bowtieDiagrams, risksData]);
 
 
-  const handleUpdate = (updatedData: BowtieData) => {
-    setBowtieDiagrams(prevDiagrams => 
-      prevDiagrams.map(d => d.id === updatedData.id ? { ...updatedData, approvalStatus: 'Em aprovação' } : d)
-    );
-     // Update the selected diagram as well if it's the one being edited
-    if (selectedDiagram && selectedDiagram.id === updatedData.id) {
-        setSelectedDiagram({ ...updatedData, approvalStatus: 'Em aprovação' });
+  const handleUpdate = async (updatedData: BowtieData) => {
+    const optimisticData = {
+        ...updatedData,
+        approvalStatus: 'Em aprovação' as const,
+        version: updatedData.version + 0.1, // Incremento provisório
+    };
+
+    // Atualização otimista na UI
+    setSelectedDiagram(optimisticData);
+    setBowtieDiagrams(prev => prev.map(d => d.id === updatedData.id ? optimisticData : d));
+
+    try {
+        const response = await fetch(`/api/bowtie/${updatedData.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(optimisticData),
+        });
+
+        if (!response.ok) throw new Error('Falha ao atualizar o Bowtie');
+
+        const savedData = await response.json();
+        
+        // Sincroniza o estado com a resposta final do servidor
+        setSelectedDiagram(savedData);
+        setBowtieDiagrams(prev => prev.map(d => d.id === savedData.id ? savedData : d));
+
+        toast({
+            title: "Sucesso",
+            description: "Diagrama Bowtie atualizado e enviado para aprovação.",
+        });
+
+    } catch (error) {
+        console.error(error);
+        toast({
+            title: "Erro de Atualização",
+            description: "Não foi possível salvar as alterações. Revertendo.",
+            variant: "destructive",
+        });
+        // Reverte em caso de erro
+        fetchData(); 
     }
-    console.log("Bowtie data updated, status set to 'Em aprovação':", updatedData);
   };
 
-  const handleCreateNew = (riskId: string) => {
+  const handleCreateNew = async (riskId: string) => {
     const risk = risksData.find(r => r.id === riskId);
-    if (risk) {
-        const newDiagram = getEmptyBowtie(risk);
-        setBowtieDiagrams(prev => [...prev, newDiagram]);
-        setSelectedDiagram(newDiagram);
+    if (!risk) {
+        toast({ title: "Erro", description: "Risco selecionado não encontrado.", variant: "destructive" });
+        return;
+    }
+
+    const newDiagram: Omit<BowtieData, 'riskName'> & { riskName?: string } = {
+        id: uuidv4(),
+        riskId: risk.id,
+        topEvent: { title: risk.risco, description: 'Evento de topo gerado a partir do risco' },
+        threats: [],
+        consequences: [],
+        approvalStatus: 'Em aprovação',
+        version: 1.0,
+        responsible: 'Sistema', // Substituir pelo usuário logado
+        createdAt: new Date().toISOString().split('T')[0],
+        createdBy: 'Sistema',
+        updatedAt: new Date().toISOString(),
+        updatedBy: 'Sistema',
+    };
+
+    try {
+        const response = await fetch('/api/bowtie', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newDiagram),
+        });
+
+        if (!response.ok) throw new Error('Falha ao criar o Bowtie');
+
+        const createdDiagram = await response.json();
+
+        setBowtieDiagrams(prev => [...prev, createdDiagram]);
+        setSelectedDiagram(createdDiagram);
+
+        toast({
+            title: "Diagrama Criado",
+            description: `Novo Bowtie para o risco "${risk.risco}" foi criado.`,
+        });
+
+    } catch (error) {
+        console.error(error);
+        toast({
+            title: "Erro de Criação",
+            description: "Não foi possível criar o novo diagrama Bowtie.",
+            variant: "destructive",
+        });
     }
   };
 
-  const handleDeleteDiagram = (diagramId: string) => {
-    setBowtieDiagrams(bowtieDiagrams.filter(d => d.id !== diagramId));
-    if (selectedDiagram && selectedDiagram.id === diagramId) {
-        setSelectedDiagram(null);
+  const handleDeleteDiagram = async (diagramId: string) => {
+    const originalDiagrams = [...bowtieDiagrams];
+    setBowtieDiagrams(prev => prev.filter(d => d.id !== diagramId));
+    setSelectedDiagram(null);
+
+    try {
+        const response = await fetch(`/api/bowtie/${diagramId}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) throw new Error('Falha ao excluir o Bowtie');
+
+        toast({
+            title: "Sucesso",
+            description: "Diagrama Bowtie excluído com sucesso.",
+        });
+
+    } catch (error) {
+        console.error(error);
+        toast({
+            title: "Erro de Exclusão",
+            description: "Não foi possível excluir o diagrama. Revertendo.",
+            variant: "destructive",
+        });
+        setBowtieDiagrams(originalDiagrams);
     }
   }
 
-  const handleApprove = (diagramId: string) => {
-    setBowtieDiagrams(prev => prev.map(d => d.id === diagramId ? {
-        ...d,
-        approvalStatus: 'Aprovado',
-        version: d.version + 1
-    } : d));
+  const handleApprove = async (diagramId: string) => {
+    const diagram = bowtieDiagrams.find(d => d.id === diagramId);
+    if (!diagram) return;
+
+    const approvedDiagram = { ...diagram, approvalStatus: 'Aprovado' as 'Aprovado' };
+
+    setBowtieDiagrams(prev => prev.map(d => d.id === diagramId ? approvedDiagram : d));
+
+     try {
+        const response = await fetch(`/api/bowtie/${diagramId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(approvedDiagram),
+        });
+
+        if (!response.ok) throw new Error('Falha ao aprovar o Bowtie');
+
+        toast({
+            title: "Aprovado!",
+            description: "O diagrama Bowtie foi marcado como aprovado.",
+        });
+
+    } catch (error) {
+        console.error(error);
+        toast({
+            title: "Erro de Aprovação",
+            description: "Não foi possível aprovar o diagrama. Revertendo.",
+            variant: "destructive",
+        });
+        fetchData(); // Re-sincroniza
+    }
   };
   
   const unassignedRisks = risksData.filter(r => !bowtieDiagrams.some(d => d.riskId === r.id));
@@ -142,7 +293,11 @@ export default function BowtiePage() {
                             Selecione um risco existente que ainda não possui um diagrama para criar um novo Bowtie.
                         </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <Select onValueChange={handleCreateNew}>
+                        <Select onValueChange={(riskId) => {
+                            // Fechar o dialog e criar
+                            handleCreateNew(riskId);
+                            // A UI vai mudar para a tela de edição automaticamente
+                        }}>
                             <SelectTrigger>
                             <SelectValue placeholder="Selecione um risco..." />
                             </SelectTrigger>
@@ -160,9 +315,8 @@ export default function BowtiePage() {
                         </Select>
                         <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction asChild>
-                            <Button disabled={unassignedRisks.length === 0}>Visualizar ao Criar</Button>
-                        </AlertDialogAction>
+                        {/* A ação agora é direta no Select, este botão pode ser removido ou desabilitado */}
+                        <AlertDialogAction disabled>Criar e Visualizar</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
@@ -181,37 +335,45 @@ export default function BowtiePage() {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {bowtieDiagrams.map(diagram => {
-                        const risk = risksData.find(r => r.id === diagram.riskId);
-                        return (
-                             <TableRow key={diagram.id}>
-                                <TableCell className="font-medium">{risk ? `[${risk.id}] ${risk.risco}` : 'Risco não encontrado'}</TableCell>
-                                <TableCell>{formatDate(diagram.createdAt)}</TableCell>
-                                <TableCell>{diagram.responsible}</TableCell>
-                                <TableCell>
-                                    <Badge variant={statusVariantMap[diagram.approvalStatus] || 'outline'}>
-                                        {diagram.approvalStatus}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>v{diagram.version}</TableCell>
-                                <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon" onClick={() => setSelectedDiagram(diagram)}>
-                                        <Eye className="h-4 w-4" />
-                                        <span className="sr-only">Visualizar</span>
-                                    </Button>
-                                    <Button 
-                                        variant="ghost" 
-                                        size="icon" 
-                                        onClick={() => handleApprove(diagram.id)}
-                                        disabled={diagram.approvalStatus === 'Aprovado'}
-                                    >
-                                        <CheckCircle className={cn("h-4 w-4", diagram.approvalStatus === 'Aprovado' ? 'text-green-500' : '')} />
-                                        <span className="sr-only">Aprovar</span>
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
-                        )
-                    })}
+                    {bowtieDiagrams.length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={6} className="text-center">
+                                Nenhum diagrama Bowtie encontrado.
+                            </TableCell>
+                        </TableRow>
+                    ) : (
+                        bowtieDiagrams.map(diagram => {
+                            const risk = risksData.find(r => r.id === diagram.riskId);
+                            return (
+                                <TableRow key={diagram.id}>
+                                    <TableCell className="font-medium">{risk ? `[${risk.id}] ${risk.risco}` : `[${diagram.riskId}] Risco não encontrado`}</TableCell>
+                                    <TableCell>{formatDate(diagram.createdAt)}</TableCell>
+                                    <TableCell>{diagram.responsible}</TableCell>
+                                    <TableCell>
+                                        <Badge variant={statusVariantMap[diagram.approvalStatus] || 'outline'}>
+                                            {diagram.approvalStatus}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>v{diagram.version}</TableCell>
+                                    <TableCell className="text-right">
+                                        <Button variant="ghost" size="icon" onClick={() => setSelectedDiagram(diagram)}>
+                                            <Eye className="h-4 w-4" />
+                                            <span className="sr-only">Visualizar</span>
+                                        </Button>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            onClick={() => handleApprove(diagram.id)}
+                                            disabled={diagram.approvalStatus === 'Aprovado'}
+                                        >
+                                            <CheckCircle className={cn("h-4 w-4", diagram.approvalStatus === 'Aprovado' ? 'text-green-500' : '')} />
+                                            <span className="sr-only">Aprovar</span>
+                                        </Button>
+                                    </TableCell>
+                                </TableRow>
+                            )
+                        })
+                    )}
                 </TableBody>
             </Table>
         </CardContent>

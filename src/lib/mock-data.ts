@@ -1,37 +1,7 @@
-
-
-import type { Risk, BowtieData, BowtieThreat, BowtieConsequence, Control, Kpi, EscalationRule, BowtieBarrierNode } from './types';
+import type { Risk, BowtieData, BowtieThreat, BowtieConsequence, Control, EscalationRule, BowtieBarrierNode } from './types';
 import { identifiedRisksData } from './identified-risks-data';
 
-export const kpisData: Kpi[] = [
-    { id: "KPI-1", controlId: 1, frequencia: "Mensal", ultimoKpiInformado: undefined, prazoProximoRegistro: "2024-07-30", diasPendentes: -25, status: "Pendente", responsavel: "Kaio Coutinho de Farias", emailResponsavel: "kaio.farias@rumolog.com" },
-    { id: "KPI-2", controlId: 2, frequencia: "Mensal", ultimoKpiInformado: "2024-07-02", prazoProximoRegistro: "2024-08-01", diasPendentes: -27, status: "Atrasado", responsavel: "Pablo Lacerda Aguiar", emailResponsavel: "pablo.aguiar@rumolog.com" },
-    { id: "KPI-3", controlId: 3, frequencia: "Semestral", ultimoKpiInformado: undefined, prazoProximoRegistro: "2024-12-28", diasPendentes: -146, status: "Pendente", responsavel: "Pablo Lacerda Aguiar", emailResponsavel: "pablo.aguiar@rumolog.com" },
-    { id: "KPI-4", controlId: 4, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Pablo Lacerda Aguiar", emailResponsavel: "pablo.aguiar@rumolog.com" },
-    { id: "KPI-5", controlId: 5, frequencia: "Mensal", ultimoKpiInformado: undefined, prazoProximoRegistro: "2024-07-29", diasPendentes: -24, status: "Pendente", responsavel: "Pablo Lacerda Aguiar", emailResponsavel: "pablo.aguiar@rumolog.com" },
-    { id: "KPI-6", controlId: 6, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Edson Yassuo Abe", emailResponsavel: "edson.abe@rumolog.com" },
-    { id: "KPI-7", controlId: 7, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Bruno Edison Silva Dalosto", emailResponsavel: "bruno.dalosto@rumolog.com" },
-    { id: "KPI-8", controlId: 8, frequencia: "Mensal", ultimoKpiInformado: "2024-07-02", prazoProximoRegistro: "2024-08-01", diasPendentes: -27, status: "Atrasado", responsavel: "Bruno Edison Silva Dalosto", emailResponsavel: "bruno.dalosto@rumolog.com" },
-    { id: "KPI-9", controlId: 9, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Pablo Lacerda Aguiar", emailResponsavel: "pablo.aguiar@rumolog.com" },
-    { id: "KPI-10", controlId: 10, frequencia: "Mensal", ultimoKpiInformado: "2024-07-02", prazoProximoRegistro: "2024-08-01", diasPendentes: -27, status: "Atrasado", responsavel: "Kaio Coutinho de Farias", emailResponsavel: "kaio.farias@rumolog.com" },
-    { id: "KPI-11", controlId: 11, frequencia: "Mensal", ultimoKpiInformado: undefined, prazoProximoRegistro: "2024-07-30", diasPendentes: -25, status: "Pendente", responsavel: "Victor Dimitri Zolotareff", emailResponsavel: "victor.zolotareff@rumolog.com" },
-    { id: "KPI-12", controlId: 12, frequencia: "Semestral", ultimoKpiInformado: undefined, prazoProximoRegistro: "2024-12-28", diasPendentes: -146, status: "Pendente", responsavel: "Victor Dimitri Zolotareff", emailResponsavel: "victor.zolotareff@rumolog.com" },
-    { id: "KPI-13", controlId: 13, frequencia: "Trimestral", ultimoKpiInformado: "2024-07-02", prazoProximoRegistro: "2024-10-01", diasPendentes: -88, status: "Atrasado", responsavel: "Bruno Edison Silva Dalosto", emailResponsavel: "bruno.dalosto@rumolog.com" },
-    { id: "KPI-14", controlId: 14, frequencia: "Mensal", ultimoKpiInformado: undefined, prazoProximoRegistro: "2024-07-30", diasPendentes: -25, status: "Pendente", responsavel: "Kaio Coutinho de Farias", emailResponsavel: "kaio.farias@rumolog.com" },
-    { id: "KPI-15", controlId: 15, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Pablo Lacerda Aguiar", emailResponsavel: "pablo.aguiar@rumolog.com" },
-    { id: "KPI-16", controlId: 16, frequencia: "Trimestral", ultimoKpiInformado: undefined, prazoProximoRegistro: "2024-09-30", diasPendentes: -87, status: "Pendente", responsavel: "Kaio Coutinho de Farias", emailResponsavel: "kaio.farias@rumolog.com" },
-    { id: "KPI-17", controlId: 17, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Edson Yassuo Abe", emailResponsavel: "edson.abe@rumolog.com" },
-    { id: "KPI-18", controlId: 18, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Bruno Edison Silva Dalosto", emailResponsavel: "bruno.dalosto@rumolog.com" },
-    { id: "KPI-19", controlId: 19, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Kaio Coutinho de Farias", emailResponsavel: "kaio.farias@rumolog.com" },
-    { id: "KPI-20", controlId: 20, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Victor Dimitri Zolotareff", emailResponsavel: "victor.zolotareff@rumolog.com" },
-    { id: "KPI-21", controlId: 21, frequencia: "Mensal", ultimoKpiInformado: "2024-07-02", prazoProximoRegistro: "2024-08-01", diasPendentes: -27, status: "Atrasado", responsavel: "Kaio Coutinho de Farias", emailResponsavel: "kaio.farias@rumolog.com" },
-    { id: "KPI-22", controlId: 22, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Victor Dimitri Zolotareff", emailResponsavel: "victor.zolotareff@rumolog.com" },
-    { id: "KPI-23", controlId: 23, frequencia: "Mensal", ultimoKpiInformado: "2024-07-02", prazoProximoRegistro: "2024-08-01", diasPendentes: -27, status: "Atrasado", responsavel: "Edson Yassuo Abe", emailResponsavel: "edson.abe@rumolog.com" },
-    { id: "KPI-24", controlId: 24, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Edson Yassuo Abe", emailResponsavel: "edson.abe@rumolog.com" },
-    { id: "KPI-25", controlId: 25, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Edson Yassuo Abe", emailResponsavel: "edson.abe@rumolog.com" },
-    { id: "KPI-26", controlId: 26, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Kaio Coutinho de Farias", emailResponsavel: "kaio.farias@rumolog.com" },
-    { id: "KPI-27", controlId: 27, frequencia: "Anual", ultimoKpiInformado: undefined, prazoProximoRegistro: "2025-06-30", diasPendentes: -360, status: "Pendente", responsavel: "Edson Yassuo Abe", emailResponsavel: "edson.abe@rumolog.com" }
-];
+
 
 
 
@@ -113,21 +83,16 @@ const existingRisks: Risk[] = [
 export const risksData: Risk[] = [...existingRisks, ...newRisksFromIdentification.map(r => ({ ...r, escalationRule: defaultEscalationRule }))];
 
 
-export const complianceChartData = [
-  { month: 'Jan', compliance: 88, target: 90 },
-  { month: 'Feb', compliance: 91, target: 90 },
-  { month: 'Mar', compliance: 92, target: 90 },
-  { month: 'Apr', compliance: 89, target: 90 },
-  { month: 'May', compliance: 93, target: 90 },
-  { month: 'Jun', compliance: 95, target: 90 },
-  { month: 'Jul', compliance: 85.7, target: 90 },
-];
+
 
 export const initialBowtieData: BowtieData[] = [
     {
         id: 'B001',
         riskId: '29',
         createdAt: '2024-07-20',
+        createdBy: 'Admin Rumo',
+        updatedAt: '2024-07-20',
+        updatedBy: 'Admin Rumo',
         responsible: 'Admin Rumo',
         approvalStatus: 'Aprovado',
         version: 2,
@@ -136,34 +101,54 @@ export const initialBowtieData: BowtieData[] = [
             description: "Armazenagem"
         },
         threats: [
-            { 
-                id: 'T1', 
-                title: 'Sobrecarga da estrutura',
+            {
+                id: 'T1',
+                title: 'Excesso de peso no caminhão',
                 barriers: [
-                    { id: 'B1-1', controlId: 1, title: 'Controle de Peso', responsible: 'Operação', effectiveness: 'Eficaz', status: 'Implementado' },
+                    { id: 'B1-1', controlId: '1', title: 'Controle de Peso', responsible: 'Operação', effectiveness: 'Eficaz', status: 'Implementado' },
                 ]
             },
+            {
+                id: 'T2',
+                title: 'Falta de manutenção nos freios',
+                barriers: []
+            },
+            {
+                id: 'T3',
+                title: 'Incêndio na carga',
+                barriers: [
+                    { id: 'B3-1', controlId: '3', title: 'Seguro Patrimonial', responsible: 'Financeiro', effectiveness: 'Eficaz', status: 'Implementado' },
+                ]
+            }
         ],
         consequences: [
             {
                 id: 'C1',
-                title: 'Perda de material',
+                title: 'Danos à reputação da empresa',
                 barriers: [
-                    { id: 'B3-1', controlId: 3, title: 'Seguro Patrimonial', responsible: 'Financeiro', effectiveness: 'Eficaz', status: 'Implementado' },
+                    { id: 'B2-1', controlId: '2', title: 'Plano de Gerenciamento de Crise', responsible: 'Comunicação', effectiveness: 'Pouco Eficaz', status: 'Implementado com Pendência' },
                 ]
             },
+            {
+                id: 'C2',
+                title: 'Perda de carga valiosa',
+                barriers: [
+                    { id: 'B3-1', controlId: '3', title: 'Seguro Patrimonial', responsible: 'Financeiro', effectiveness: 'Eficaz', status: 'Implementado' },
+                ]
+            }
         ]
     }
 ];
 
 export const getEmptyBowtie = (risk: Risk): BowtieData => {
     const newId = `B${Math.random().toString(36).substr(2, 9)}`;
+    const now = new Date().toISOString();
     const newThreat: BowtieThreat = {
         id: 'T1',
         title: 'Nova Ameaça',
         barriers: [{
             id: 'B1-1',
-            controlId: undefined,
+            controlId: '',
             title: 'Selecione um Controle',
             responsible: 'Indefinido',
             effectiveness: 'Eficaz',
@@ -175,7 +160,7 @@ export const getEmptyBowtie = (risk: Risk): BowtieData => {
         title: 'Nova Consequência',
         barriers: [{
             id: 'B2-1',
-            controlId: undefined,
+            controlId: '',
             title: 'Selecione um Controle',
             responsible: 'Indefinido',
             effectiveness: 'Eficaz',
@@ -186,7 +171,10 @@ export const getEmptyBowtie = (risk: Risk): BowtieData => {
     return {
         id: newId,
         riskId: risk.id,
-        createdAt: new Date().toISOString().split('T')[0],
+        createdAt: now,
+        createdBy: risk.responsavelBowtie || 'Não definido',
+        updatedAt: now,
+        updatedBy: risk.responsavelBowtie || 'Não definido',
         responsible: risk.responsavelBowtie || 'Não definido',
         approvalStatus: 'Em aprovação',
         version: 1,
@@ -196,5 +184,70 @@ export const getEmptyBowtie = (risk: Risk): BowtieData => {
         },
         threats: [newThreat],
         consequences: [newConsequence],
+    };
+}
+
+export const createEmptyBarrier = (type: 'threat' | 'consequence'): BowtieBarrierNode => {
+    return {
+        id: `new-barrier-${Date.now()}`,
+        controlId: '', // Default to empty string
+        title: 'Nova Barreira',
+        responsible: 'Não definido',
+        effectiveness: 'Ineficaz',
+        status: 'Pendente'
+    };
+};
+
+export const createEmptyThreat = (): BowtieThreat => {
+    return {
+        id: `new-threat-${Date.now()}`,
+        title: 'Nova Ameaça',
+        barriers: [createEmptyBarrier('threat')]
+    };
+};
+
+export const createEmptyConsequence = (): BowtieConsequence => {
+    return {
+        id: `new-consequence-${Date.now()}`,
+        title: 'Nova Consequência',
+        barriers: [createEmptyBarrier('consequence')]
+    };
+};
+
+
+export const generateMockBowtie = (riskId: string): BowtieData => {
+    const now = new Date().toISOString();
+    return {
+        id: `bowtie-${riskId}`,
+        riskId: riskId,
+        createdAt: now,
+        createdBy: 'mock-user@example.com',
+        updatedAt: now,
+        updatedBy: 'mock-user@example.com',
+        responsible: 'Gerente de Risco',
+        approvalStatus: 'Em aprovação',
+        version: 1,
+        topEvent: {
+            title: 'Evento Topo Mock',
+            description: 'Descrição do Evento Topo Mock'
+        },
+        threats: [
+            {
+                id: 'T1',
+                title: 'Ameaça Mock 1',
+                barriers: [
+                    { id: 'B1-1', controlId: '1', title: 'Controle Mock 1', responsible: 'Operação', effectiveness: 'Eficaz', status: 'Implementado' },
+                ]
+            }
+        ],
+        consequences: [
+            {
+                id: 'C1',
+                title: 'Consequência Mock 1',
+                barriers: [
+                    { id: 'B2-1', controlId: '2', title: 'Controle Mock 2', responsible: 'Segurança', effectiveness: 'Pouco Eficaz', status: 'Implementado com Pendência' },
+                ]
+            }
+        ]
     };
 };

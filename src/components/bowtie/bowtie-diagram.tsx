@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -33,7 +32,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { controlsData } from '@/lib/mock-data';
+import { v4 as uuidv4 } from 'uuid';
+// import { controlsData } from '@/lib/mock-data';
 
 
 const statusColors: Record<BowtieBarrierNode['status'], string> = {
@@ -51,12 +51,12 @@ const effectivenessColors: Record<BowtieBarrierNode['effectiveness'], string> = 
 };
 
 // --- Editor Popovers ---
-const BarrierEditor = ({ barrier, onUpdate, trigger }: { barrier: BowtieBarrierNode, onUpdate: (updatedBarrier: BowtieBarrierNode) => void, trigger: React.ReactNode }) => {
+const BarrierEditor = ({ barrier, onUpdate, trigger, controls }: { barrier: BowtieBarrierNode, onUpdate: (updatedBarrier: BowtieBarrierNode) => void, trigger: React.ReactNode, controls: Control[] }) => {
     const [selectedControlId, setSelectedControlId] = React.useState<string | undefined>(barrier.controlId?.toString());
     const [effectiveness, setEffectiveness] = React.useState(barrier.effectiveness);
 
     const handleSave = () => {
-        const control = controlsData.find(c => c.id.toString() === selectedControlId);
+        const control = controls.find((c: Control) => c.id.toString() === selectedControlId);
         if (control) {
             onUpdate({ 
                 ...barrier, 
@@ -68,13 +68,13 @@ const BarrierEditor = ({ barrier, onUpdate, trigger }: { barrier: BowtieBarrierN
             });
         }
     };
-    
+
     const handleControlSelect = (controlId: string) => {
         setSelectedControlId(controlId);
-    }
-
+    };
+    
     return (
-         <Popover>
+        <Popover>
             <PopoverTrigger asChild>{trigger}</PopoverTrigger>
             <PopoverContent className="w-80">
                 <div className="grid gap-4">
@@ -88,7 +88,7 @@ const BarrierEditor = ({ barrier, onUpdate, trigger }: { barrier: BowtieBarrierN
                                 <SelectValue placeholder="Selecione um controle..." />
                             </SelectTrigger>
                             <SelectContent position="popper">
-                                {controlsData.map(c => (
+                                {controls.map((c: Control) => (
                                     <SelectItem key={c.id} value={c.id.toString()}>
                                        {`[${c.id}] ${c.nomeControle}`}
                                     </SelectItem>
@@ -140,7 +140,7 @@ const ThreatConsequenceEditor = ({ item, onUpdate, trigger }: { item: {id: strin
 };
 
 // --- Node Components ---
-const BarrierNode = ({ barrier, onUpdate, onDelete }: { barrier: BowtieBarrierNode; onUpdate: (updatedBarrier: BowtieBarrierNode) => void; onDelete: () => void; }) => (
+const BarrierNode = ({ barrier, onUpdate, onDelete, controls }: { barrier: BowtieBarrierNode; onUpdate: (updatedBarrier: BowtieBarrierNode) => void; onDelete: () => void; controls: Control[] }) => (
     <div className="relative group/barrier">
         <div className="w-48 bg-white border border-gray-300 rounded-md shadow-sm flex flex-col text-sm">
             <div className="p-2 border-b font-semibold text-center flex items-center justify-center gap-2">
@@ -158,7 +158,7 @@ const BarrierNode = ({ barrier, onUpdate, onDelete }: { barrier: BowtieBarrierNo
             </div>
         </div>
         <div className="absolute top-1 right-1 flex items-center opacity-0 group-hover/barrier:opacity-100 transition-opacity">
-            <BarrierEditor barrier={barrier} onUpdate={onUpdate} trigger={
+            <BarrierEditor barrier={barrier} onUpdate={onUpdate} controls={controls} trigger={
                  <Button variant="ghost" size="icon" className="h-6 w-6"><Edit className="h-3 w-3" /></Button>
             } />
             <AlertDialog>
@@ -166,11 +166,15 @@ const BarrierNode = ({ barrier, onUpdate, onDelete }: { barrier: BowtieBarrierNo
                     <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive"><Trash2 className="h-3 w-3" /></Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
-                    <AlertDialogHeader><AlertDialogTitle>Excluir Barreira?</AlertDialogTitle></AlertDialogHeader>
-                    <AlertDialogDescription>Tem certeza que deseja excluir a barreira "{barrier.title}"?</AlertDialogDescription>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tem certeza que deseja excluir esta barreira? Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={onDelete}>Excluir</AlertDialogAction>
+                        <AlertDialogAction onClick={onDelete} className="bg-destructive hover:bg-destructive/90">Excluir</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -230,42 +234,50 @@ const ConsequenceNode = ({ consequence, onUpdate, onDelete }: { consequence: Bow
     </div>
 );
 
-const TopEventNode = ({ topEvent, onUpdate }: { topEvent: BowtieTopEvent; onUpdate: (updatedEvent: BowtieTopEvent) => void; }) => {
-     const [title, setTitle] = React.useState(topEvent.title);
-     const [description, setDescription] = React.useState(topEvent.description);
-
-     const handleSave = () => onUpdate({ title, description });
-
-    return (
-        <Popover>
-            <PopoverTrigger asChild>
-                <div className="w-56 h-32 bg-green-100 border-2 border-green-600 rounded-lg shadow-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-green-400">
-                    <div className="w-full bg-green-600 p-1 text-white font-bold text-sm flex items-center justify-center gap-1 rounded-t-md">
-                        <AlertTriangle size={16} />
-                        Evento de Topo
-                    </div>
-                    <div className="p-2 flex-grow flex flex-col justify-center">
-                        <p className="font-bold text-base text-green-800">{topEvent.title}</p>
-                        <p className="text-xs text-gray-600 mt-1">{topEvent.description}</p>
-                    </div>
+const EventNode = ({ title, description, onUpdate }: { title: string, description: string, onUpdate: (updates: { title: string, description: string }) => void }) => (
+    <Popover>
+        <PopoverTrigger asChild>
+            <div className="w-64 bg-yellow-100 border-2 border-yellow-400 rounded-md shadow-lg flex flex-col text-center">
+                <div className="px-3 py-2">
+                    <h3 className="font-bold text-lg">{title}</h3>
+                    <p className="text-xs text-gray-600">{description}</p>
                 </div>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-                 <div className="grid gap-4">
-                    <div className="space-y-2"><h4 className="font-medium leading-none">Editar Evento de Topo</h4></div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="te-title">Título</Label>
-                        <Input id="te-title" value={title} onChange={(e) => setTitle(e.target.value)} />
-                        <Label htmlFor="te-desc">Descrição</Label>
-                        <Textarea id="te-desc" value={description} onChange={(e) => setDescription(e.target.value)} />
-                    </div>
-                    <Button onClick={handleSave}>Salvar</Button>
+            </div>
+        </PopoverTrigger>
+        <PopoverContent className="w-80">
+             <div className="grid gap-4">
+                <div className="space-y-2"><h4 className="font-medium leading-none">Editar Evento de Topo</h4></div>
+                <div className="grid gap-2">
+                    <Label htmlFor="te-title">Título</Label>
+                    <Input id="te-title" value={title} onChange={(e) => onUpdate({ title: e.target.value, description })} />
+                    <Label htmlFor="te-desc">Descrição</Label>
+                    <Textarea id="te-desc" value={description} onChange={(e) => onUpdate({ title, description: e.target.value })} />
                 </div>
-            </PopoverContent>
-        </Popover>
-    );
-};
+                <Button onClick={() => onUpdate({ title, description })}>Salvar</Button>
+            </div>
+        </PopoverContent>
+    </Popover>
+);
 
+const TopEventNode = ({ title, description, onUpdate }: { title: string, description: string, onUpdate: (updates: { title: string, description: string }) => void }) => (
+    <div className="relative group/topevent">
+        <div className="w-64 bg-yellow-100 border-2 border-yellow-400 rounded-md shadow-lg flex flex-col text-center">
+            <div className="px-3 py-2">
+                <h3 className="font-bold text-lg">{title}</h3>
+                <p className="text-xs text-gray-600">{description}</p>
+            </div>
+        </div>
+        <div className="absolute top-1 right-1 opacity-0 group-hover/topevent:opacity-100 transition-opacity">
+            <EventNode title={title} description={description} onUpdate={onUpdate} />
+        </div>
+    </div>
+);
+
+const StatusBadge = ({ status, className }: { status: BowtieBarrierNode['status'], className?: string }) => (
+    <div className={cn("px-2 py-1 text-xs rounded-full font-semibold", className, statusColors[status])}>
+        {status}
+    </div>
+);
 
 const AddNodeButton = ({ onClick, children }: { onClick: () => void; children: React.ReactNode }) => (
     <Button variant="outline" className="h-24 w-48 border-dashed" onClick={onClick}>
@@ -276,12 +288,8 @@ const AddNodeButton = ({ onClick, children }: { onClick: () => void; children: R
     </Button>
 );
 
-const Line = ({ position }: { position: 'start' | 'middle' | 'end' }) => (
-    <div className="flex-1 flex items-center">
-        <div className={cn("w-1/2 h-px", position === 'start' ? 'bg-transparent' : 'bg-gray-300')}></div>
-        <div className="w-px h-full bg-gray-300"></div>
-        <div className={cn("w-1/2 h-px", position === 'end' ? 'bg-transparent' : 'bg-gray-300')}></div>
-    </div>
+const Line = ({ className }: { className?: string }) => (
+    <div className={cn("flex-1 h-px bg-gray-300", className)} />
 );
 
 const DiagramHeader = ({ title, color, className }: { title: string; color: string; className?: string }) => (
@@ -291,229 +299,264 @@ const DiagramHeader = ({ title, color, className }: { title: string; color: stri
 );
 
 export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, onUpdate: (data: BowtieData) => void, onDelete: (id: string) => void }) => {
+    const [localData, setLocalData] = React.useState<BowtieData>(() => JSON.parse(JSON.stringify(data)));
+    const [hasChanges, setHasChanges] = React.useState(false);
+    const [controls, setControls] = React.useState<Control[]>([]);
+
+    React.useEffect(() => {
+        setLocalData(JSON.parse(JSON.stringify(data)));
+    }, [data]);
+
+    React.useEffect(() => {
+        setHasChanges(JSON.stringify(localData) !== JSON.stringify(data));
+    }, [localData, data]);
+
+    React.useEffect(() => {
+        const fetchControls = async () => {
+            try {
+                const res = await fetch('/api/controls');
+                if (!res.ok) throw new Error('Falha ao buscar controles');
+                const fetchedControls = await res.json();
+                setControls(fetchedControls);
+            } catch (error) {
+                console.error("Erro ao carregar controles:", error);
+            }
+        };
+        fetchControls();
+    }, []);
+
+    const handleSave = () => {
+        onUpdate(localData);
+    };
+
+    const handleDiscard = () => {
+        setLocalData(JSON.parse(JSON.stringify(data)));
+    };
 
     const handleUpdate = (updates: Partial<BowtieData>) => {
-        onUpdate({ ...data, ...updates });
+        setLocalData(prevData => ({ ...prevData, ...updates } as BowtieData));
     };
 
     const addThreat = () => {
-        const newThreat: BowtieThreat = { id: `T${Date.now()}`, title: 'Nova Ameaça', barriers: [] };
-        handleUpdate({ threats: [...data.threats, newThreat] });
+        const newThreat: BowtieThreat = {
+            id: `threat-${uuidv4()}`,
+            title: 'Nova Ameaça',
+            barriers: []
+        };
+        setLocalData(prevData => ({ ...prevData, threats: [...prevData.threats, newThreat] }));
     };
 
     const addConsequence = () => {
-        const newConsequence: BowtieConsequence = { id: `C${Date.now()}`, title: 'Nova Consequência', barriers: [] };
-        handleUpdate({ consequences: [...data.consequences, newConsequence] });
+        const newConsequence: BowtieConsequence = {
+            id: `consequence-${uuidv4()}`,
+            title: 'Nova Consequência',
+            barriers: []
+        };
+        setLocalData(prevData => ({ ...prevData, consequences: [...prevData.consequences, newConsequence] }));
     };
     
     const addBarrier = (side: 'threat' | 'consequence', ownerId: string) => {
-        const newBarrier: BowtieBarrierNode = { 
-            id: `B${Date.now()}`,
-            controlId: undefined, 
-            title: 'Selecione um Controle', 
-            responsible: 'Indefinido', 
-            effectiveness: 'Eficaz', 
-            status: 'Pendente' 
+        const newBarrier: BowtieBarrierNode = {
+            id: `barrier-${uuidv4()}`,
+            controlId: '',
+            title: 'Nova Barreira',
+            responsible: 'Não definido',
+            effectiveness: 'Ineficaz',
+            status: 'Pendente'
         };
+
         if (side === 'threat') {
-            const updatedThreats = data.threats.map(t => t.id === ownerId ? { ...t, barriers: [...t.barriers, newBarrier] } : t);
-            handleUpdate({ threats: updatedThreats });
+            const updatedThreats = localData.threats.map(t => {
+                if (t.id === ownerId) {
+                    return { ...t, barriers: [...t.barriers, newBarrier] };
+                }
+                return t;
+            });
+            setLocalData(prevData => ({ ...prevData, threats: updatedThreats }));
         } else {
-            const updatedConsequences = data.consequences.map(c => c.id === ownerId ? { ...c, barriers: [...c.barriers, newBarrier] } : c);
-            handleUpdate({ consequences: updatedConsequences });
+            const updatedConsequences = localData.consequences.map(c => {
+                if (c.id === ownerId) {
+                    return { ...c, barriers: [...c.barriers, newBarrier] };
+                }
+                return c;
+            });
+            setLocalData(prevData => ({ ...prevData, consequences: updatedConsequences }));
         }
     };
     
     const updateThreat = (updatedThreat: BowtieThreat) => {
-        const updatedThreats = data.threats.map(t => t.id === updatedThreat.id ? updatedThreat : t);
-        handleUpdate({ threats: updatedThreats });
+        const updatedThreats = localData.threats.map(t => t.id === updatedThreat.id ? updatedThreat : t);
+        setLocalData(prevData => ({ ...prevData, threats: updatedThreats }));
     };
     
     const updateConsequence = (updatedConsequence: BowtieConsequence) => {
-        const updatedConsequences = data.consequences.map(c => c.id === updatedConsequence.id ? updatedConsequence : c);
-        handleUpdate({ consequences: updatedConsequences });
+        const updatedConsequences = localData.consequences.map(c => c.id === updatedConsequence.id ? updatedConsequence : c);
+        setLocalData(prevData => ({ ...prevData, consequences: updatedConsequences }));
     };
 
     const updateBarrier = (ownerId: string, updatedBarrier: BowtieBarrierNode, side: 'threat' | 'consequence') => {
         if(side === 'threat') {
-            const updatedThreats = data.threats.map(t => {
+            const updatedThreats = localData.threats.map(t => {
                 if (t.id === ownerId) {
                     return {...t, barriers: t.barriers.map(b => b.id === updatedBarrier.id ? updatedBarrier : b)}
                 }
                 return t;
             });
-            handleUpdate({ threats: updatedThreats });
+            setLocalData(prevData => ({ ...prevData, threats: updatedThreats }));
         } else {
-            const updatedConsequences = data.consequences.map(c => {
+            const updatedConsequences = localData.consequences.map(c => {
                 if(c.id === ownerId) {
                     return {...c, barriers: c.barriers.map(b => b.id === updatedBarrier.id ? updatedBarrier : b)}
                 }
                 return c;
             });
-            handleUpdate({ consequences: updatedConsequences });
+            setLocalData(prevData => ({ ...prevData, consequences: updatedConsequences }));
         }
     };
     
     const deleteThreat = (threatId: string) => {
-        handleUpdate({ threats: data.threats.filter(t => t.id !== threatId) });
+        setLocalData(prevData => ({ ...prevData, threats: prevData.threats.filter(t => t.id !== threatId) }));
     };
 
     const deleteConsequence = (consequenceId: string) => {
-        handleUpdate({ consequences: data.consequences.filter(c => c.id !== consequenceId) });
+        setLocalData(prevData => ({ ...prevData, consequences: prevData.consequences.filter(c => c.id !== consequenceId) }));
     };
 
     const deleteBarrier = (ownerId: string, barrierId: string, side: 'threat' | 'consequence') => {
         if(side === 'threat') {
-            const updatedThreats = data.threats.map(t => {
+            const updatedThreats = localData.threats.map(t => {
                 if (t.id === ownerId) {
                     return {...t, barriers: t.barriers.filter(b => b.id !== barrierId)}
                 }
                 return t;
             });
-            handleUpdate({ threats: updatedThreats });
+            setLocalData(prevData => ({ ...prevData, threats: updatedThreats }));
         } else {
-            const updatedConsequences = data.consequences.map(c => {
+            const updatedConsequences = localData.consequences.map(c => {
                 if(c.id === ownerId) {
                     return {...c, barriers: c.barriers.filter(b => b.id !== barrierId)}
                 }
                 return c;
             });
-            handleUpdate({ consequences: updatedConsequences });
+            setLocalData(prevData => ({ ...prevData, consequences: updatedConsequences }));
         }
     };
 
 
-    const maxPreventiveBarriers = Math.max(1, ...data.threats.map(t => t.barriers.length));
-    const maxMitigatoryBarriers = Math.max(1, ...data.consequences.map(c => c.barriers.length));
-    
-    const barrierTitle = (type: 'preventive' | 'mitigatory') => (
-        <div className="w-48 px-3 py-1 text-center font-semibold text-sm text-gray-600 bg-gray-200 rounded">
-            {type === 'preventive' ? 'Barreira Preventiva' : 'Barreira Mitigatória'}
-        </div>
-    );
+    const maxPreventiveBarriers = localData.threats.length > 0 ? Math.max(1, ...localData.threats.map(t => t.barriers.length)) : 1;
+    const maxMitigatoryBarriers = localData.consequences.length > 0 ? Math.max(1, ...localData.consequences.map(c => c.barriers.length)) : 1;
+
 
     return (
-        <Card className="overflow-x-auto p-4">
-            <CardHeader className='pb-2'>
-                <div className='flex justify-between items-center'>
-                    <CardTitle className="flex items-center gap-2"><GitFork /> Visualização Bowtie</CardTitle>
+        <div className="bg-gray-50 p-8 rounded-lg overflow-x-auto">
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h2 className="text-2xl font-bold">Diagrama Bowtie</h2>
+                    <p className="text-muted-foreground">Risco Associado: {localData.riskId}</p>
+                </div>
+                <div className='flex items-center gap-2'>
+                    <Button onClick={handleSave} disabled={!hasChanges}>
+                        Salvar Alterações
+                    </Button>
+                    <Button variant="outline" onClick={handleDiscard} disabled={!hasChanges}>
+                        Descartar
+                    </Button>
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="destructive-outline"><Trash2 className="mr-2 h-4 w-4" /> Excluir Diagrama</Button>
+                            <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+                                <Trash2 className="mr-2 h-4 w-4" /> Excluir Diagrama
+                            </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
-                            <AlertDialogHeader><AlertDialogTitle>Excluir Diagrama Bowtie?</AlertDialogTitle></AlertDialogHeader>
-                            <AlertDialogDescription>Esta ação excluirá permanentemente o diagrama Bowtie para o risco "{data.topEvent.title}".</AlertDialogDescription>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Tem certeza que deseja excluir este diagrama Bowtie? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
                             <AlertDialogFooter>
                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => onDelete(data.id)} className="bg-destructive hover:bg-destructive/90">Sim, excluir</AlertDialogAction>
+                                <AlertDialogAction onClick={() => onDelete(localData.id)} className="bg-destructive hover:bg-destructive/90">Excluir</AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
                 </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-2 min-w-[1800px]">
+            </div>
 
-                {/* Headers */}
-                <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-x-4 mb-4">
-                    {/* Left Side Header */}
-                    <div className='flex items-center gap-4'>
-                        <DiagramHeader title="Ameaça" color="bg-orange-400" className='w-48'/>
-                        <div className="flex-1 h-px bg-gray-300"></div>
-                        <div className='flex items-center gap-4'>
-                             {Array.from({ length: maxPreventiveBarriers }).map((_, i) => (
-                                <React.Fragment key={i}>
-                                    {barrierTitle('preventive')}
-                                    {i < maxPreventiveBarriers - 1 && <div className="flex-1 h-px bg-gray-300"></div>}
-                                </React.Fragment>
-                            ))}
-                        </div>
-                    </div>
-                    
-                    {/* Center Header */}
-                    <div className="w-56 text-center">
-                        <DiagramHeader title="Evento de Topo" color="bg-green-600" />
-                    </div>
-                    
-                    {/* Right Side Header */}
-                    <div className='flex items-center gap-4 flex-row-reverse'>
-                         <DiagramHeader title="Consequência" color="bg-red-500" className='w-48'/>
-                         <div className="flex-1 h-px bg-gray-300"></div>
-                         <div className='flex items-center gap-4'>
-                              {Array.from({ length: maxMitigatoryBarriers }).map((_, i) => (
-                                <React.Fragment key={i}>
-                                    {barrierTitle('mitigatory')}
-                                    {i < maxMitigatoryBarriers - 1 && <div className="flex-1 h-px bg-gray-300"></div>}
-                                </React.Fragment>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-                
-                {/* Diagram Content */}
-                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-4">
-                    {/* Left side threats and barriers */}
-                    <div className="flex flex-col gap-4">
-                        {data.threats.map((threat) => (
-                            <div key={threat.id} className="flex items-center">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-4">
+                {/* Preventive Side */}
+                <div className="flex flex-col gap-4">
+                    <DiagramHeader title="Ameaças (Causas)" color="bg-orange-500" />
+                    <div className="flex flex-col items-stretch gap-4">
+                        {localData.threats.map(threat => (
+                            <div key={threat.id} className="grid grid-flow-col auto-cols-max items-center gap-4">
                                 <ThreatNode threat={threat} onUpdate={updateThreat} onDelete={() => deleteThreat(threat.id)} />
-                                <div className="flex-1 h-px bg-gray-300 mx-4"></div>
-                                {threat.barriers.map(barrier => (
-                                    <React.Fragment key={barrier.id}>
-                                        <BarrierNode barrier={barrier} onUpdate={(b) => updateBarrier(threat.id, b, 'threat')} onDelete={() => deleteBarrier(threat.id, barrier.id, 'threat')} />
-                                        <div className="flex-1 h-px bg-gray-300 mx-4"></div>
-                                    </React.Fragment>
-                                ))}
-                                {/* Fill empty barrier slots */}
-                                {Array.from({ length: maxPreventiveBarriers - threat.barriers.length }).map((_, i) => (
-                                   <React.Fragment key={i}>
-                                        <div className="w-48 h-24" /> {/* Placeholder */}
-                                        <div className="flex-1 h-px bg-transparent mx-4"></div>
-                                   </React.Fragment>
-                                ))}
-                                <Button size="icon" variant="ghost" onClick={() => addBarrier('threat', threat.id)}><PlusCircle className="h-5 w-5"/></Button>
+                                <div className="flex items-center gap-4 overflow-x-auto p-2">
+                                    <Line />
+                                    {threat.barriers.map(barrier => (
+                                        <React.Fragment key={barrier.id}>
+                                            <BarrierNode 
+                                                barrier={barrier} 
+                                                onUpdate={(b) => updateBarrier(threat.id, b, 'threat')} 
+                                                onDelete={() => deleteBarrier(threat.id, barrier.id, 'threat')}
+                                                controls={controls}
+                                            />
+                                            <Line />
+                                        </React.Fragment>
+                                    ))}
+                                    <AddNodeButton onClick={() => addBarrier('threat', threat.id)}>
+                                        Barreira
+                                    </AddNodeButton>
+                                </div>
                             </div>
                         ))}
-                         <div className='flex items-center'>
-                            <AddNodeButton onClick={addThreat}>Adicionar Ameaça</AddNodeButton>
-                        </div>
-                    </div>
-
-                    {/* Center Top Event */}
-                    <div className="flex flex-col items-center justify-center self-stretch">
-                         <Line position='start' />
-                         <TopEventNode topEvent={data.topEvent} onUpdate={(te) => handleUpdate({ topEvent: te })} />
-                         <Line position='end' />
-                    </div>
-
-                    {/* Right side consequences and barriers */}
-                    <div className="flex flex-col gap-4">
-                       {data.consequences.map((consequence) => (
-                            <div key={consequence.id} className="flex items-center flex-row-reverse">
-                                <ConsequenceNode consequence={consequence} onUpdate={updateConsequence} onDelete={() => deleteConsequence(consequence.id)} />
-                                <div className="flex-1 h-px bg-gray-300 mx-4"></div>
-                                {consequence.barriers.map(barrier => (
-                                    <React.Fragment key={barrier.id}>
-                                        <BarrierNode barrier={barrier} onUpdate={(b) => updateBarrier(consequence.id, b, 'consequence')} onDelete={() => deleteBarrier(consequence.id, barrier.id, 'consequence')} />
-                                        <div className="flex-1 h-px bg-gray-300 mx-4"></div>
-                                    </React.Fragment>
-                                ))}
-                                {/* Fill empty barrier slots */}
-                                {Array.from({ length: maxMitigatoryBarriers - consequence.barriers.length }).map((_, i) => (
-                                   <React.Fragment key={i}>
-                                        <div className="w-48 h-24" /> {/* Placeholder */}
-                                        <div className="flex-1 h-px bg-transparent mx-4"></div>
-                                   </React.Fragment>
-                                ))}
-                                 <Button size="icon" variant="ghost" onClick={() => addBarrier('consequence', consequence.id)}><PlusCircle className="h-5 w-5"/></Button>
-                            </div>
-                        ))}
-                        <div className='flex items-center flex-row-reverse'>
-                            <AddNodeButton onClick={addConsequence}>Adicionar Consequência</AddNodeButton>
+                        <div className="flex justify-start">
+                            <AddNodeButton onClick={addThreat}>
+                                Ameaça
+                            </AddNodeButton>
                         </div>
                     </div>
                 </div>
-            </CardContent>
-        </Card>
+
+                {/* Center (Top Event) */}
+                <div className="flex flex-col items-center justify-center pt-16">
+                     <TopEventNode title={localData.topEvent.title} description={localData.topEvent.description} onUpdate={(te) => handleUpdate({ topEvent: te })} />
+                </div>
+
+                {/* Mitigatory Side */}
+                <div className="flex flex-col gap-4">
+                    <DiagramHeader title="Consequências (Impactos)" color="bg-red-500" />
+                    <div className="flex flex-col items-stretch gap-4">
+                        {localData.consequences.map(consequence => (
+                            <div key={consequence.id} className="grid grid-flow-col auto-cols-max items-center justify-end gap-4">
+                                <div className="flex items-center gap-4 overflow-x-auto p-2">
+                                    <AddNodeButton onClick={() => addBarrier('consequence', consequence.id)}>
+                                        Barreira
+                                    </AddNodeButton>
+                                    {consequence.barriers.slice().reverse().map(barrier => (
+                                        <React.Fragment key={barrier.id}>
+                                            <Line />
+                                            <BarrierNode 
+                                                barrier={barrier} 
+                                                onUpdate={(b) => updateBarrier(consequence.id, b, 'consequence')} 
+                                                onDelete={() => deleteBarrier(consequence.id, barrier.id, 'consequence')}
+                                                controls={controls}
+                                            />
+                                        </React.Fragment>
+                                    ))}
+                                    <Line />
+                                </div>
+                                <ConsequenceNode consequence={consequence} onUpdate={updateConsequence} onDelete={() => deleteConsequence(consequence.id)} />
+                            </div>
+                        ))}
+                        <div className="flex justify-end">
+                            <AddNodeButton onClick={addConsequence}>
+                                Consequência
+                            </AddNodeButton>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 };

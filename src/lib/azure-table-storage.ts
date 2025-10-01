@@ -4,7 +4,7 @@
 
 import { TableClient, TableEntity, AzureNamedKeyCredential } from "@azure/data-tables";
 // Removido mockData: integração 100% Azure
-import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk } from './types';
+import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk, BowtieData } from './types';
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const identifiedRisksTableName = "identifiedrisks";
@@ -12,6 +12,7 @@ const riskAnalysisTableName = "riskanalysis"; // Nova tabela
 const controlsTableName = "controls";
 const kpisTableName = "kpis";
 const parametersTableName = "parameters";
+const bowtieTableName = "bowties";
 
 // Helper para converter o tipo da aplicação para o tipo da entidade da tabela (IdentifiedRisk)
 const toIdentifiedRiskTableEntity = (risk: Omit<IdentifiedRisk, 'id'> & { id?: string }): TableEntity<Omit<IdentifiedRisk, 'id' | 'businessObjectives'> & { businessObjectives: string }> => {
@@ -142,7 +143,6 @@ const fromKpiTableEntity = (entity: TableEntity<any>): Kpi => {
     kpi.id = entity.rowKey;
     return kpi as Kpi;
 };
-
 
 const getClient = (tableName: string): TableClient => {
     if (!connectionString) {
@@ -487,5 +487,109 @@ export async function setParameter<T>(name: string, value: T): Promise<void> {
     } catch (error) {
         console.error(`Erro ao salvar o parâmetro "${name}":`, error);
         throw new Error(`Falha ao salvar o parâmetro "${name}" no Azure Table Storage.`);
+    }
+}
+
+// ---- Funções CRUD para Bowtie ----
+
+const toBowtieTableEntity = (bowtie: BowtieData): TableEntity<any> => {
+    const { id, riskId, ...rest } = bowtie;
+    return {
+        partitionKey: id, // O ID do Bowtie é a PartitionKey
+        rowKey: riskId,   // O ID do Risco associado é a RowKey
+        ...rest,
+        topEvent: JSON.stringify(bowtie.topEvent),
+        threats: JSON.stringify(bowtie.threats),
+        consequences: JSON.stringify(bowtie.consequences),
+    };
+};
+
+const fromBowtieTableEntity = (entity: TableEntity<any>): BowtieData => {
+    const bowtie: any = {};
+    for (const key in entity) {
+        if (key !== 'partitionKey' && key !== 'rowKey' && key !== 'etag' && key !== 'timestamp' && !key.endsWith('@odata.type')) {
+            bowtie[key] = entity[key];
+        }
+    }
+    bowtie.id = entity.partitionKey;
+    bowtie.riskId = entity.rowKey;
+
+    try {
+        bowtie.topEvent = JSON.parse(entity.topEvent);
+        bowtie.threats = JSON.parse(entity.threats);
+        bowtie.consequences = JSON.parse(entity.consequences);
+    } catch (e) {
+        console.error("Erro ao deserializar dados do Bowtie:", e);
+        bowtie.topEvent = {};
+        bowtie.threats = [];
+        bowtie.consequences = [];
+    }
+
+    return bowtie as BowtieData;
+};
+
+export async function getAllBowties(): Promise<BowtieData[]> {
+    const client = getClient(bowtieTableName);
+    try {
+        await client.createTable();
+        const entities = client.listEntities();
+        const bowties: BowtieData[] = [];
+        for await (const entity of entities) {
+            bowties.push(fromBowtieTableEntity(entity));
+        }
+        return bowties;
+    } catch (error) {
+        console.error("Erro ao buscar todos os Bowties:", error);
+        return [];
+    }
+}
+
+export async function getBowtieById(id: string): Promise<BowtieData | undefined> {
+    const client = getClient(bowtieTableName);
+    try {
+        const entities = client.listEntities<TableEntity<any>>({
+            queryOptions: { filter: `PartitionKey eq '${id}'` }
+        });
+        for await (const entity of entities) {
+            return fromBowtieTableEntity(entity); // Retorna o primeiro encontrado
+        }
+        return undefined;
+    } catch (error) {
+        console.error(`Erro ao buscar Bowtie com ID ${id}:`, error);
+        return undefined;
+    }
+}
+
+export async function addOrUpdateBowtie(bowtieData: BowtieData): Promise<BowtieData> {
+    const client = getClient(bowtieTableName);
+    try {
+        await client.createTable();
+        const now = new Date().toISOString();
+        
+        let bowtieToSave = { ...bowtieData };
+        if (!bowtieToSave.createdAt) {
+            bowtieToSave.createdAt = now;
+            bowtieToSave.createdBy = "Sistema"; // Substituir pelo usuário logado
+        }
+        bowtieToSave.updatedAt = now;
+        bowtieToSave.updatedBy = "Sistema"; // Substituir pelo usuário logado
+
+        const entity = toBowtieTableEntity(bowtieToSave);
+        await client.upsertEntity(entity, "Merge");
+        return fromBowtieTableEntity(entity);
+    } catch (error) {
+        console.error("Erro ao salvar o Bowtie:", error);
+        throw new Error("Falha ao salvar o Bowtie no Azure Table Storage.");
+    }
+}
+
+export async function deleteBowtie(id: string, riskId: string): Promise<void> {
+    const client = getClient(bowtieTableName);
+    try {
+        await client.deleteEntity(id, riskId);
+        console.log(`Bowtie com ID ${id} e RiskID ${riskId} excluído com sucesso.`);
+    } catch (error) {
+        console.error("Erro ao excluir o Bowtie:", error);
+        throw new Error("Falha ao excluir o Bowtie no Azure Table Storage.");
     }
 }

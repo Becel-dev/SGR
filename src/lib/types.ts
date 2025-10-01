@@ -114,7 +114,7 @@ export type RecentActivity = {
 // Bowtie V2 Types
 export type BowtieBarrierNode = {
   id: string;
-  controlId?: number; // Link to the actual Control
+  controlId: string; // Link to the actual Control
   title: string;
   responsible: string;
   effectiveness: 'Eficaz' | 'Pouco Eficaz' | 'Ineficaz';
@@ -128,7 +128,7 @@ export type BowtieThreat = {
 };
 
 export type BowtieConsequence = {
-  id: string;
+  id:string;
   title: string;
   barriers: BowtieBarrierNode[];
 };
@@ -139,12 +139,15 @@ export type BowtieTopEvent = {
 };
 
 export type BowtieData = {
-  id: string;
-  riskId: string;
+  id: string; // Will be partitionKey
+  riskId: string; // Will be rowKey
   topEvent: BowtieTopEvent;
   threats: BowtieThreat[];
   consequences: BowtieConsequence[];
   createdAt: string;
+  createdBy: string;
+  updatedAt: string;
+  updatedBy: string;
   responsible: string;
   approvalStatus: 'Em aprovação' | 'Aprovado';
   version: number;
