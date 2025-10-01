@@ -230,7 +230,7 @@ export type RiskAnalysis = IdentifiedRisk & {
   // --- Analysis & Classification ---
   ier?: number;
   origem?: string; // e.g., 'Identificação de Risco'
-  tipoIER?: 'Risco Crítico' | 'Risco Prioritário' | 'Risco Gerenciável' | 'Risco Aceitável';
+  tipoIER?: string;
   x?: number; // Coordinate
   y?: number; // Coordinate
   englobador?: string;
@@ -254,4 +254,17 @@ export type RiskAnalysis = IdentifiedRisk & {
   // --- Residual Risk (Example) ---
   residualRiskProbability?: "Raro" | "Improvável" | "Possível" | "Provável" | "Quase Certo";
   residualRiskImpact?: "Insignificante" | "Menor" | "Moderado" | "Maior" | "Catastrófico";
+};
+
+// IER Rules Parameter
+export type IerRule = {
+  min: number;
+  max: number;
+  label: string;
+  color: string;
+};
+
+export type IerParameter = {
+  name: 'ierRules';
+  rules: IerRule[];
 };

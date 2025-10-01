@@ -21,17 +21,21 @@ const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive"
 // Helper function to format date consistently
 const formatDate = (dateString: string | undefined) => {
     if (!dateString) return '-';
-    // Dates in mock are YYYY-MM-DD. We want to display as DD/MM/YYYY.
-    const [year, month, day] = dateString.split('-');
-    if (year && month && day) {
-        return `${day}/${month}/${year}`;
-    }
-    
     try {
         const date = new Date(dateString);
-         // Adjust for timezone issues by treating date as UTC
-        const utcDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-        return utcDate.toLocaleDateString('pt-BR');
+        // Checa se a data é válida
+        if (isNaN(date.getTime())) {
+            return dateString; // Retorna a string original se a data for inválida
+        }
+        return new Intl.DateTimeFormat('pt-BR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZone: 'UTC' // Usar UTC para evitar problemas de fuso horário
+        }).format(date);
     } catch(e) {
         return dateString; // fallback to original string if format is unexpected
     }

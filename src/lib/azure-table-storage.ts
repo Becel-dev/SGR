@@ -11,6 +11,7 @@ const identifiedRisksTableName = "identifiedrisks";
 const riskAnalysisTableName = "riskanalysis"; // Nova tabela
 const controlsTableName = "controls";
 const kpisTableName = "kpis";
+const parametersTableName = "parameters";
 
 // Helper para converter o tipo da aplicação para o tipo da entidade da tabela (IdentifiedRisk)
 const toIdentifiedRiskTableEntity = (risk: Omit<IdentifiedRisk, 'id'> & { id?: string }): TableEntity<Omit<IdentifiedRisk, 'id' | 'businessObjectives'> & { businessObjectives: string }> => {
@@ -453,5 +454,38 @@ export async function addOrUpdateRiskAnalysis(analysisData: RiskAnalysis): Promi
     } catch (error) {
         console.error("Erro ao salvar a análise de risco:", error);
         throw new Error("Falha ao salvar a análise de risco no Azure Table Storage.");
+    }
+}
+
+// --- Funções para Parâmetros ---
+
+export async function getParameter<T>(name: string): Promise<T | null> {
+    const client = getClient(parametersTableName);
+    try {
+        await client.createTable();
+        const entity = await client.getEntity<TableEntity<{ value: string }>>("global", name);
+        return JSON.parse(entity.value) as T;
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            return null; // Parâmetro não encontrado
+        }
+        console.error(`Erro ao buscar o parâmetro "${name}":`, error);
+        throw new Error(`Falha ao buscar o parâmetro "${name}" no Azure Table Storage.`);
+    }
+}
+
+export async function setParameter<T>(name: string, value: T): Promise<void> {
+    const client = getClient(parametersTableName);
+    try {
+        await client.createTable();
+        const entity = {
+            partitionKey: "global",
+            rowKey: name,
+            value: JSON.stringify(value),
+        };
+        await client.upsertEntity(entity, "Replace");
+    } catch (error) {
+        console.error(`Erro ao salvar o parâmetro "${name}":`, error);
+        throw new Error(`Falha ao salvar o parâmetro "${name}" no Azure Table Storage.`);
     }
 }

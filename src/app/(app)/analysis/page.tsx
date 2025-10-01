@@ -9,8 +9,9 @@ import { PlusCircle, Siren, ArrowRight, Search, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import type { RiskAnalysis } from "@/lib/types";
 import { getRisksForAnalysis } from "@/lib/azure-table-storage";
+import { getIerRules, getIerClassification } from "@/lib/ier-utils";
+import type { RiskAnalysis, IerRule } from "@/lib/types";
 
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
     'Novo': 'destructive',
@@ -41,24 +42,29 @@ const getBadgeVariant = (status: string): "default" | "secondary" | "destructive
 export default function RiskAnalysisPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [risks, setRisks] = useState<RiskAnalysis[]>([]);
+  const [ierRules, setIerRules] = useState<IerRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchRisks() {
+    async function fetchData() {
       try {
         setLoading(true);
-        const fetchedRisks = await getRisksForAnalysis();
+        const [fetchedRisks, fetchedIerRules] = await Promise.all([
+          getRisksForAnalysis(),
+          getIerRules()
+        ]);
         setRisks(fetchedRisks);
+        setIerRules(fetchedIerRules);
         setError(null);
       } catch (err) {
         console.error(err);
-        setError("Falha ao carregar os riscos. Tente novamente mais tarde.");
+        setError("Falha ao carregar os dados. Tente novamente mais tarde.");
       } finally {
         setLoading(false);
       }
     }
-    fetchRisks();
+    fetchData();
   }, []);
   
   const filteredRisks = risks
@@ -136,7 +142,9 @@ export default function RiskAnalysisPage() {
                   </TableCell>
                 </TableRow>
               ) : filteredRisks.length > 0 ? (
-                filteredRisks.map(risk => (
+                filteredRisks.map(risk => {
+                  const ierClassification = getIerClassification(risk.ier || 0, ierRules);
+                  return (
                   <TableRow 
                       key={risk.id}
                       className={cn(risk.status === 'Novo' && 'bg-yellow-100/50 dark:bg-yellow-900/20 hover:bg-yellow-100/60 dark:hover:bg-yellow-900/30')}
@@ -155,13 +163,11 @@ export default function RiskAnalysisPage() {
                     <TableCell>{risk.riskName}</TableCell>
                     <TableCell>{risk.topRisk}</TableCell>
                     <TableCell className="font-bold text-center">
-                        <span className={cn('p-2 rounded text-white font-semibold', {
-                            'bg-gray-400': risk.status === 'Novo', // IER não calculado ainda
-                            'bg-red-600': risk.status !== 'Novo' && (risk.ier || 0) >= 800,
-                            'bg-orange-500': risk.status !== 'Novo' && (risk.ier || 0) >= 700 && (risk.ier || 0) < 800,
-                            'bg-yellow-400 text-black': risk.status !== 'Novo' && (risk.ier || 0) < 700,
-                        })}>
-                          {risk.status === 'Novo' ? 'N/A' : risk.ier || 0}
+                        <span 
+                          className='p-2 rounded text-white font-semibold'
+                          style={{ backgroundColor: risk.status === 'Novo' ? '#d1d5db' : ierClassification.color }}
+                        >
+                          {risk.status === 'Novo' ? 'N/A' : Math.round(risk.ier || 0)}
                         </span>
                     </TableCell>
                     <TableCell>
@@ -174,7 +180,8 @@ export default function RiskAnalysisPage() {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))
+                  )
+                })
               ) : (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center p-8 text-muted-foreground">

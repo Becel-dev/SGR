@@ -31,6 +31,7 @@ const navigationItems = [
   { href: '/bowtie', icon: GitFork, label: 'Visualização Bowtie' },
   { href: '/reports/generate', icon: Bot, label: 'Gerador de Relatório IA' },
   { href: '/administration', icon: Users, label: 'Administração', roles: ['admin'] },
+  { href: '/administration/parameters', icon: Settings, label: 'Parâmetros', roles: ['admin'] },
 ];
 
 export function AppSidebar({ isMobile = false }: { isMobile?: boolean }) {

@@ -15,7 +15,8 @@ import {
   addOrUpdateRiskAnalysis,
   deleteRiskAnalysis,
 } from "@/lib/azure-table-storage";
-import type { RiskAnalysis, IdentifiedRisk } from "@/lib/types";
+import { getIerRules, getIerClassification } from "@/lib/ier-utils";
+import type { RiskAnalysis, IdentifiedRisk, IerRule } from "@/lib/types";
 import { Loader2, Save, ArrowLeft, Trash2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -62,10 +63,7 @@ const analysisSchema = z.object({
   observacao: z.string().optional().default(""),
   contexto: z.string().optional().default(""),
   origem: z.string().optional().default("Identificação de Risco"),
-  tipoIER: z.preprocess(
-    (val) => (val === "" ? undefined : val),
-    z.enum(['Risco Crítico', 'Risco Prioritário', 'Risco Gerenciável', 'Risco Aceitável']).optional()
-  ),
+  tipoIER: z.string().optional(), // Tornando o campo uma string opcional para evitar falha de validação
   x: z.coerce.number().optional().default(0),
   y: z.coerce.number().optional().default(0),
   englobador: z.string().optional().default(""),
@@ -193,6 +191,7 @@ export default function RiskAnalysisCapturePage() {
   const id = params?.id as string;
 
   const [risk, setRisk] = useState<IdentifiedRisk | RiskAnalysis | null>(null);
+  const [ierRules, setIerRules] = useState<IerRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -282,7 +281,13 @@ export default function RiskAnalysisCapturePage() {
     setCalculatedIer(roundedIer);
     setValue('ier', roundedIer); // Atualiza o valor do IER no formulário
 
-  }, [watchedFields, setValue]);
+    // Atualiza o Tipo IER dinamicamente
+    if (ierRules.length > 0) {
+      const classification = getIerClassification(roundedIer, ierRules);
+      setValue('tipoIER', classification.label as any);
+    }
+
+  }, [watchedFields, setValue, ierRules]);
 
 
   useEffect(() => {
@@ -294,13 +299,14 @@ export default function RiskAnalysisCapturePage() {
     async function fetchRiskData() {
       try {
         setLoading(true);
-        // 1. Tenta buscar da tabela de Análise primeiro
-        let riskData: RiskAnalysis | IdentifiedRisk | null = (await getRiskAnalysisById(id)) || null;
+        
+        const [riskResult, rulesResult] = await Promise.all([
+          getRiskAnalysisById(id).then(res => res || getIdentifiedRiskById(id)),
+          getIerRules()
+        ]);
 
-        // 2. Se não encontrar, busca da tabela de Identificação
-        if (!riskData) {
-          riskData = (await getIdentifiedRiskById(id)) || null;
-        }
+        setIerRules(rulesResult);
+        const riskData = riskResult || null;
 
         if (riskData) {
           setRisk(riskData);
@@ -355,9 +361,10 @@ export default function RiskAnalysisCapturePage() {
       const analysisData: RiskAnalysis = {
         ...risk,
         ...data,
+        tipoIER: data.tipoIER as RiskAnalysis['tipoIER'], // Type assertion
         ier: calculatedIer,
         status: newStatus,
-        analysisId: data.topRisk.replace(/[^a-zA-Z0-9]/g, '') || "Default", // Adicionado para corrigir o erro de tipo
+        analysisId: data.topRisk.replace(/[^a-zA-Z0-9]/g, '') || "Default",
         updatedAt: new Date().toISOString(),
         updatedBy: 'current.user@example.com', // TODO: Substituir pelo usuário logado
       };
@@ -535,13 +542,10 @@ export default function RiskAnalysisCapturePage() {
                     <div><Label>Origem</Label><Input value="Identificação de Risco" readOnly className="bg-muted/60"/></div>
                     
                     <Controller name="tipoIER" control={control} render={({ field }) => (
-                        <div><Label>Tipo IER</Label>
-                        <Select onValueChange={field.onChange} value={field.value ?? ''}>
-                            <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                            <SelectContent>
-                                {tipoIerOptions.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
-                            </SelectContent>
-                        </Select></div>
+                        <div>
+                            <Label>Tipo IER</Label>
+                            <Input {...field} value={field.value ?? ''} readOnly className="bg-muted/60 font-bold" />
+                        </div>
                     )} />
                     <Controller name="x" control={control} render={({ field }) => (<div><Label>X</Label><Input type="number" {...field} /></div>)} />
                     <Controller name="y" control={control} render={({ field }) => (<div><Label>Y</Label><Input type="number" {...field} /></div>)} />
