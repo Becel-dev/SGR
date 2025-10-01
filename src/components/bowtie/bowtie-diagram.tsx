@@ -448,8 +448,9 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
 
 
     return (
-        <div className="bg-gray-50 p-8 rounded-lg overflow-x-auto">
-            <div className="flex justify-between items-center mb-6">
+        <div className="w-full overflow-x-auto">
+            <div className="bg-gray-50 p-8 rounded-lg min-w-max">
+                <div className="flex justify-between items-center mb-6">
                 <div>
                     <h2 className="text-2xl font-bold">Diagrama Bowtie</h2>
                     <p className="text-muted-foreground">Risco Associado: {localData.riskId}</p>
@@ -483,30 +484,32 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                 </div>
             </div>
 
-            <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-4">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-4">
                 {/* Preventive Side */}
                 <div className="flex flex-col gap-4">
                     <DiagramHeader title="Ameaças (Causas)" color="bg-orange-500" />
                     <div className="flex flex-col items-stretch gap-4">
                         {localData.threats.map(threat => (
-                            <div key={threat.id} className="grid grid-flow-col auto-cols-max items-center gap-4">
+                            <div key={threat.id} className="flex items-center gap-4">
                                 <ThreatNode threat={threat} onUpdate={updateThreat} onDelete={() => deleteThreat(threat.id)} />
-                                <div className="flex items-center gap-4 overflow-x-auto p-2">
-                                    <Line />
-                                    {threat.barriers.map(barrier => (
-                                        <React.Fragment key={barrier.id}>
-                                            <BarrierNode 
-                                                barrier={barrier} 
-                                                onUpdate={(b) => updateBarrier(threat.id, b, 'threat')} 
-                                                onDelete={() => deleteBarrier(threat.id, barrier.id, 'threat')}
-                                                controls={controls}
-                                            />
-                                            <Line />
-                                        </React.Fragment>
-                                    ))}
-                                    <AddNodeButton onClick={() => addBarrier('threat', threat.id)}>
-                                        Barreira
-                                    </AddNodeButton>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-4 p-2">
+                                        {threat.barriers.map(barrier => (
+                                            <React.Fragment key={barrier.id}>
+                                                <Line />
+                                                <BarrierNode 
+                                                    barrier={barrier} 
+                                                    onUpdate={(b) => updateBarrier(threat.id, b, 'threat')} 
+                                                    onDelete={() => deleteBarrier(threat.id, barrier.id, 'threat')}
+                                                    controls={controls}
+                                                />
+                                            </React.Fragment>
+                                        ))}
+                                        <Line />
+                                        <AddNodeButton onClick={() => addBarrier('threat', threat.id)}>
+                                            Barreira
+                                        </AddNodeButton>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -528,23 +531,25 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                     <DiagramHeader title="Consequências (Impactos)" color="bg-red-500" />
                     <div className="flex flex-col items-stretch gap-4">
                         {localData.consequences.map(consequence => (
-                            <div key={consequence.id} className="grid grid-flow-col auto-cols-max items-center justify-end gap-4">
-                                <div className="flex items-center gap-4 overflow-x-auto p-2">
-                                    <AddNodeButton onClick={() => addBarrier('consequence', consequence.id)}>
-                                        Barreira
-                                    </AddNodeButton>
-                                    {consequence.barriers.slice().reverse().map(barrier => (
-                                        <React.Fragment key={barrier.id}>
-                                            <Line />
-                                            <BarrierNode 
-                                                barrier={barrier} 
-                                                onUpdate={(b) => updateBarrier(consequence.id, b, 'consequence')} 
-                                                onDelete={() => deleteBarrier(consequence.id, barrier.id, 'consequence')}
-                                                controls={controls}
-                                            />
-                                        </React.Fragment>
-                                    ))}
-                                    <Line />
+                            <div key={consequence.id} className="flex items-center gap-4 justify-end">
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-4 p-2">
+                                        <AddNodeButton onClick={() => addBarrier('consequence', consequence.id)}>
+                                            Barreira
+                                        </AddNodeButton>
+                                        {consequence.barriers.slice().reverse().map(barrier => (
+                                            <React.Fragment key={barrier.id}>
+                                                <Line />
+                                                <BarrierNode 
+                                                    barrier={barrier} 
+                                                    onUpdate={(b) => updateBarrier(consequence.id, b, 'consequence')} 
+                                                    onDelete={() => deleteBarrier(consequence.id, barrier.id, 'consequence')}
+                                                    controls={controls}
+                                                />
+                                            </React.Fragment>
+                                        ))}
+                                        <Line />
+                                    </div>
                                 </div>
                                 <ConsequenceNode consequence={consequence} onUpdate={updateConsequence} onDelete={() => deleteConsequence(consequence.id)} />
                             </div>
@@ -555,6 +560,7 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                             </AddNodeButton>
                         </div>
                     </div>
+                </div>
                 </div>
             </div>
         </div>
