@@ -36,7 +36,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { IdentifiedRisk } from '@/lib/types';
 import { getIdentifiedRiskById, addOrUpdateIdentifiedRisk, getRiskAnalysisStatus } from '@/lib/azure-table-storage';
-import { topRiskOptions, riskFactorOptions, businessObjectivesOptions } from '@/lib/form-options';
+import { topRiskOptions, riskFactorOptions, businessObjectivesOptions, getTopRiskOptions, getRiskFactorOptions } from '@/lib/form-options';
 import { useToast } from '@/hooks/use-toast';
 
 const Section = ({ title, children, icon: Icon, defaultOpen = false, disabled = false }: { title: string, children: React.ReactNode, icon?: React.ElementType, defaultOpen?: boolean, disabled?: boolean }) => (
@@ -84,6 +84,7 @@ const identifiedRiskSchema = z.object({
         currentControlCapacity: z.number().min(0).max(10),
         containmentTime: z.number().min(0).max(10),
         technicalFeasibility: z.number().min(0).max(10),
+        observacao: z.string().optional(),
         // Campos de auditoria
         createdBy: z.string().optional(),
         createdAt: z.string().optional(),
@@ -115,6 +116,8 @@ export default function CaptureIdentifiedRiskPage() {
     const [loading, setLoading] = React.useState(isEditing);
     const [isLocked, setIsLocked] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
+    const [topRisks, setTopRisks] = React.useState<string[]>(topRiskOptions); // Fallback estático
+    const [riskFactors, setRiskFactors] = React.useState<string[]>(riskFactorOptions); // Fallback estático
 
     const { control, handleSubmit, register, setValue, watch, formState: { errors, isSubmitting } } = useForm<z.infer<typeof identifiedRiskSchema>>({
         resolver: zodResolver(identifiedRiskSchema),
@@ -124,6 +127,34 @@ export default function CaptureIdentifiedRiskPage() {
             currentControlCapacity: 0, containmentTime: 0, technicalFeasibility: 0
         }
     });
+
+    // Carrega TopRisks dinamicamente
+    React.useEffect(() => {
+        const loadTopRisks = async () => {
+            try {
+                const dynamicTopRisks = await getTopRiskOptions();
+                setTopRisks(dynamicTopRisks);
+            } catch (error) {
+                console.error('Erro ao carregar TopRisks:', error);
+                // Mantém o fallback estático
+            }
+        };
+        loadTopRisks();
+    }, []);
+
+    // Carrega RiskFactors dinamicamente
+    React.useEffect(() => {
+        const loadRiskFactors = async () => {
+            try {
+                const dynamicRiskFactors = await getRiskFactorOptions();
+                setRiskFactors(dynamicRiskFactors);
+            } catch (error) {
+                console.error('Erro ao carregar RiskFactors:', error);
+                // Mantém o fallback estático
+            }
+        };
+        loadRiskFactors();
+    }, []);
 
     React.useEffect(() => {
         if (riskId) {
@@ -227,7 +258,7 @@ export default function CaptureIdentifiedRiskPage() {
                         <Controller name="topRisk" control={control} render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value} disabled={isLocked}>
                                 <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
-                                <SelectContent>{topRiskOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                <SelectContent>{topRisks.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                             </Select>
                         )} />
                     </Field>
@@ -235,7 +266,7 @@ export default function CaptureIdentifiedRiskPage() {
                         <Controller name="riskFactor" control={control} render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value} disabled={isLocked}>
                                 <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
-                                <SelectContent>{riskFactorOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                <SelectContent>{riskFactors.map(factor => <SelectItem key={factor} value={factor}>{factor}</SelectItem>)}</SelectContent>
                             </Select>
                         )} />
                     </Field>
@@ -319,6 +350,10 @@ export default function CaptureIdentifiedRiskPage() {
                     <Controller name="technicalFeasibility" control={control} render={({ field }) => (
                         <RatingSlider label="16. Facilidade Técnica/Prática de Ocorrência" helpText="Mede a viabilidade de o risco se concretizar." field={field} disabled={isLocked} />
                     )}/>
+                    
+                    <Field label="17. Observações" className="sm:col-span-3 lg:col-span-4" description="Observações adicionais sobre o risco identificado.">
+                        <Textarea {...register("observacao")} placeholder="Digite observações relevantes sobre este risco..." disabled={isLocked} />
+                    </Field>
                 </Section>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">

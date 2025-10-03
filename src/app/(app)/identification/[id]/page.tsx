@@ -217,6 +217,12 @@ export default function IdentifiedRiskDetailPage() {
                 <RatingItem label="16. Facilidade Técnica de Ocorrência" value={risk.technicalFeasibility} />
             </div>
         </Section>
+        
+        {risk.observacao && (
+            <Section title="Observações" icon={Info}>
+                <DetailItem label="17. Observações" value={risk.observacao} className="sm:col-span-4" />
+            </Section>
+        )}
       </CardContent>
        <CardFooter className="flex justify-between">
             <AlertDialog>

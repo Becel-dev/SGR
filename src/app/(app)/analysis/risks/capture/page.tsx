@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/popover';
 import { Calendar as CalendarIcon, Siren, Activity, BarChart3, Briefcase, ClipboardList } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
   Accordion,
@@ -39,55 +39,11 @@ import {
 } from "@/components/ui/accordion"
 
 
-const topRiskOptions = [
-    'Risco 01.Não integridade Operacional de Ativos',
-    'Risco 02. Execução nos projetos de expansão',
-    'Risco 03. Não atendimento junto ao Regulador',
-    'Risco 04. Crise Ambiental & Mudanças Climáticas',
-    'Risco 05. Decisões Tributárias e Judiciais Adversas',
-    'Risco 06. Ambiente Concorrencial & Demanda',
-    'Risco 07. Impactos no Ambiente Operacional de Tecnologia',
-    'Risco 08. Integridade, Compliance & Reputacional',
-    'Risco 09. Dependência de Fornecedores',
-    'Risco 10. Gente & Cultura',
-    'Risco 11. Gestão de Mudança'
-];
+import { getTopRiskOptions, getRiskFactorOptions } from '@/lib/form-options';
+import { getRisksForAnalysis } from '@/lib/azure-table-storage';
 
-const riskFactorOptions = [
-    '1.1 Paralisação e/ou indisponibilidade operacional por vandalismo, greve ou manifestação',
-    '1.2 Limitação de capacidade operacional.',
-    '1.3 Paralização e/ou indisponibilidade operacional causado por acidentes',
-    '1.4 Ausência de plano de manutenção preventivo estruturado',
-    '2.1 Performance dos contratos chaves.',
-    '2.2 Comprometimento do CAPEX e cronograma planejado',
-    '3.1 Decisões regulatórias adversas: Passivos contratuais da Malha Sul e Oeste.',
-    '3.2 Decisões regulatórias adversas: Cumprimento e gerenciamento do caderno de obrigações das concessões e autorizações',
-    '3.3 Licenciamento e Atos Autorizativos : Não manutenção das licenças e/ou atendimento das condicionantes para operar',
-    '3.4 Análise, contribuições e acompanhamento da revisão de normativos da ANTT',
-    '4.1 Danos físicos aos ativos e operação, principalmente corredor Santos',
-    '4.2 Danos ambientais causados pela Companhia',
-    '4.3 Impacto em demanda',
-    '5.1 Falha no monitoramento da Legislação Tributária.',
-    '5.2 Perdas financeiras devido a divergência de Interpretação do dispositivo legal ou mudança da jurisprudência',
-    '5.3 Decisões judiciais adversas.',
-    '6.1 Desenvolvimento de rotas e serviços alternativos',
-    '6.2 Queda abrupta da oferta de grãos',
-    '6.3 Evolução da demanda global',
-    '7.1 Indisponibilidade de sistemas críticos para operação e planejamento',
-    '7.2 Tratamento inadequado de informações confidenciais, pessoais ou sensíveis',
-    '7.3 Incapacidade de recuperação de sistemas e dados essenciais após incidentes',
-    '8.1 Desvio de conduta',
-    '8.2 Relacionamento com órgão público e conduta com fornecedores',
-    '8.3 Gestão inadequada e due diligence em terceiros, fornecedores e clientes.',
-    '9.1 Dependência dos fornecedores de locomotivas e vagões',
-    '10.1 Falta de mão de obra especializada para operacionalização das atividades da ferrovia',
-    '10.2 Saúde e Segurança Pessoal',
-    '10.3 Não atendimento da legislação trabalhista',
-    '10.4 Cultura DNA Rumo não consolidada',
-    '10.5 Direitos Humanos',
-    '11.1. Gestão inadequada de mudanças ocasionando erro, ruptura e descontinuidade de processos e perda de histórico.',
-    '11.2. Gestão inadequada do conhecimento'
-];
+// TopRisks dinâmicos serão carregados do Azure Storage
+// RiskFactors dinâmicos serão carregados do Azure Storage - removido array estático
 
 const gerenciaOptions = [
     'Operação', 'Tecnologia', 'Ambiental', 'GesMud', 'Compliance',
@@ -167,8 +123,124 @@ const Field = ({ label, children, className }: {label: string, children: React.R
 
 export default function CaptureRiskPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const riskId = searchParams ? searchParams.get('id') : null;
+    const isEditing = !!riskId;
     const [dataAlteracaoCuradoria, setDataAlteracaoCuradoria] = useState<Date>();
-    
+    const [topRisks, setTopRisks] = useState<string[]>([]); // Estado para TopRisks dinâmicos
+    const [riskFactors, setRiskFactors] = useState<string[]>([]); // Carregado dinamicamente
+    const [isLoadingRisk, setIsLoadingRisk] = useState(false);
+    const [isLoadingOptions, setIsLoadingOptions] = useState(true); // Novo estado para controlar carregamento de opções
+
+    // Carrega TopRisks dinamicamente
+    useEffect(() => {
+        const loadTopRisks = async () => {
+            try {
+                const dynamicTopRisks = await getTopRiskOptions();
+                setTopRisks(dynamicTopRisks);
+            } catch (error) {
+                console.error('Erro ao carregar TopRisks:', error);
+                // Fallback vazio em caso de erro
+            }
+        };
+        loadTopRisks();
+    }, []);
+
+    // Carrega RiskFactors dinamicamente
+    useEffect(() => {
+        const loadRiskFactors = async () => {
+            try {
+                const dynamicRiskFactors = await getRiskFactorOptions();
+                setRiskFactors(dynamicRiskFactors);
+                setIsLoadingOptions(false);
+            } catch (error) {
+                console.error('Erro ao carregar RiskFactors:', error);
+                setRiskFactors(['⚠️ ERRO: Não foi possível carregar fatores de risco']);
+                setIsLoadingOptions(false);
+            }
+        };
+        loadRiskFactors();
+    }, []);
+
+    // Carrega dados do risco para edição
+    useEffect(() => {
+        const loadRiskData = async () => {
+            if (!riskId) return;
+            
+            // Aguarda as opções serem carregadas antes de continuar
+            if (isLoadingOptions) {
+                console.log('⏳ Aguardando carregamento de opções...');
+                return;
+            }
+            
+            console.log('🔄 Carregando dados para edição, riskId:', riskId);
+            console.log('📊 RiskFactors disponíveis:', riskFactors.length);
+            console.log('📋 Lista de RiskFactors:', riskFactors);
+            
+            setIsLoadingRisk(true);
+            try {
+                const risks = await getRisksForAnalysis();
+                const riskData = risks.find((r: any) => r.id === riskId);
+                
+                if (riskData) {
+                    console.log('✅ Dados do risco encontrados:', {
+                        id: riskData.id,
+                        riskName: riskData.riskName,
+                        topRisk: riskData.topRisk,
+                        riskFactor: riskData.riskFactor
+                    });
+
+                    // Aguarda um pouco para garantir que os elementos estejam renderizados
+                    setTimeout(() => {
+                        // Preenche campos básicos
+                        const idField = document.querySelector('[name="id"]') as HTMLInputElement;
+                        if (idField) idField.value = riskData.id || '';
+                        
+                        const riscoField = document.querySelector('[name="risco"]') as HTMLInputElement;
+                        if (riscoField) riscoField.value = riskData.riskName || '';
+                        
+                        // Preenche selects
+                        const topRiskSelect = document.querySelector('[name="topRiskAssociado"]') as HTMLSelectElement;
+                        if (topRiskSelect) {
+                            topRiskSelect.value = riskData.topRisk || '';
+                            console.log('📝 TopRisk preenchido:', riskData.topRisk);
+                        }
+                        
+                        const fatorRiscoSelect = document.querySelector('[name="fatorDeRisco"]') as HTMLSelectElement;
+                        if (fatorRiscoSelect) {
+                            console.log('🔍 Tentando preencher RiskFactor com:', riskData.riskFactor);
+                            console.log('🎯 Opções disponíveis no select:', Array.from(fatorRiscoSelect.options).map(opt => ({ value: opt.value, text: opt.text })));
+                            
+                            // Verifica se o valor existe nas opções
+                            const optionExists = Array.from(fatorRiscoSelect.options).some(opt => opt.value === riskData.riskFactor);
+                            console.log('✓ Opção existe no select?', optionExists);
+                            
+                            fatorRiscoSelect.value = riskData.riskFactor || '';
+                            console.log('📝 RiskFactor preenchido. Valor atual do select:', fatorRiscoSelect.value);
+                        }
+                        
+                        const observacaoField = document.querySelector('[name="observacao"]') as HTMLTextAreaElement;
+                        if (observacaoField) observacaoField.value = riskData.observacao || '';
+                        
+                        // Preenche valores numéricos mapeados corretamente
+                        setImp(riskData.corporateImpact || 0);
+                        setOrg(riskData.organizationalRelevance || 0);
+                        setProb(riskData.contextualizedProbability || 0);
+                        setCtrl(riskData.currentControlCapacity || 0);
+                        setTempo(riskData.containmentTime || 0);
+                        setFacil(riskData.technicalFeasibility || 0);
+                    }, 1000); // Aumentando o delay para garantir que tudo foi renderizado
+                }
+            } catch (error) {
+                console.error('❌ Erro ao carregar dados do risco:', error);
+            } finally {
+                setIsLoadingRisk(false);
+            }
+        };
+
+        loadRiskData();
+    }, [riskId, isLoadingOptions, riskFactors, topRisks]); // Adiciona isLoadingOptions como dependência
+
     // States for IER calculation
     const [imp, setImp] = useState(0);
     const [org, setOrg] = useState(0);
@@ -230,16 +302,20 @@ export default function CaptureRiskPage() {
                 <Select name="topRiskAssociado">
                     <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
                     <SelectContent>
-                        {topRiskOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        {topRisks.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                     </SelectContent>
                 </Select>
             </Field>
 
             <Field label="Fator de Risco" className="sm:col-span-2">
                  <Select name="fatorDeRisco">
-                    <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={isLoadingOptions ? "Carregando..." : "Selecione..."}/></SelectTrigger>
                     <SelectContent>
-                        {riskFactorOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        {isLoadingOptions ? (
+                            <SelectItem value="_loading" disabled>Carregando fatores de risco...</SelectItem>
+                        ) : (
+                            riskFactors.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)
+                        )}
                     </SelectContent>
                 </Select>
             </Field>

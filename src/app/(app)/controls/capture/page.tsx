@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/popover';
 import { Calendar as CalendarIcon, Shield, AlertTriangle, PlusCircle, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/accordion"
 import { cn } from '@/lib/utils';
 import type { AssociatedRisk, Risk, Control } from '@/lib/types';
-import { addOrUpdateControl } from '@/lib/azure-table-storage';
+import { addOrUpdateControl, getControlById } from '@/lib/azure-table-storage';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -105,11 +105,15 @@ const Field = ({ label, children, className }: {label: string, children: React.R
 
 export default function CaptureControlPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const controlId = searchParams ? searchParams.get('id') : null;
+    const isEditing = !!controlId;
     const { toast } = useToast();
     const [associatedRisks, setAssociatedRisks] = useState<AssociatedRiskWithKey[]>([]);
     const [availableRisks, setAvailableRisks] = useState<Risk[]>([]);
     const [loadingRisks, setLoadingRisks] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isLoadingControl, setIsLoadingControl] = useState(false);
 
     const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<z.infer<typeof controlSchema>>({
         resolver: zodResolver(controlSchema),
@@ -136,6 +140,52 @@ export default function CaptureControlPage() {
         };
         fetchRisks();
     }, []);
+
+    // Carrega dados do controle para edição
+    useEffect(() => {
+        const fetchControlData = async () => {
+            if (!controlId) return;
+            
+            setIsLoadingControl(true);
+            try {
+                const response = await fetch(`/api/controls/${controlId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch control');
+                }
+                const { control: controlData } = await response.json();
+                
+                // Preenche os campos do formulário
+                Object.keys(controlData).forEach((key) => {
+                    if (key === 'associatedRisks') {
+                        const risksWithKeys = controlData[key].map((risk: AssociatedRisk, index: number) => ({
+                            ...risk,
+                            key: Date.now() + index
+                        }));
+                        setAssociatedRisks(risksWithKeys);
+                        setValue('associatedRisks', controlData[key]);
+                    } else if (key === 'dataUltimaVerificacao' || key === 'proximaVerificacao') {
+                        if (controlData[key]) {
+                            setValue(key as any, new Date(controlData[key]));
+                        }
+                    } else {
+                        setValue(key as any, controlData[key]);
+                    }
+                });
+                
+            } catch (error) {
+                console.error("Error fetching control:", error);
+                toast({
+                    variant: "destructive",
+                    title: "Erro ao carregar controle",
+                    description: "Não foi possível carregar os dados do controle para edição."
+                });
+            } finally {
+                setIsLoadingControl(false);
+            }
+        };
+
+        fetchControlData();
+    }, [controlId, setValue, toast]);
 
     useEffect(() => {
         setValue('associatedRisks', associatedRisks.map(({ key, ...rest }) => rest));
@@ -188,14 +238,14 @@ export default function CaptureControlPage() {
                 evidenciaUrl = uploadResult.evidenciaUrl;
             }
 
-            const newControl: Control = {
+            const controlData: Control = {
                 ...data,
-                id: `CTRL-${Date.now()}`, // Gerando um ID único
-                onePager: onePagerUrl || '',
-                evidencia: evidenciaUrl || '',
+                id: controlId || `CTRL-${Date.now()}`, // Usa ID existente para edição ou gera novo
+                onePager: onePagerUrl || data.onePager || '',
+                evidencia: evidenciaUrl || data.evidencia || '',
                 dataUltimaVerificacao: data.dataUltimaVerificacao?.toISOString() || '',
                 proximaVerificacao: data.proximaVerificacao?.toISOString() || '',
-                criadoEm: (data.criadoEm || new Date()).toISOString(),
+                criadoEm: (typeof data.criadoEm === 'string' ? data.criadoEm : data.criadoEm?.toISOString()) || new Date().toISOString(),
                 modificadoEm: new Date().toISOString(),
                 modificadoPor: 'Sistema', // Substituir pelo usuário logado
                 associatedRisks: data.associatedRisks.map(({ riskId, codigoMUE, titulo }) => ({ 
@@ -205,11 +255,11 @@ export default function CaptureControlPage() {
                 }))
             };
 
-            await addOrUpdateControl(newControl);
+            await addOrUpdateControl(controlData);
 
             toast({
                 title: "Sucesso!",
-                description: "O novo controle foi salvo com sucesso.",
+                description: isEditing ? "O controle foi atualizado com sucesso." : "O novo controle foi salvo com sucesso.",
             });
             router.push('/controls');
 
@@ -230,10 +280,12 @@ export default function CaptureControlPage() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
             <Shield />
-            Cadastro de Novo Controle
+            {isEditing ? 'Editar Controle' : 'Cadastro de Novo Controle'}
         </CardTitle>
         <CardDescription>
-          Preencha os campos abaixo para registrar um novo controle e associá-lo a um ou mais riscos.
+          {isEditing 
+            ? 'Atualize as informações do controle selecionado.' 
+            : 'Preencha os campos abaixo para registrar um novo controle e associá-lo a um ou mais riscos.'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -435,8 +487,8 @@ export default function CaptureControlPage() {
       </CardContent>
       <CardFooter className="flex justify-end gap-2">
         <Button variant="outline" onClick={() => router.push('/controls')}>Cancelar</Button>
-        <Button onClick={handleSubmit(onSubmit)} disabled={isSubmitting}>
-            {isSubmitting ? 'Salvando...' : 'Salvar Controle'}
+        <Button onClick={handleSubmit(onSubmit)} disabled={isSubmitting || isLoadingControl}>
+            {isSubmitting ? 'Salvando...' : (isEditing ? 'Atualizar Controle' : 'Salvar Controle')}
         </Button>
       </CardFooter>
     </Card>

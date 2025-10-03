@@ -12,9 +12,21 @@ import {
 import { Button } from '@/components/ui/button';
 import type { Control, Kpi, Risk } from '@/lib/types';
 import Link from 'next/link';
-import { notFound, useParams } from 'next/navigation';
+import { notFound, useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Shield, GanttChartSquare, ClipboardList, User, Calendar, Info, PlusCircle, ArrowRight, FileText, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Shield, GanttChartSquare, ClipboardList, User, Calendar, Info, PlusCircle, ArrowRight, FileText, AlertTriangle, Trash2, Edit, Loader2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useToast } from '@/hooks/use-toast';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -62,11 +74,14 @@ const formatDate = (dateString: string | undefined) => {
 
 export default function ControlDetailPage() {
     const params = useParams();
+    const router = useRouter();
+    const { toast } = useToast();
     const id = params && typeof params.id === 'string' ? params.id : '';
     const [control, setControl] = useState<Control | null>(null);
     const [relatedKpis, setRelatedKpis] = useState<Kpi[]>([]);
     const [associatedRisks, setAssociatedRisks] = useState<Risk[]>([]);
     const [loading, setLoading] = useState(true);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -91,6 +106,37 @@ export default function ControlDetailPage() {
             fetchControlDetails();
         }
     }, [id]);
+
+    const handleDelete = async () => {
+        if (!control) return;
+        setDeleting(true);
+        try {
+            const response = await fetch(`/api/controls/${control.id}`, {
+                method: 'DELETE',
+            });
+            
+            if (!response.ok) {
+                throw new Error('Falha ao excluir controle');
+            }
+            
+            toast({
+                title: "Sucesso",
+                description: "O controle foi excluído com sucesso.",
+            });
+            
+            router.push('/controls');
+            router.refresh();
+        } catch (error: any) {
+            console.error('Erro ao excluir controle:', error);
+            toast({
+                variant: "destructive",
+                title: "Erro ao excluir",
+                description: error?.message || "Não foi possível excluir o controle."
+            });
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -268,17 +314,47 @@ export default function ControlDetailPage() {
         
       </CardContent>
        <CardFooter className="flex justify-between">
-            <div>
-                 <Button asChild>
+            <div className="flex gap-2">
+                <Button asChild>
                     <Link href={`/kpis/capture?controlId=${control.id}`}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Adicionar KPI
                     </Link>
                 </Button>
             </div>
-            <div>
-                 <Button asChild>
-                    <Link href={`/controls/edit/${control.id}`}>Editar Controle</Link>
+            <div className="flex gap-2">
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" disabled={deleting}>
+                            {deleting ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                                <Trash2 className="mr-2 h-4 w-4" />
+                            )}
+                            {deleting ? "Excluindo..." : "Excluir Controle"}
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Tem certeza que deseja excluir este controle?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Esta ação não pode ser desfeita. Isso excluirá permanentemente o controle "{control.nomeControle}" e todos os dados relacionados.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDelete} disabled={deleting}>
+                                Sim, excluir
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                
+                <Button asChild disabled={deleting}>
+                    <Link href={`/controls/capture?id=${control.id}`}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Editar Controle
+                    </Link>
                 </Button>
             </div>
        </CardFooter>

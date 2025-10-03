@@ -44,6 +44,7 @@ import {
   geOrigemRiscoOptions,
   topRiskOptions,
   riskFactorOptions,
+  getTopRiskOptions,
 } from '@/lib/form-options';
 
 const analysisSchema = z.object({
@@ -197,6 +198,7 @@ export default function RiskAnalysisCapturePage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isMarkingAsAnalyzed, setIsMarkingAsAnalyzed] = useState(false);
   const [calculatedIer, setCalculatedIer] = useState(0);
+  const [topRisks, setTopRisks] = useState<string[]>(topRiskOptions); // Fallback estático
 
   const { control, handleSubmit, reset, watch, setValue, getValues, trigger, formState: { errors } } = useForm<z.infer<typeof analysisSchema>>({
     resolver: zodResolver(analysisSchema),
@@ -241,6 +243,20 @@ export default function RiskAnalysisCapturePage() {
       console.log("Erros de validação do formulário:", errors);
     }
   }, [errors]);
+
+  // Carrega TopRisks dinamicamente
+  useEffect(() => {
+    const loadTopRisks = async () => {
+      try {
+        const dynamicTopRisks = await getTopRiskOptions();
+        setTopRisks(dynamicTopRisks);
+      } catch (error) {
+        console.error('Erro ao carregar TopRisks:', error);
+        // Mantém o fallback estático
+      }
+    };
+    loadTopRisks();
+  }, []);
 
   const watchedFields = watch([
     "corporateImpact", 
@@ -481,7 +497,7 @@ export default function RiskAnalysisCapturePage() {
                         <Select onValueChange={field.onChange} value={field.value}>
                             <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                             <SelectContent>
-                                {topRiskOptions.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                                {topRisks.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
                             </SelectContent>
                         </Select></div>
                     )} />

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -13,7 +14,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Settings, Trash2, PlusCircle } from 'lucide-react';
+import { 
+  Loader2, 
+  Settings, 
+  Trash2, 
+  PlusCircle, 
+  ArrowRight,
+  Target 
+} from 'lucide-react';
 
 // Definindo o tipo para uma única regra de IER
 type IerRule = {
@@ -112,45 +120,121 @@ export default function ParametersPage() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Settings />
-          Parâmetros do Sistema
-        </CardTitle>
-        <CardDescription>
-          Ajuste as configurações e regras que governam o comportamento do sistema.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <h3 className="text-lg font-semibold">Regras de Classificação do IER</h3>
-        {loading ? (
-          <div className="flex justify-center items-center h-40">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <div className="space-y-6">
+      {/* Card de Navegação de Parâmetros */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings />
+            Parâmetros do Sistema
+          </CardTitle>
+          <CardDescription>
+            Escolha o tipo de parâmetro que deseja configurar.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Target className="h-6 w-6 text-primary" />
+                    <div>
+                      <h3 className="font-semibold">Top Risks Corporativos</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Gerencie os Top Risks para Identificação e Análise
+                      </p>
+                    </div>
+                  </div>
+                  <Link href="/administration/parameters/toprisk">
+                    <Button variant="ghost" size="sm">
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Settings className="h-6 w-6 text-primary" />
+                    <div>
+                      <h3 className="font-semibold">Fatores de Risco</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Gerencie os Fatores de Risco para formulários
+                      </p>
+                    </div>
+                  </div>
+                  <Link href="/administration/parameters/riskfactor">
+                    <Button variant="ghost" size="sm">
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="cursor-pointer hover:bg-accent/50 transition-colors border-dashed">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Settings className="h-6 w-6 text-muted-foreground" />
+                    <div>
+                      <h3 className="font-semibold text-muted-foreground">Outros Parâmetros</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Em breve...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        ) : (
-          <div className="space-y-4">
-            {ierRules.map((rule, index) => (
-              <RuleRow
-                key={index}
-                rule={rule}
-                onChange={(field, value) => handleRuleChange(index, field, value)}
-                onRemove={() => handleRemoveRule(index)}
-              />
-            ))}
-             <Button variant="outline" onClick={handleAddRule}>
+        </CardContent>
+      </Card>
+
+      {/* Card das Regras IER - Mantido para compatibilidade */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Settings />
+            Regras de Classificação do IER
+          </CardTitle>
+          <CardDescription>
+            Configure as faixas e classificações para o cálculo do Índice de Exposição ao Risco (IER).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {loading ? (
+            <div className="flex justify-center items-center h-40">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {ierRules.map((rule, index) => (
+                <RuleRow
+                  key={index}
+                  rule={rule}
+                  onChange={(field, value) => handleRuleChange(index, field, value)}
+                  onRemove={() => handleRemoveRule(index)}
+                />
+              ))}
+              <Button variant="outline" onClick={handleAddRule}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Adicionar Nova Regra
-            </Button>
-          </div>
-        )}
-      </CardContent>
-      <CardFooter>
-        <Button onClick={handleSave} disabled={loading || saving}>
-          {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          {saving ? 'Salvando...' : 'Salvar Alterações'}
-        </Button>
-      </CardFooter>
-    </Card>
+              </Button>
+            </div>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button onClick={handleSave} disabled={loading || saving}>
+            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {saving ? 'Salvando...' : 'Salvar Alterações'}
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }

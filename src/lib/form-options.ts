@@ -1,3 +1,63 @@
+import { getTopRisks, getRiskFactors } from './azure-table-storage';
+
+// TopRisks dinâmicos - busca do Azure Storage
+export async function getTopRiskOptions(): Promise<string[]> {
+  try {
+    const topRisks = await getTopRisks();
+    return topRisks
+      .filter(tr => tr.nome) // Filtra apenas TopRisks ativos
+      .map(tr => tr.nome);
+  } catch (error) {
+    console.error('Erro ao carregar TopRisks:', error);
+    // Fallback para os valores estáticos em caso de erro
+    return [
+      "Risco 01.Não integridade Operacional de Ativos",
+      "Risco 02. Execução nos projetos de expansão",
+      "Risco 03. Não atendimento junto ao Regulador",
+      "Risco 04. Crise Ambiental & Mudanças Climáticas",
+      "Risco 05. Decisões Tributárias e Judiciais Adversas",
+      "Risco 06. Ambiente Concorrencial & Demanda",
+      "Risco 07. Impactos no Ambiente Operacional de Tecnologia",
+      "Risco 08. Integridade, Compliance & Reputacional",
+      "Risco 09. Dependência de Fornecedores",
+      "Risco 10. Gente & Cultura",
+      "Risco 11. Gestão de Mudança",
+    ];
+  }
+}
+
+// RiskFactors dinâmicos - busca do Azure Storage
+export async function getRiskFactorOptions(): Promise<string[]> {
+  try {
+    const riskFactors = await getRiskFactors();
+    
+    if (riskFactors.length === 0) {
+      throw new Error('Nenhum risk factor encontrado no Azure');
+    }
+    
+    return riskFactors
+      .filter(rf => rf.nome) // Filtra apenas RiskFactors válidos
+      .map(rf => rf.nome);
+  } catch (error) {
+    console.error('Erro ao carregar RiskFactors:', error);
+    // Fallback para os valores estáticos em caso de erro
+    return [
+      "1.1 Paralisação e/ou indisponibilidade operacional por vandalismo, greve ou manifestação.",
+      "1.2 Limitação de capacidade operacional.",
+      "1.3 Paralização e/ou indisponibilidade operacional causado por acidentes",
+      "2.2 Comprometimento do CAPEX e cronograma planejado",
+      "3.2 Decisões regulatórias adversas: Cumprimento e gerenciamento do caderno de obrigações das concessões e autorizações.",
+      "3.3 Licenciamento e Atos Autorizativos : Não manutenção das licenças e/ou atendimento das condicionantes para operar",
+      "4.1 Danos físicos aos ativos e operação, principalmente corredor Santos",
+      "4.2 Danos ambientais causados pela Companhia",
+      "4.3 Impacto em demanda",
+      "5.2 Perdas financeiras devido a divergência de Interpretação do dispositivo legal ou mudança da jurisprudência",
+      "5.3 Decisões judiciais adversas.",
+    ];
+  }
+}
+
+// TopRisks estáticos (para compatibilidade e fallback)
 export const topRiskOptions = [
   "Risco 01.Não integridade Operacional de Ativos",
   "Risco 02. Execução nos projetos de expansão",

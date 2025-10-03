@@ -142,11 +142,11 @@ export default function RiskAnalysisPage() {
                   </TableCell>
                 </TableRow>
               ) : filteredRisks.length > 0 ? (
-                filteredRisks.map(risk => {
+                filteredRisks.map((risk, index) => {
                   const ierClassification = getIerClassification(risk.ier || 0, ierRules);
                   return (
                   <TableRow 
-                      key={risk.id}
+                      key={`${risk.id}-${index}`}
                       className={cn(risk.status === 'Novo' && 'bg-yellow-100/50 dark:bg-yellow-900/20 hover:bg-yellow-100/60 dark:hover:bg-yellow-900/30')}
                   >
                     <TableCell>

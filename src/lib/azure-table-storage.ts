@@ -4,7 +4,7 @@
 
 import { TableClient, TableEntity, AzureNamedKeyCredential } from "@azure/data-tables";
 // Removido mockData: integração 100% Azure
-import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk, BowtieData } from './types';
+import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk, BowtieData, TopRisk, RiskFactor } from './types';
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const identifiedRisksTableName = "identifiedrisks";
@@ -13,6 +13,8 @@ const controlsTableName = "controls";
 const kpisTableName = "kpis";
 const parametersTableName = "parameters";
 const bowtieTableName = "bowties";
+const topRiskTableName = "toprisks";
+const riskFactorTableName = "riskfactors";
 
 // Helper para converter o tipo da aplicação para o tipo da entidade da tabela (IdentifiedRisk)
 const toIdentifiedRiskTableEntity = (risk: Omit<IdentifiedRisk, 'id'> & { id?: string }): TableEntity<Omit<IdentifiedRisk, 'id' | 'businessObjectives'> & { businessObjectives: string }> => {
@@ -102,10 +104,36 @@ const fromRiskAnalysisTableEntity = (entity: TableEntity<any>): RiskAnalysis => 
 
 const toControlTableEntity = (control: Control): TableEntity<any> => {
     const { id, associatedRisks, ...rest } = control;
+    
+    // Garante que partitionKey seja válido
+    let partitionKey = "Default";
+    if (control.area && typeof control.area === 'string') {
+        const sanitized = control.area.replace(/[^a-zA-Z0-9]/g, '');
+        partitionKey = sanitized || "Default";
+    }
+    
+    // Converte todos os valores para tipos primitivos aceitos pelo Azure Table Storage
+    const sanitizedRest: any = {};
+    for (const key in rest) {
+        const value = (rest as any)[key];
+        
+        // Se for objeto ou array, serializa como JSON string
+        if (value !== null && value !== undefined) {
+            if (typeof value === 'object') {
+                sanitizedRest[key] = JSON.stringify(value);
+            } else {
+                sanitizedRest[key] = value;
+            }
+        } else {
+            // Mantém null/undefined como string vazia para Azure
+            sanitizedRest[key] = value ?? '';
+        }
+    }
+    
     return {
-        partitionKey: control.area.replace(/[^a-zA-Z0-9]/g, '') || "Default",
+        partitionKey: partitionKey,
         rowKey: id,
-        ...rest,
+        ...sanitizedRest,
         associatedRisks: JSON.stringify(associatedRisks || []),
     };
 };
@@ -114,19 +142,34 @@ const fromControlTableEntity = (entity: TableEntity<any>): Control => {
     const control: any = {};
     for (const key in entity) {
         if (key !== 'partitionKey' && key !== 'rowKey' && key !== 'etag' && key !== 'timestamp' && !key.endsWith('@odata.type')) {
-            control[key] = entity[key];
+            const value = entity[key];
+            
+            // Tenta deserializar strings JSON de volta para objetos/arrays
+            if (typeof value === 'string' && (value.startsWith('{') || value.startsWith('['))) {
+                try {
+                    control[key] = JSON.parse(value);
+                } catch (e) {
+                    // Se falhar, mantém como string
+                    control[key] = value;
+                }
+            } else {
+                control[key] = value;
+            }
         }
     }
     control.id = entity.rowKey;
 
-    if (control.associatedRisks && typeof control.associatedRisks === 'string') {
-        try {
-            control.associatedRisks = JSON.parse(control.associatedRisks);
-        } catch (e) {
+    // Garante que associatedRisks seja sempre um array
+    if (!Array.isArray(control.associatedRisks)) {
+        if (typeof control.associatedRisks === 'string') {
+            try {
+                control.associatedRisks = JSON.parse(control.associatedRisks);
+            } catch (e) {
+                control.associatedRisks = [];
+            }
+        } else {
             control.associatedRisks = [];
         }
-    } else {
-        control.associatedRisks = [];
     }
 
     return control as Control;
@@ -207,12 +250,27 @@ export async function addOrUpdateControl(controlData: Control): Promise<Control>
         control.modificadoEm = now;
         control.modificadoPor = "Sistema"; // Substituir pelo usuário logado
 
+        console.log("Tentando salvar controle:", control);
         const entity = toControlTableEntity(control);
+        console.log("Entity gerada:", entity);
         await client.upsertEntity(entity, "Merge");
         return fromControlTableEntity(entity);
-    } catch (error) {
+    } catch (error: any) {
         console.error("Erro ao salvar o controle:", error);
-        throw new Error("Falha ao salvar o controle no Azure Table Storage.");
+        console.error("Mensagem de erro:", error?.message);
+        console.error("Stack trace:", error?.stack);
+        console.error("Detalhes do erro:", JSON.stringify(error, null, 2));
+        throw new Error(`Falha ao salvar o controle no Azure Table Storage: ${error?.message || 'Erro desconhecido'}`);
+    }
+}
+
+export async function deleteControl(id: string, partitionKey: string): Promise<void> {
+    const client = getClient(controlsTableName);
+    try {
+        await client.deleteEntity(partitionKey, id);
+    } catch (error) {
+        console.error("Erro ao excluir o controle:", error);
+        throw new Error("Falha ao excluir o controle do Azure Table Storage.");
     }
 }
 
@@ -417,6 +475,7 @@ export async function getRisksForAnalysis(): Promise<RiskAnalysis[]> {
             topRiskAssociado: risk.topRisk,
             fatorDeRisco: risk.riskFactor,
             contexto: risk.riskScenario,
+            observacao: risk.observacao,
             imp: risk.corporateImpact,
             org: risk.organizationalRelevance,
             prob: risk.contextualizedProbability,
@@ -426,8 +485,13 @@ export async function getRisksForAnalysis(): Promise<RiskAnalysis[]> {
             ier: 0, // O cálculo do IER será mantido na UI ou em outra camada
         } as unknown as RiskAnalysis));
 
-    // Combina os riscos existentes com os novos
-    return [...existingAnalysisRisks, ...newRisksForAnalysis].sort((a, b) => 
+    // Combina os riscos existentes com os novos, garantindo que não há duplicados
+    const allRisks = [...existingAnalysisRisks, ...newRisksForAnalysis];
+    const uniqueRisks = allRisks.filter((risk, index, self) => 
+        index === self.findIndex(r => r.id === risk.id)
+    );
+    
+    return uniqueRisks.sort((a, b) => 
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
 }
@@ -591,5 +655,407 @@ export async function deleteBowtie(id: string, riskId: string): Promise<void> {
     } catch (error) {
         console.error("Erro ao excluir o Bowtie:", error);
         throw new Error("Falha ao excluir o Bowtie no Azure Table Storage.");
+    }
+}
+
+// ---- Funções CRUD para TopRisk ----
+
+const toTopRiskTableEntity = (topRisk: TopRisk): TableEntity<any> => {
+    const { id, ...rest } = topRisk;
+    return {
+        partitionKey: "global", // Todos os Top Risks ficam na mesma partição
+        rowKey: id,
+        ...rest,
+    };
+};
+
+const fromTopRiskTableEntity = (entity: TableEntity<any>): TopRisk => {
+    const topRisk: any = {};
+    for (const key in entity) {
+        if (key !== 'partitionKey' && key !== 'rowKey' && key !== 'etag' && key !== 'timestamp' && !key.endsWith('@odata.type')) {
+            topRisk[key] = entity[key];
+        }
+    }
+    topRisk.id = entity.rowKey;
+
+    return topRisk as TopRisk;
+};
+
+export async function createTopRiskTable(): Promise<void> {
+    const client = getClient(topRiskTableName);
+    try {
+        await client.createTable();
+        console.log(`Tabela "${topRiskTableName}" criada ou já existente.`);
+    } catch (error) {
+        console.error(`Erro ao criar a tabela "${topRiskTableName}":`, error);
+    }
+}
+
+export async function getTopRisks(): Promise<TopRisk[]> {
+    const client = getClient(topRiskTableName);
+    try {
+        await client.createTable();
+        const entities = client.listEntities();
+        const topRisks: TopRisk[] = [];
+        for await (const entity of entities) {
+            topRisks.push(fromTopRiskTableEntity(entity));
+        }
+        return topRisks;
+    } catch (error) {
+        console.error("Erro ao buscar Top Risks:", error);
+        return [];
+    }
+}
+
+export async function getTopRiskById(id: string): Promise<TopRisk | undefined> {
+    const client = getClient(topRiskTableName);
+    try {
+        const entity = await client.getEntity<TableEntity<any>>("global", id);
+        return fromTopRiskTableEntity(entity);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            return undefined;
+        }
+        console.error(`Erro ao buscar Top Risk com ID ${id}:`, error);
+        return undefined;
+    }
+}
+
+export async function addOrUpdateTopRisk(topRiskData: TopRisk): Promise<TopRisk> {
+    const client = getClient(topRiskTableName);
+    try {
+        await client.createTable();
+        const entity = toTopRiskTableEntity(topRiskData);
+        await client.upsertEntity(entity, "Merge");
+        return fromTopRiskTableEntity(entity);
+    } catch (error) {
+        console.error("Erro ao salvar o Top Risk:", error);
+        throw new Error("Falha ao salvar o Top Risk no Azure Table Storage.");
+    }
+}
+
+export async function deleteTopRisk(id: string, partitionKey: string): Promise<void> {
+    const client = getClient(topRiskTableName);
+    try {
+        await client.deleteEntity(partitionKey, id);
+        console.log(`Top Risk com ID ${id} excluído com sucesso.`);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            console.warn(`Tentativa de excluir Top Risk não encontrado (ID: ${id}).`);
+            return;
+        }
+        console.error("Erro ao excluir o Top Risk:", error);
+        throw new Error("Falha ao excluir o Top Risk no Azure Table Storage.");
+    }
+}
+
+// ---- Função para inicializar Top Risks padrão ----
+
+export async function initializeDefaultTopRisks(): Promise<void> {
+    const client = getClient(topRiskTableName);
+    try {
+        await client.createTable();
+        
+        // Verifica se já existem Top Risks
+        const existingTopRisks = await getTopRisks();
+        if (existingTopRisks.length > 0) {
+            console.log("Top Risks já inicializados.");
+            return;
+        }
+
+        const defaultTopRisks: Omit<TopRisk, 'id'>[] = [
+            {
+                nome: "Risco 01.Não integridade Operacional de Ativos",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Risco 02. Execução nos projetos de expansão",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Risco 03. Não atendimento junto ao Regulador",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Risco 04. Crise Ambiental & Mudanças Climáticas",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Risco 05. Decisões Tributárias e Judiciais Adversas",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Risco 06. Ambiente Concorrencial & Demanda",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Risco 07. Impactos no Ambiente Operacional de Tecnologia",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Risco 08. Integridade, Compliance & Reputacional",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Risco 09. Dependência de Fornecedores",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Risco 10. Gente & Cultura",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Risco 11. Gestão de Mudança",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+        ];
+
+        // Insere os Top Risks padrão
+        for (const topRiskData of defaultTopRisks) {
+            const topRisk: TopRisk = {
+                ...topRiskData,
+                id: `toprisk_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+            };
+            await addOrUpdateTopRisk(topRisk);
+        }
+
+        console.log("Top Risks padrão inicializados com sucesso.");
+    } catch (error) {
+        console.error("Erro ao inicializar Top Risks padrão:", error);
+        throw new Error("Falha ao inicializar Top Risks padrão no Azure Table Storage.");
+    }
+}
+
+// ---- Funções CRUD para RiskFactor ----
+
+const toRiskFactorTableEntity = (riskFactor: RiskFactor): TableEntity<any> => {
+    const { id, ...rest } = riskFactor;
+    return {
+        partitionKey: "global", // Todos os Risk Factors ficam na mesma partição
+        rowKey: id,
+        ...rest,
+    };
+};
+
+const fromRiskFactorTableEntity = (entity: TableEntity<any>): RiskFactor => {
+    const riskFactor: any = {};
+    for (const key in entity) {
+        if (key !== 'partitionKey' && key !== 'rowKey' && key !== 'etag' && key !== 'timestamp' && !key.endsWith('@odata.type')) {
+            riskFactor[key] = entity[key];
+        }
+    }
+    riskFactor.id = entity.rowKey;
+
+    return riskFactor as RiskFactor;
+};
+
+export async function createRiskFactorTable(): Promise<void> {
+    const client = getClient(riskFactorTableName);
+    try {
+        await client.createTable();
+        console.log(`Tabela "${riskFactorTableName}" criada ou já existente.`);
+    } catch (error) {
+        console.error(`Erro ao criar a tabela "${riskFactorTableName}":`, error);
+    }
+}
+
+export async function getRiskFactors(): Promise<RiskFactor[]> {
+    const client = getClient(riskFactorTableName);
+    try {
+        await client.createTable();
+        const entities = client.listEntities();
+        const riskFactors: RiskFactor[] = [];
+        for await (const entity of entities) {
+            riskFactors.push(fromRiskFactorTableEntity(entity));
+        }
+        return riskFactors;
+    } catch (error) {
+        console.error("Erro ao buscar Risk Factors:", error);
+        return [];
+    }
+}
+
+export async function getRiskFactorById(id: string): Promise<RiskFactor | undefined> {
+    const client = getClient(riskFactorTableName);
+    try {
+        const entity = await client.getEntity<TableEntity<any>>("global", id);
+        return fromRiskFactorTableEntity(entity);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            return undefined;
+        }
+        console.error(`Erro ao buscar Risk Factor com ID ${id}:`, error);
+        return undefined;
+    }
+}
+
+export async function addOrUpdateRiskFactor(riskFactorData: RiskFactor): Promise<RiskFactor> {
+    const client = getClient(riskFactorTableName);
+    try {
+        await client.createTable();
+        const entity = toRiskFactorTableEntity(riskFactorData);
+        await client.upsertEntity(entity, "Merge");
+        return fromRiskFactorTableEntity(entity);
+    } catch (error) {
+        console.error("Erro ao salvar o Risk Factor:", error);
+        throw new Error("Falha ao salvar o Risk Factor no Azure Table Storage.");
+    }
+}
+
+export async function deleteRiskFactor(id: string, partitionKey: string): Promise<void> {
+    const client = getClient(riskFactorTableName);
+    try {
+        await client.deleteEntity(partitionKey, id);
+        console.log(`Risk Factor com ID ${id} excluído com sucesso.`);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            console.warn(`Tentativa de excluir Risk Factor não encontrado (ID: ${id}).`);
+            return;
+        }
+        console.error("Erro ao excluir o Risk Factor:", error);
+        throw new Error("Falha ao excluir o Risk Factor no Azure Table Storage.");
+    }
+}
+
+// ---- Função para inicializar Risk Factors padrão ----
+
+export async function initializeDefaultRiskFactors(): Promise<void> {
+    const client = getClient(riskFactorTableName);
+    try {
+        await client.createTable();
+        
+        // Verifica se já existem Risk Factors
+        const existingRiskFactors = await getRiskFactors();
+        if (existingRiskFactors.length > 0) {
+            console.log("Risk Factors já inicializados.");
+            return;
+        }
+
+        const defaultRiskFactors: Omit<RiskFactor, 'id'>[] = [
+            {
+                nome: "1.1 Paralisação e/ou indisponibilidade operacional por vandalismo, greve ou manifestação.",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "1.2 Limitação de capacidade operacional.",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "1.3 Paralização e/ou indisponibilidade operacional causado por acidentes",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "2.2 Comprometimento do CAPEX e cronograma planejado",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "3.2 Decisões regulatórias adversas: Cumprimento e gerenciamento do caderno de obrigações das concessões e autorizações.",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "3.3 Licenciamento e Atos Autorizativos : Não manutenção das licenças e/ou atendimento das condicionantes para operar",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "4.1 Danos físicos aos ativos e operação, principalmente corredor Santos",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "4.2 Danos ambientais causados pela Companhia",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "4.3 Impacto em demanda",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "5.2 Perdas financeiras devido a divergência de Interpretação do dispositivo legal ou mudança da jurisprudência",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "5.3 Decisões judiciais adversas.",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+        ];
+
+        // Insere os Risk Factors padrão
+        for (const riskFactorData of defaultRiskFactors) {
+            const riskFactor: RiskFactor = {
+                ...riskFactorData,
+                id: `riskfactor_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+            };
+            await addOrUpdateRiskFactor(riskFactor);
+        }
+
+        console.log("Risk Factors padrão inicializados com sucesso.");
+    } catch (error) {
+        console.error("Erro ao inicializar Risk Factors padrão:", error);
+        throw new Error("Falha ao inicializar Risk Factors padrão no Azure Table Storage.");
     }
 }

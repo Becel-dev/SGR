@@ -189,6 +189,8 @@ export type IdentifiedRisk = {
   containmentTime: number; // 0-10 (inverted logic) - TEMPO
   // Field 16
   technicalFeasibility: number; // 0-10 - FACIL
+  // Field 17
+  observacao?: string; // Campo de observações livres
   // Auditoria
   createdBy: string; // Usuário criador
   createdAt: string; // Data de criação (ISO)
@@ -270,4 +272,34 @@ export type IerRule = {
 export type IerParameter = {
   name: 'ierRules';
   rules: IerRule[];
+};
+
+// TopRisk Parameter
+export type TopRisk = {
+  id: string;
+  nome: string;
+  createdBy: string;
+  createdAt: string;
+  updatedBy: string;
+  updatedAt: string;
+};
+
+export type TopRiskParameter = {
+  name: 'topRisks';
+  items: TopRisk[];
+};
+
+// RiskFactor Parameter
+export type RiskFactor = {
+  id: string;
+  nome: string;
+  createdBy: string;
+  createdAt: string;
+  updatedBy: string;
+  updatedAt: string;
+};
+
+export type RiskFactorParameter = {
+  name: 'riskFactors';
+  items: RiskFactor[];
 };
