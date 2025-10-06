@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { v4 as uuidv4 } from 'uuid';
+import { Download } from 'lucide-react';
 // import { controlsData } from '@/lib/mock-data';
 
 
@@ -295,8 +296,8 @@ const StatusBadge = ({ status, className }: { status: BowtieBarrierNode['status'
     </div>
 );
 
-const AddNodeButton = ({ onClick, children }: { onClick: () => void; children: React.ReactNode }) => (
-    <Button variant="outline" className="h-24 w-48 border-dashed" onClick={onClick}>
+const AddNodeButton = ({ onClick, children, className }: { onClick: () => void; children: React.ReactNode; className?: string }) => (
+    <Button variant="outline" className={cn("h-24 w-48 border-dashed", className)} onClick={onClick}>
         <div className="flex flex-col items-center gap-2">
             <PlusCircle className="h-6 w-6 text-muted-foreground" />
             <span className="text-xs">{children}</span>
@@ -318,6 +319,8 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
     const [localData, setLocalData] = React.useState<BowtieData>(() => JSON.parse(JSON.stringify(data)));
     const [hasChanges, setHasChanges] = React.useState(false);
     const [controls, setControls] = React.useState<Control[]>([]);
+    const [isExporting, setIsExporting] = React.useState(false);
+    const diagramRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
         setLocalData(JSON.parse(JSON.stringify(data)));
@@ -330,12 +333,24 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
     React.useEffect(() => {
         const fetchControls = async () => {
             try {
-                const res = await fetch('/api/controls');
-                if (!res.ok) throw new Error('Falha ao buscar controles');
+                const res = await fetch('/api/controls', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                if (!res.ok) {
+                    console.warn(`Falha ao buscar controles: ${res.status} ${res.statusText}`);
+                    setControls([]); // Define array vazio em caso de erro
+                    return;
+                }
+                
                 const fetchedControls = await res.json();
-                setControls(fetchedControls);
+                setControls(Array.isArray(fetchedControls) ? fetchedControls : []);
             } catch (error) {
                 console.error("Erro ao carregar controles:", error);
+                setControls([]); // Define array vazio em caso de erro
             }
         };
         fetchControls();
@@ -347,6 +362,96 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
 
     const handleDiscard = () => {
         setLocalData(JSON.parse(JSON.stringify(data)));
+    };
+
+    const handleExportPDF = async () => {
+        if (!diagramRef.current) {
+            console.error('Referência do diagrama não encontrada');
+            alert('Erro: Diagrama não encontrado. Recarregue a página.');
+            return;
+        }
+        
+        setIsExporting(true);
+        try {
+            console.log('Iniciando exportação PDF...');
+            
+            // Importa dinamicamente para evitar problemas de SSR
+            console.log('Importando bibliotecas...');
+            const html2canvas = (await import('html2canvas')).default;
+            const { jsPDF } = await import('jspdf');
+            console.log('Bibliotecas importadas com sucesso');
+            
+            // Aguarda um pouco para garantir que os botões foram ocultados via CSS
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Captura o elemento do diagrama
+            console.log('Capturando diagrama...');
+            const canvas = await html2canvas(diagramRef.current, {
+                scale: 2, // Qualidade maior
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff', // Fundo branco para PDF
+                allowTaint: true,
+                imageTimeout: 15000,
+                width: diagramRef.current.scrollWidth,
+                height: diagramRef.current.scrollHeight,
+            });
+            console.log('Diagrama capturado:', canvas.width, 'x', canvas.height);
+            
+            // Cria PDF em paisagem (landscape) A4
+            console.log('Criando PDF...');
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4',
+            });
+            
+            // Dimensões da página A4 landscape
+            const pdfWidth = 297; // mm
+            const pdfHeight = 210; // mm
+            
+            // Calcula dimensões mantendo aspect ratio e cabendo na página
+            const canvasAspectRatio = canvas.width / canvas.height;
+            const pdfAspectRatio = pdfWidth / pdfHeight;
+            
+            let finalWidth: number;
+            let finalHeight: number;
+            let xOffset = 0;
+            let yOffset = 0;
+            
+            if (canvasAspectRatio > pdfAspectRatio) {
+                // Imagem mais larga - limita pela largura
+                finalWidth = pdfWidth - 20; // Margem de 10mm de cada lado
+                finalHeight = finalWidth / canvasAspectRatio;
+                xOffset = 10;
+                yOffset = (pdfHeight - finalHeight) / 2;
+            } else {
+                // Imagem mais alta - limita pela altura
+                finalHeight = pdfHeight - 20; // Margem de 10mm em cima e embaixo
+                finalWidth = finalHeight * canvasAspectRatio;
+                yOffset = 10;
+                xOffset = (pdfWidth - finalWidth) / 2;
+            }
+            
+            const imgData = canvas.toDataURL('image/png');
+            console.log('Imagem convertida para base64');
+            
+            console.log('Adicionando imagem ao PDF...');
+            pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight);
+            
+            // Adiciona metadados
+            const fileName = `Bowtie_${localData.riskId}_${new Date().toISOString().split('T')[0]}.pdf`;
+            console.log('Salvando PDF:', fileName);
+            pdf.save(fileName);
+            console.log('PDF exportado com sucesso!');
+            
+        } catch (error) {
+            console.error('Erro detalhado ao exportar PDF:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+            alert(`Erro ao gerar PDF: ${errorMessage}\n\nVerifique o console para mais detalhes.`);
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     const handleUpdate = (updates: Partial<BowtieData>) => {
@@ -465,13 +570,33 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
 
     return (
         <div className="w-full overflow-x-auto">
-            <div className="bg-gray-50 p-8 rounded-lg min-w-max">
+            <div ref={diagramRef} className={cn("bg-gray-50 p-8 rounded-lg min-w-max", isExporting && "scale-75 origin-top-left")}>
+                <style>
+                    {isExporting ? `
+                        .export-hidden {
+                            display: none !important;
+                        }
+                    ` : ''}
+                </style>
                 <div className="flex justify-between items-center mb-6">
                 <div>
                     <h2 className="text-2xl font-bold">Diagrama Bowtie</h2>
                     <p className="text-muted-foreground">Risco Associado: {localData.riskId}</p>
                 </div>
-                <div className='flex items-center gap-2'>
+                <div className='flex items-center gap-2 export-hidden'>
+                    <Button onClick={handleExportPDF} disabled={isExporting} variant="secondary">
+                        {isExporting ? (
+                            <>
+                                <span className="animate-spin mr-2">⏳</span>
+                                Gerando PDF...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="mr-2 h-4 w-4" />
+                                Exportar PDF
+                            </>
+                        )}
+                    </Button>
                     <Button onClick={handleSave} disabled={!hasChanges}>
                         Salvar Alterações
                     </Button>
@@ -522,14 +647,14 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                                             </React.Fragment>
                                         ))}
                                         <Line />
-                                        <AddNodeButton onClick={() => addBarrier('threat', threat.id)}>
+                                        <AddNodeButton onClick={() => addBarrier('threat', threat.id)} className="export-hidden">
                                             Barreira
                                         </AddNodeButton>
                                     </div>
                                 </div>
                             </div>
                         ))}
-                        <div className="flex justify-start">
+                        <div className="flex justify-start export-hidden">
                             <AddNodeButton onClick={addThreat}>
                                 Ameaça
                             </AddNodeButton>
@@ -550,7 +675,7 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                             <div key={consequence.id} className="flex items-center gap-4 justify-end">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-4 p-2">
-                                        <AddNodeButton onClick={() => addBarrier('consequence', consequence.id)}>
+                                        <AddNodeButton onClick={() => addBarrier('consequence', consequence.id)} className="export-hidden">
                                             Barreira
                                         </AddNodeButton>
                                         {consequence.barriers.slice().reverse().map(barrier => (
@@ -570,7 +695,7 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                                 <ConsequenceNode consequence={consequence} onUpdate={updateConsequence} onDelete={() => deleteConsequence(consequence.id)} />
                             </div>
                         ))}
-                        <div className="flex justify-end">
+                        <div className="flex justify-end export-hidden">
                             <AddNodeButton onClick={addConsequence}>
                                 Consequência
                             </AddNodeButton>
