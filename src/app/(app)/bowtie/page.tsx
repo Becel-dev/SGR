@@ -66,10 +66,21 @@ export default function BowtiePage() {
         throw new Error('Falha ao buscar dados');
       }
 
-      const bowties = await bowtiesRes.json();
+      const bowties: BowtieData[] = await bowtiesRes.json();
       const risks = await risksRes.json();
 
-      setBowtieDiagrams(bowties);
+      // Filtrar apenas a última versão de cada riskId
+      const latestBowtiesMap = new Map<string, BowtieData>();
+      bowties.forEach(bowtie => {
+        const existing = latestBowtiesMap.get(bowtie.riskId);
+        if (!existing || bowtie.version > existing.version) {
+          latestBowtiesMap.set(bowtie.riskId, bowtie);
+        }
+      });
+      
+      const latestBowties = Array.from(latestBowtiesMap.values());
+
+      setBowtieDiagrams(latestBowties);
       setRisksData(risks);
 
     } catch (error) {
@@ -367,7 +378,7 @@ export default function BowtiePage() {
                         bowtieDiagrams.map(diagram => {
                             const risk = risksData.find(r => r.id === diagram.riskId);
                             return (
-                                <TableRow key={diagram.id}>
+                                <TableRow key={`${diagram.riskId}-${diagram.version}`}>
                                     <TableCell className="font-medium">{risk ? `[${risk.id}] ${risk.risco}` : `[${diagram.riskId}] Risco não encontrado`}</TableCell>
                                     <TableCell>{formatDate(diagram.createdAt)}</TableCell>
                                     <TableCell>{diagram.responsible}</TableCell>

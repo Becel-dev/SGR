@@ -1,7 +1,6 @@
 'use server';
 
 import { generateRiskReport } from '@/ai/flows/generate-risk-report';
-import { controlsData, kpisData, risksData } from '@/lib/mock-data';
 import { z } from 'zod';
 
 const ReportSchema = z.object({
@@ -29,20 +28,50 @@ export async function generateReportAction(prevState: ReportState, formData: For
   }
 
   try {
+    // Buscar dados reais do sistema diretamente (evitar fetch em server action)
+    const {
+      getRisksForAnalysis,
+      getAllControls,
+      getAllEscalations,
+      getIdentifiedRisks,
+      getTopRisks,
+    } = await import('@/lib/azure-table-storage');
+
+    const [risks, controls, escalations, identifiedRisks, topRisks] = await Promise.all([
+      getRisksForAnalysis(),
+      getAllControls(),
+      getAllEscalations(),
+      getIdentifiedRisks(),
+      getTopRisks(),
+    ]);
+
+    console.log('Dados carregados:', {
+      risks: risks.length,
+      controls: controls.length,
+      escalations: escalations.length,
+      identifiedRisks: identifiedRisks.length,
+      topRisks: topRisks.length,
+    });
+
     const result = await generateRiskReport({
       prompt: validatedFields.data.prompt,
-      risks: risksData,
-      controls: controlsData,
-      kpis: kpisData,
+      risks: risks as any[],
+      controls: controls as any[],
+      escalations: escalations as any[],
+      identifiedRisks: identifiedRisks as any[],
+      topRisks: topRisks as any[],
     });
+    
+    console.log('Relatório gerado:', result.report ? 'Sucesso' : 'Vazio');
+    
     return {
       message: 'Report generated successfully.',
       report: result.report,
     };
   } catch (error) {
-    console.error(error);
+    console.error('Erro ao gerar relatório:', error);
     return {
-      message: 'Failed to generate report. An unexpected error occurred.',
+      message: `Failed to generate report: ${error instanceof Error ? error.message : 'Unknown error'}`,
     };
   }
 }
