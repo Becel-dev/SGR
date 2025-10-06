@@ -331,7 +331,17 @@ export async function getRisksForAssociation(): Promise<RiskAnalysis[]> {
         for await (const entity of entities) {
             risks.push(fromRiskAnalysisTableEntity(entity));
         }
-        return risks;
+        
+        // Remove duplicatas baseado no ID (mantém o primeiro encontrado)
+        const uniqueRisks = risks.reduce((acc, current) => {
+            const exists = acc.find(item => item.id === current.id);
+            if (!exists) {
+                acc.push(current);
+            }
+            return acc;
+        }, [] as RiskAnalysis[]);
+        
+        return uniqueRisks;
     } catch (error) {
         console.error("Erro ao buscar riscos para associação:", error);
         return [];

@@ -251,7 +251,16 @@ export default function BowtiePage() {
     }
   };
   
-  const unassignedRisks = risksData.filter(r => !bowtieDiagrams.some(d => d.riskId === r.id));
+  // Remove duplicatas de risksData baseado no ID antes de filtrar
+  const uniqueRisksData = risksData.reduce((acc, current) => {
+    const exists = acc.find(item => item.id === current.id);
+    if (!exists) {
+      acc.push(current);
+    }
+    return acc;
+  }, [] as Risk[]);
+  
+  const unassignedRisks = uniqueRisksData.filter(r => !bowtieDiagrams.some(d => d.riskId === r.id));
 
 
   if (selectedDiagram) {

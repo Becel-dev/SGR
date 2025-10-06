@@ -140,47 +140,63 @@ const ThreatConsequenceEditor = ({ item, onUpdate, trigger }: { item: {id: strin
 };
 
 // --- Node Components ---
-const BarrierNode = ({ barrier, onUpdate, onDelete, controls }: { barrier: BowtieBarrierNode; onUpdate: (updatedBarrier: BowtieBarrierNode) => void; onDelete: () => void; controls: Control[] }) => (
-    <div className="relative group/barrier">
-        <div className="w-48 bg-white border border-gray-300 rounded-md shadow-sm flex flex-col text-sm">
-            <div className="p-2 border-b font-semibold text-center flex items-center justify-center gap-2">
-                <Shield size={14} className="text-green-600" />
-                <span className='truncate'>{barrier.title}</span>
+const BarrierNode = ({ barrier, onUpdate, onDelete, controls }: { barrier: BowtieBarrierNode; onUpdate: (updatedBarrier: BowtieBarrierNode) => void; onDelete: () => void; controls: Control[] }) => {
+    // Busca o controle associado para exibir informações completas
+    const associatedControl = controls.find(c => c.id === barrier.controlId);
+    
+    return (
+        <div className="relative group/barrier">
+            <div className="w-56 bg-white border border-gray-300 rounded-md shadow-sm flex flex-col text-xs">
+                {/* Nome do Controle */}
+                <div className="p-2 border-b font-semibold text-center flex items-center justify-center gap-2 bg-green-50">
+                    <Shield size={14} className="text-green-600 flex-shrink-0" />
+                    <span className='truncate' title={associatedControl?.nomeControle || barrier.title}>
+                        {associatedControl?.nomeControle || barrier.title}
+                    </span>
+                </div>
+                
+                {/* Dono do Controle */}
+                <div className="p-1.5 border-b text-center truncate bg-gray-50" title={associatedControl?.donoControle || barrier.responsible}>
+                    <span className="font-medium text-gray-600">Dono: </span>
+                    {associatedControl?.donoControle || barrier.responsible}
+                </div>
+                
+                {/* Categoria */}
+                <div className="p-1.5 border-b text-center truncate bg-blue-50" title={associatedControl?.categoria || 'Não definida'}>
+                    <span className="font-medium text-blue-700">Cat: </span>
+                    {associatedControl?.categoria || '-'}
+                </div>
+                
+                {/* Status */}
+                <div className={`p-1.5 rounded-b-md text-center truncate font-medium ${statusColors[barrier.status as keyof typeof statusColors] || 'bg-gray-200 text-gray-800'}`}>
+                    {associatedControl?.status || barrier.status}
+                </div>
             </div>
-            <div className={`p-1.5 border-b text-center truncate ${effectivenessColors[barrier.effectiveness]}`}>
-                {barrier.responsible}
-            </div>
-            <div className={`p-1.5 border-b text-center truncate ${effectivenessColors[barrier.effectiveness]}`}>
-                {barrier.effectiveness}
-            </div>
-            <div className={`p-1.5 rounded-b-md text-center truncate ${statusColors[barrier.status] || 'bg-gray-200 text-gray-800'}`}>
-                {barrier.status}
+            <div className="absolute top-1 right-1 flex items-center opacity-0 group-hover/barrier:opacity-100 transition-opacity">
+                <BarrierEditor barrier={barrier} onUpdate={onUpdate} controls={controls} trigger={
+                     <Button variant="ghost" size="icon" className="h-6 w-6"><Edit className="h-3 w-3" /></Button>
+                } />
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive"><Trash2 className="h-3 w-3" /></Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Tem certeza que deseja excluir esta barreira? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={onDelete} className="bg-destructive hover:bg-destructive/90">Excluir</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         </div>
-        <div className="absolute top-1 right-1 flex items-center opacity-0 group-hover/barrier:opacity-100 transition-opacity">
-            <BarrierEditor barrier={barrier} onUpdate={onUpdate} controls={controls} trigger={
-                 <Button variant="ghost" size="icon" className="h-6 w-6"><Edit className="h-3 w-3" /></Button>
-            } />
-            <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive"><Trash2 className="h-3 w-3" /></Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Tem certeza que deseja excluir esta barreira? Esta ação não pode ser desfeita.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={onDelete} className="bg-destructive hover:bg-destructive/90">Excluir</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </div>
-    </div>
-);
+    );
+};
 
 const ThreatNode = ({ threat, onUpdate, onDelete }: { threat: BowtieThreat; onUpdate: (updatedThreat: BowtieThreat) => void; onDelete: () => void; }) => (
     <div className="relative group/threat">
