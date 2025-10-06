@@ -571,11 +571,14 @@ export async function setParameter<T>(name: string, value: T): Promise<void> {
 // ---- Funções CRUD para Bowtie ----
 
 const toBowtieTableEntity = (bowtie: BowtieData): TableEntity<any> => {
-    const { id, riskId, ...rest } = bowtie;
+    const { id, riskId, version, ...rest } = bowtie;
     return {
-        partitionKey: id, // O ID do Bowtie é a PartitionKey
-        rowKey: riskId,   // O ID do Risco associado é a RowKey
+        partitionKey: riskId, // O ID do Risco é a PartitionKey (agrupa versões)
+        rowKey: `${id}_v${version}`,   // ID do Bowtie + versão é a RowKey
         ...rest,
+        id,
+        riskId,
+        version,
         topEvent: JSON.stringify(bowtie.topEvent),
         threats: JSON.stringify(bowtie.threats),
         consequences: JSON.stringify(bowtie.consequences),
@@ -589,8 +592,14 @@ const fromBowtieTableEntity = (entity: TableEntity<any>): BowtieData => {
             bowtie[key] = entity[key];
         }
     }
-    bowtie.id = entity.partitionKey;
-    bowtie.riskId = entity.rowKey;
+    // riskId vem da PartitionKey
+    bowtie.riskId = entity.partitionKey;
+    // id e version já estão no entity, mas garantimos extração do rowKey como fallback
+    if (!bowtie.id || !bowtie.version) {
+        const rowKeyParts = entity.rowKey.split('_v');
+        bowtie.id = rowKeyParts[0];
+        bowtie.version = parseFloat(rowKeyParts[1]) || 1.0;
+    }
 
     try {
         bowtie.topEvent = JSON.parse(entity.topEvent);
@@ -622,18 +631,49 @@ export async function getAllBowties(): Promise<BowtieData[]> {
     }
 }
 
-export async function getBowtieById(id: string): Promise<BowtieData | undefined> {
+export async function getBowtieVersions(riskId: string): Promise<BowtieData[]> {
     const client = getClient(bowtieTableName);
     try {
         const entities = client.listEntities<TableEntity<any>>({
-            queryOptions: { filter: `PartitionKey eq '${id}'` }
+            queryOptions: { filter: `PartitionKey eq '${riskId}'` }
+        });
+        const versions: BowtieData[] = [];
+        for await (const entity of entities) {
+            versions.push(fromBowtieTableEntity(entity));
+        }
+        // Retorna todas as versões ordenadas da mais recente para a mais antiga
+        return versions.sort((a, b) => b.version - a.version);
+    } catch (error) {
+        console.error(`Erro ao buscar versões do Bowtie com riskId ${riskId}:`, error);
+        return [];
+    }
+}
+
+export async function getBowtieById(riskId: string): Promise<BowtieData | undefined> {
+    try {
+        const versions = await getBowtieVersions(riskId);
+        // Retorna a versão mais recente
+        return versions.length > 0 ? versions[0] : undefined;
+    } catch (error) {
+        console.error(`Erro ao buscar Bowtie com riskId ${riskId}:`, error);
+        return undefined;
+    }
+}
+
+export async function getBowtieByVersion(riskId: string, version: number): Promise<BowtieData | undefined> {
+    const client = getClient(bowtieTableName);
+    try {
+        const rowKey = `${riskId}_v${version}`;
+        // Tenta buscar uma versão específica primeiro
+        const entities = client.listEntities<TableEntity<any>>({
+            queryOptions: { filter: `PartitionKey eq '${riskId}' and RowKey eq '${rowKey}'` }
         });
         for await (const entity of entities) {
-            return fromBowtieTableEntity(entity); // Retorna o primeiro encontrado
+            return fromBowtieTableEntity(entity);
         }
         return undefined;
     } catch (error) {
-        console.error(`Erro ao buscar Bowtie com ID ${id}:`, error);
+        console.error(`Erro ao buscar Bowtie versão ${version} com riskId ${riskId}:`, error);
         return undefined;
     }
 }
@@ -645,6 +685,16 @@ export async function addOrUpdateBowtie(bowtieData: BowtieData): Promise<BowtieD
         const now = new Date().toISOString();
         
         let bowtieToSave = { ...bowtieData };
+        
+        // Se é uma atualização, busca a última versão e incrementa
+        if (bowtieToSave.id && bowtieToSave.riskId) {
+            const existingVersions = await getBowtieVersions(bowtieToSave.riskId);
+            if (existingVersions.length > 0) {
+                const latestVersion = Math.max(...existingVersions.map((v: BowtieData) => v.version));
+                bowtieToSave.version = parseFloat((latestVersion + 0.1).toFixed(1));
+            }
+        }
+        
         if (!bowtieToSave.createdAt) {
             bowtieToSave.createdAt = now;
             bowtieToSave.createdBy = "Sistema"; // Substituir pelo usuário logado
@@ -661,11 +711,12 @@ export async function addOrUpdateBowtie(bowtieData: BowtieData): Promise<BowtieD
     }
 }
 
-export async function deleteBowtie(id: string, riskId: string): Promise<void> {
+export async function deleteBowtie(riskId: string, id: string, version: number): Promise<void> {
     const client = getClient(bowtieTableName);
     try {
-        await client.deleteEntity(id, riskId);
-        console.log(`Bowtie com ID ${id} e RiskID ${riskId} excluído com sucesso.`);
+        const rowKey = `${id}_v${version}`;
+        await client.deleteEntity(riskId, rowKey);
+        console.log(`Bowtie com riskId ${riskId}, ID ${id} e versão ${version} excluído com sucesso.`);
     } catch (error) {
         console.error("Erro ao excluir o Bowtie:", error);
         throw new Error("Falha ao excluir o Bowtie no Azure Table Storage.");

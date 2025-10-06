@@ -1,6 +1,7 @@
 'use client';
 
 import { BowtieDiagram } from "@/components/bowtie/bowtie-diagram";
+import { BowtieVersionHistory } from "@/components/bowtie/bowtie-version-history";
 import { useEffect, useState } from "react";
 import type { BowtieData, Risk } from "@/lib/types";
 import {
@@ -264,14 +265,26 @@ export default function BowtiePage() {
 
 
   if (selectedDiagram) {
+    // Verifica se é uma versão antiga (não é a mais recente)
+    const latestVersion = bowtieDiagrams.find(d => d.riskId === selectedDiagram.riskId);
+    const isOldVersion = latestVersion && latestVersion.version !== selectedDiagram.version;
+    
     return (
         <div className="space-y-4">
-             <Button onClick={() => setSelectedDiagram(null)}>Voltar para a Lista</Button>
+             <div className="flex items-center justify-between">
+                <Button onClick={() => setSelectedDiagram(null)}>Voltar para a Lista</Button>
+                {isOldVersion && (
+                    <Badge variant="secondary" className="text-sm">
+                        Visualizando versão {selectedDiagram.version.toFixed(1)} (Somente Leitura)
+                    </Badge>
+                )}
+             </div>
              <BowtieDiagram 
-                key={selectedDiagram.id} 
+                key={`${selectedDiagram.id}_v${selectedDiagram.version}`} 
                 data={selectedDiagram} 
                 onUpdate={handleUpdate} 
                 onDelete={handleDeleteDiagram}
+                readOnly={isOldVersion}
             />
         </div>
     )
@@ -365,19 +378,25 @@ export default function BowtiePage() {
                                     </TableCell>
                                     <TableCell>v{diagram.version}</TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => setSelectedDiagram(diagram)}>
-                                            <Eye className="h-4 w-4" />
-                                            <span className="sr-only">Visualizar</span>
-                                        </Button>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            onClick={() => handleApprove(diagram.id)}
-                                            disabled={diagram.approvalStatus === 'Aprovado'}
-                                        >
-                                            <CheckCircle className={cn("h-4 w-4", diagram.approvalStatus === 'Aprovado' ? 'text-green-500' : '')} />
-                                            <span className="sr-only">Aprovar</span>
-                                        </Button>
+                                        <div className="flex items-center justify-end gap-1">
+                                            <Button variant="ghost" size="icon" onClick={() => setSelectedDiagram(diagram)}>
+                                                <Eye className="h-4 w-4" />
+                                                <span className="sr-only">Visualizar</span>
+                                            </Button>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                onClick={() => handleApprove(diagram.id)}
+                                                disabled={diagram.approvalStatus === 'Aprovado'}
+                                            >
+                                                <CheckCircle className={cn("h-4 w-4", diagram.approvalStatus === 'Aprovado' ? 'text-green-500' : '')} />
+                                                <span className="sr-only">Aprovar</span>
+                                            </Button>
+                                            <BowtieVersionHistory 
+                                                riskId={diagram.riskId}
+                                                onSelectVersion={setSelectedDiagram}
+                                            />
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             )

@@ -52,7 +52,7 @@ const effectivenessColors: Record<BowtieBarrierNode['effectiveness'], string> = 
 };
 
 // --- Editor Popovers ---
-const BarrierEditor = ({ barrier, onUpdate, trigger, controls }: { barrier: BowtieBarrierNode, onUpdate: (updatedBarrier: BowtieBarrierNode) => void, trigger: React.ReactNode, controls: Control[] }) => {
+const BarrierEditor = ({ barrier, onUpdate, trigger, controls, readOnly }: { barrier: BowtieBarrierNode, onUpdate: (updatedBarrier: BowtieBarrierNode) => void, trigger: React.ReactNode, controls: Control[], readOnly?: boolean }) => {
     const [selectedControlId, setSelectedControlId] = React.useState<string | undefined>(barrier.controlId?.toString());
     const [effectiveness, setEffectiveness] = React.useState(barrier.effectiveness);
 
@@ -73,6 +73,10 @@ const BarrierEditor = ({ barrier, onUpdate, trigger, controls }: { barrier: Bowt
     const handleControlSelect = (controlId: string) => {
         setSelectedControlId(controlId);
     };
+    
+    if (readOnly) {
+        return <>{trigger}</>;
+    }
     
     return (
         <Popover>
@@ -141,7 +145,7 @@ const ThreatConsequenceEditor = ({ item, onUpdate, trigger }: { item: {id: strin
 };
 
 // --- Node Components ---
-const BarrierNode = ({ barrier, onUpdate, onDelete, controls }: { barrier: BowtieBarrierNode; onUpdate: (updatedBarrier: BowtieBarrierNode) => void; onDelete: () => void; controls: Control[] }) => {
+const BarrierNode = ({ barrier, onUpdate, onDelete, controls, readOnly }: { barrier: BowtieBarrierNode; onUpdate: (updatedBarrier: BowtieBarrierNode) => void; onDelete: () => void; controls: Control[]; readOnly?: boolean }) => {
     // Busca o controle associado para exibir informações completas
     const associatedControl = controls.find(c => c.id === barrier.controlId);
     
@@ -173,8 +177,8 @@ const BarrierNode = ({ barrier, onUpdate, onDelete, controls }: { barrier: Bowti
                     {associatedControl?.status || barrier.status}
                 </div>
             </div>
-            <div className="absolute top-1 right-1 flex items-center opacity-0 group-hover/barrier:opacity-100 transition-opacity">
-                <BarrierEditor barrier={barrier} onUpdate={onUpdate} controls={controls} trigger={
+            {!readOnly && (<div className="absolute top-1 right-1 flex items-center opacity-0 group-hover/barrier:opacity-100 transition-opacity">
+                <BarrierEditor barrier={barrier} onUpdate={onUpdate} controls={controls} readOnly={readOnly} trigger={
                      <Button variant="ghost" size="icon" className="h-6 w-6"><Edit className="h-3 w-3" /></Button>
                 } />
                 <AlertDialog>
@@ -194,17 +198,17 @@ const BarrierNode = ({ barrier, onUpdate, onDelete, controls }: { barrier: Bowti
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
-            </div>
+            </div>)}
         </div>
     );
 };
 
-const ThreatNode = ({ threat, onUpdate, onDelete }: { threat: BowtieThreat; onUpdate: (updatedThreat: BowtieThreat) => void; onDelete: () => void; }) => (
+const ThreatNode = ({ threat, onUpdate, onDelete, readOnly }: { threat: BowtieThreat; onUpdate: (updatedThreat: BowtieThreat) => void; onDelete: () => void; readOnly?: boolean; }) => (
     <div className="relative group/threat">
         <div className="w-48 h-24 bg-orange-400 text-white rounded-md shadow-md flex items-center justify-center p-2 text-center font-semibold">
             {threat.title}
         </div>
-        <div className="absolute top-1 right-1 flex items-center opacity-0 group-hover/threat:opacity-100 transition-opacity">
+        {!readOnly && (<div className="absolute top-1 right-1 flex items-center opacity-0 group-hover/threat:opacity-100 transition-opacity">
             <ThreatConsequenceEditor item={threat} onUpdate={(item) => onUpdate({...threat, title: item.title})} trigger={
                  <Button variant="ghost" size="icon" className="h-6 w-6 text-white hover:text-white"><Edit className="h-3 w-3" /></Button>
             } />
@@ -221,16 +225,16 @@ const ThreatNode = ({ threat, onUpdate, onDelete }: { threat: BowtieThreat; onUp
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </div>)}
     </div>
 );
 
-const ConsequenceNode = ({ consequence, onUpdate, onDelete }: { consequence: BowtieConsequence; onUpdate: (updatedConsequence: BowtieConsequence) => void; onDelete: () => void; }) => (
+const ConsequenceNode = ({ consequence, onUpdate, onDelete, readOnly }: { consequence: BowtieConsequence; onUpdate: (updatedConsequence: BowtieConsequence) => void; onDelete: () => void; readOnly?: boolean; }) => (
      <div className="relative group/consequence">
         <div className="w-48 h-24 bg-red-500 text-white rounded-md shadow-md flex items-center justify-center p-2 text-center font-semibold">
             {consequence.title}
         </div>
-         <div className="absolute top-1 right-1 flex items-center opacity-0 group-hover/consequence:opacity-100 transition-opacity">
+         {!readOnly && (<div className="absolute top-1 right-1 flex items-center opacity-0 group-hover/consequence:opacity-100 transition-opacity">
              <ThreatConsequenceEditor item={consequence} onUpdate={(item) => onUpdate({...consequence, title: item.title})} trigger={
                  <Button variant="ghost" size="icon" className="h-6 w-6 text-white hover:text-white"><Edit className="h-3 w-3" /></Button>
             } />
@@ -247,7 +251,7 @@ const ConsequenceNode = ({ consequence, onUpdate, onDelete }: { consequence: Bow
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </div>)}
     </div>
 );
 
@@ -276,7 +280,7 @@ const EventNode = ({ title, description, onUpdate }: { title: string, descriptio
     </Popover>
 );
 
-const TopEventNode = ({ title, description, onUpdate }: { title: string, description: string, onUpdate: (updates: { title: string, description: string }) => void }) => (
+const TopEventNode = ({ title, description, onUpdate, readOnly }: { title: string, description: string, onUpdate: (updates: { title: string, description: string }) => void, readOnly?: boolean }) => (
     <div className="relative group/topevent">
         <div className="w-64 bg-yellow-100 border-2 border-yellow-400 rounded-md shadow-lg flex flex-col text-center">
             <div className="px-3 py-2">
@@ -284,9 +288,9 @@ const TopEventNode = ({ title, description, onUpdate }: { title: string, descrip
                 <p className="text-xs text-gray-600">{description}</p>
             </div>
         </div>
-        <div className="absolute top-1 right-1 opacity-0 group-hover/topevent:opacity-100 transition-opacity">
+        {!readOnly && (<div className="absolute top-1 right-1 opacity-0 group-hover/topevent:opacity-100 transition-opacity">
             <EventNode title={title} description={description} onUpdate={onUpdate} />
-        </div>
+        </div>)}
     </div>
 );
 
@@ -315,7 +319,7 @@ const DiagramHeader = ({ title, color, className }: { title: string; color: stri
     </div>
 );
 
-export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, onUpdate: (data: BowtieData) => void, onDelete: (id: string) => void }) => {
+export const BowtieDiagram = ({ data, onUpdate, onDelete, readOnly = false }: { data: BowtieData, onUpdate: (data: BowtieData) => void, onDelete: (id: string) => void, readOnly?: boolean }) => {
     const [localData, setLocalData] = React.useState<BowtieData>(() => JSON.parse(JSON.stringify(data)));
     const [hasChanges, setHasChanges] = React.useState(false);
     const [controls, setControls] = React.useState<Control[]>([]);
@@ -583,7 +587,7 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                     <h2 className="text-2xl font-bold">Diagrama Bowtie</h2>
                     <p className="text-muted-foreground">Risco Associado: {localData.riskId}</p>
                 </div>
-                <div className='flex items-center gap-2 export-hidden'>
+                <div className={cn('flex items-center gap-2 export-hidden', readOnly && 'hidden')}>
                     <Button onClick={handleExportPDF} disabled={isExporting} variant="secondary">
                         {isExporting ? (
                             <>
@@ -632,7 +636,7 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                     <div className="flex flex-col items-stretch gap-4">
                         {localData.threats.map(threat => (
                             <div key={threat.id} className="flex items-center gap-4">
-                                <ThreatNode threat={threat} onUpdate={updateThreat} onDelete={() => deleteThreat(threat.id)} />
+                                <ThreatNode threat={threat} onUpdate={updateThreat} onDelete={() => deleteThreat(threat.id)} readOnly={readOnly} />
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-4 p-2">
                                         {threat.barriers.map(barrier => (
@@ -643,28 +647,29 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                                                     onUpdate={(b) => updateBarrier(threat.id, b, 'threat')} 
                                                     onDelete={() => deleteBarrier(threat.id, barrier.id, 'threat')}
                                                     controls={controls}
+                                                    readOnly={readOnly}
                                                 />
                                             </React.Fragment>
                                         ))}
                                         <Line />
-                                        <AddNodeButton onClick={() => addBarrier('threat', threat.id)} className="export-hidden">
+                                        {!readOnly && (<AddNodeButton onClick={() => addBarrier('threat', threat.id)} className="export-hidden">
                                             Barreira
-                                        </AddNodeButton>
+                                        </AddNodeButton>)}
                                     </div>
                                 </div>
                             </div>
                         ))}
-                        <div className="flex justify-start export-hidden">
+                        {!readOnly && (<div className="flex justify-start export-hidden">
                             <AddNodeButton onClick={addThreat}>
                                 Ameaça
                             </AddNodeButton>
-                        </div>
+                        </div>)}
                     </div>
                 </div>
 
                 {/* Center (Top Event) */}
                 <div className="flex flex-col items-center justify-center pt-16">
-                     <TopEventNode title={localData.topEvent.title} description={localData.topEvent.description} onUpdate={(te) => handleUpdate({ topEvent: te })} />
+                     <TopEventNode title={localData.topEvent.title} description={localData.topEvent.description} onUpdate={(te) => handleUpdate({ topEvent: te })} readOnly={readOnly} />
                 </div>
 
                 {/* Mitigatory Side */}
@@ -675,9 +680,9 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                             <div key={consequence.id} className="flex items-center gap-4 justify-end">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-4 p-2">
-                                        <AddNodeButton onClick={() => addBarrier('consequence', consequence.id)} className="export-hidden">
+                                        {!readOnly && (<AddNodeButton onClick={() => addBarrier('consequence', consequence.id)} className="export-hidden">
                                             Barreira
-                                        </AddNodeButton>
+                                        </AddNodeButton>)}
                                         {consequence.barriers.slice().reverse().map(barrier => (
                                             <React.Fragment key={barrier.id}>
                                                 <Line />
@@ -686,20 +691,21 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete }: { data: BowtieData, 
                                                     onUpdate={(b) => updateBarrier(consequence.id, b, 'consequence')} 
                                                     onDelete={() => deleteBarrier(consequence.id, barrier.id, 'consequence')}
                                                     controls={controls}
+                                                    readOnly={readOnly}
                                                 />
                                             </React.Fragment>
                                         ))}
                                         <Line />
                                     </div>
                                 </div>
-                                <ConsequenceNode consequence={consequence} onUpdate={updateConsequence} onDelete={() => deleteConsequence(consequence.id)} />
+                                <ConsequenceNode consequence={consequence} onUpdate={updateConsequence} onDelete={() => deleteConsequence(consequence.id)} readOnly={readOnly} />
                             </div>
                         ))}
-                        <div className="flex justify-end export-hidden">
+                        {!readOnly && (<div className="flex justify-end export-hidden">
                             <AddNodeButton onClick={addConsequence}>
                                 Consequência
                             </AddNodeButton>
-                        </div>
+                        </div>)}
                     </div>
                 </div>
                 </div>

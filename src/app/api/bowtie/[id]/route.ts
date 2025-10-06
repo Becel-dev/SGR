@@ -53,14 +53,15 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Para deletar, precisamos do PartitionKey (id) e do RowKey (riskId)
-    // Primeiro, buscamos o bowtie para obter o riskId
+    // O params.id é o riskId
+    // Buscamos o bowtie mais recente para obter id e version
     const bowtie = await getBowtieById(params.id);
     if (!bowtie) {
       return NextResponse.json({ error: 'Bowtie not found' }, { status: 404 });
     }
 
-    await deleteBowtie(bowtie.id, bowtie.riskId);
+    // Deleta a versão mais recente
+    await deleteBowtie(bowtie.riskId, bowtie.id, bowtie.version);
     return NextResponse.json({ message: 'Bowtie deleted successfully' });
   } catch (error) {
     console.error(`Error deleting bowtie ${params.id}:`, error);
