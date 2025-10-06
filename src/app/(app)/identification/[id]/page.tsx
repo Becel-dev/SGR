@@ -187,6 +187,7 @@ export default function IdentifiedRiskDetailPage() {
             <DetailItem label="1. Nome do Risco" value={risk.riskName} className="lg:col-span-4" />
             <DetailItem label="2. Top Risk Corporativo" value={risk.topRisk} className="sm:col-span-2" />
             <DetailItem label="3. Fator de Risco" value={risk.riskFactor} className="sm:col-span-2" />
+            <DetailItem label="Dono do Risco" value={risk.donoRisco || '-'} className="sm:col-span-2" />
             <DetailItem label="4. Causa Provável" value={risk.probableCause} className="sm:col-span-2" />
             <DetailItem label="5. Cenário de Risco" value={risk.riskScenario} className="sm:col-span-2" />
             <DetailItem label="6. Consequência Esperada no Negócio" value={risk.expectedConsequence} className="sm:col-span-4" />

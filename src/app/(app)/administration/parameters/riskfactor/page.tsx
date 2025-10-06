@@ -52,6 +52,7 @@ const RiskFactorRow = ({
 }) => (
   <TableRow>
     <TableCell className="font-medium">{riskFactor.nome}</TableCell>
+    <TableCell>{riskFactor.donoRisco || '-'}</TableCell>
     <TableCell>
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="sm" onClick={onEdit}>
@@ -78,6 +79,7 @@ const RiskFactorForm = ({
 }) => {
   const [formData, setFormData] = useState({
     nome: riskFactor?.nome || '',
+    donoRisco: riskFactor?.donoRisco || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -94,6 +96,17 @@ const RiskFactorForm = ({
           value={formData.nome}
           onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
           placeholder="Nome do Fator de Risco"
+          required
+        />
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="donoRisco">Dono do Risco *</Label>
+        <Input
+          id="donoRisco"
+          value={formData.donoRisco}
+          onChange={(e) => setFormData(prev => ({ ...prev, donoRisco: e.target.value }))}
+          placeholder="Nome do responsável pelo risco"
           required
         />
       </div>
@@ -292,13 +305,14 @@ export default function RiskFactorPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
+                  <TableHead>Dono do Risco</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {riskFactors.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={2} className="text-center text-muted-foreground">
+                    <TableCell colSpan={3} className="text-center text-muted-foreground">
                       Nenhum Fator de Risco cadastrado ainda.
                     </TableCell>
                   </TableRow>

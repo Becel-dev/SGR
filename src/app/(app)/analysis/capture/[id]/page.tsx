@@ -201,7 +201,7 @@ export default function RiskAnalysisCapturePage() {
   const [isMarkingAsAnalyzed, setIsMarkingAsAnalyzed] = useState(false);
   const [calculatedIer, setCalculatedIer] = useState(0);
   const [topRisks, setTopRisks] = useState<string[]>(topRiskOptions); // Fallback estático
-  const [riskFactors, setRiskFactors] = useState<string[]>(riskFactorOptions); // Fallback estático
+  const [riskFactors, setRiskFactors] = useState<Array<{ nome: string; donoRisco: string }>>(riskFactorOptions.map(rf => ({ nome: rf, donoRisco: '' }))); // Fallback estático
   const [temasMateriais, setTemasMateriais] = useState<string[]>(temaMaterialOptions); // Fallback estático
 
   const { control, handleSubmit, reset, watch, setValue, getValues, trigger, formState: { errors } } = useForm<z.infer<typeof analysisSchema>>({
@@ -540,7 +540,7 @@ export default function RiskAnalysisCapturePage() {
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                                 <SelectContent>
-                                    {riskFactors.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                                    {riskFactors.map(option => <SelectItem key={option.nome} value={option.nome}>{option.nome}</SelectItem>)}
                                 </SelectContent>
                             </Select></div>
                         )} />

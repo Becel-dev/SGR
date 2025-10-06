@@ -71,6 +71,7 @@ const identifiedRiskSchema = z.object({
         riskName: z.string().min(1, "O nome do risco é obrigatório."),
         topRisk: z.string().min(1, "O Top Risk é obrigatório."),
         riskFactor: z.string().min(1, "O Fator de Risco é obrigatório."),
+        donoRisco: z.string().optional(),
         probableCause: z.string().min(1, "A causa provável é obrigatória."),
         riskScenario: z.string().min(1, "O cenário de risco é obrigatório."),
         expectedConsequence: z.string().min(1, "A consequência é obrigatória."),
@@ -117,7 +118,7 @@ export default function CaptureIdentifiedRiskPage() {
     const [isLocked, setIsLocked] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
     const [topRisks, setTopRisks] = React.useState<string[]>(topRiskOptions); // Fallback estático
-    const [riskFactors, setRiskFactors] = React.useState<string[]>(riskFactorOptions); // Fallback estático
+    const [riskFactors, setRiskFactors] = React.useState<Array<{ nome: string; donoRisco: string }>>(riskFactorOptions.map(rf => ({ nome: rf, donoRisco: '' }))); // Fallback estático
 
     const { control, handleSubmit, register, setValue, watch, formState: { errors, isSubmitting } } = useForm<z.infer<typeof identifiedRiskSchema>>({
         resolver: zodResolver(identifiedRiskSchema),
@@ -147,6 +148,7 @@ export default function CaptureIdentifiedRiskPage() {
         const loadRiskFactors = async () => {
             try {
                 const dynamicRiskFactors = await getRiskFactorOptions();
+                // dynamicRiskFactors agora retorna { nome, donoRisco }
                 setRiskFactors(dynamicRiskFactors);
             } catch (error) {
                 console.error('Erro ao carregar RiskFactors:', error);
@@ -264,11 +266,21 @@ export default function CaptureIdentifiedRiskPage() {
                     </Field>
                     <Field label="3. Fator de Risco" className="sm:col-span-2" description="Assinale o item do mapa de riscos." error={errors.riskFactor?.message}>
                         <Controller name="riskFactor" control={control} render={({ field }) => (
-                            <Select onValueChange={field.onChange} value={field.value} disabled={isLocked}>
+                            <Select onValueChange={(value) => {
+                                field.onChange(value);
+                                // Auto-popula o donoRisco baseado no fator de risco selecionado
+                                const selectedFactor = riskFactors.find(rf => rf.nome === value);
+                                if (selectedFactor) {
+                                    setValue('donoRisco', selectedFactor.donoRisco);
+                                }
+                            }} value={field.value} disabled={isLocked}>
                                 <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
-                                <SelectContent>{riskFactors.map(factor => <SelectItem key={factor} value={factor}>{factor}</SelectItem>)}</SelectContent>
+                                <SelectContent>{riskFactors.map(factor => <SelectItem key={factor.nome} value={factor.nome}>{factor.nome}</SelectItem>)}</SelectContent>
                             </Select>
                         )} />
+                    </Field>
+                    <Field label="Dono do Risco" className="sm:col-span-2" description="Preenchido automaticamente baseado no Fator de Risco.">
+                        <Input {...register("donoRisco")} disabled readOnly placeholder="Selecione um Fator de Risco" />
                     </Field>
                     <Field label="4. Causa Provável" className="sm:col-span-2" description="Descreva a causa que pode originar o risco." error={errors.probableCause?.message}>
                         <Textarea {...register("probableCause")} placeholder="Ex: Alta dependência de fornecedor único..." disabled={isLocked} />

@@ -29,12 +29,20 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    
+    if (!body.donoRisco) {
+      return NextResponse.json(
+        { error: "O campo 'Dono do Risco' é obrigatório" },
+        { status: 400 }
+      );
+    }
 
     // Gera um ID único se não for fornecido
     const now = new Date().toISOString();
     const riskFactorData: RiskFactor = {
       id: body.id || `riskfactor_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
       nome: body.nome,
+      donoRisco: body.donoRisco,
       createdBy: 'Sistema', // TODO: Substituir pelo usuário logado
       createdAt: now,
       updatedBy: 'Sistema', // TODO: Substituir pelo usuário logado
@@ -60,6 +68,13 @@ export async function PUT(request: NextRequest) {
     if (!body.id || !body.nome) {
       return NextResponse.json(
         { error: 'ID e nome são obrigatórios' },
+        { status: 400 }
+      );
+    }
+    
+    if (!body.donoRisco) {
+      return NextResponse.json(
+        { error: "O campo 'Dono do Risco' é obrigatório" },
         { status: 400 }
       );
     }

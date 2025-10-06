@@ -57,6 +57,7 @@ export type Risk = {
   risco: string;
   topRiskAssociado: string;
   fatorDeRisco: string;
+  donoRisco?: string;
   categoria: string;
   taxonomia: string;
 
@@ -163,6 +164,8 @@ export type IdentifiedRisk = {
   topRisk: string;
   // Field 3
   riskFactor: string;
+  // Dono do Risco (auto-preenchido pelo Fator de Risco)
+  donoRisco?: string;
   // Field 4
   probableCause: string;
   // Field 5
@@ -293,6 +296,7 @@ export type TopRiskParameter = {
 export type RiskFactor = {
   id: string;
   nome: string;
+  donoRisco: string;
   createdBy: string;
   createdAt: string;
   updatedBy: string;

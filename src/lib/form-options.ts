@@ -27,7 +27,8 @@ export async function getTopRiskOptions(): Promise<string[]> {
 }
 
 // RiskFactors dinâmicos - busca do Azure Storage
-export async function getRiskFactorOptions(): Promise<string[]> {
+// Retorna objetos com { nome, donoRisco } ao invés de apenas strings
+export async function getRiskFactorOptions(): Promise<Array<{ nome: string; donoRisco: string }>> {
   try {
     const riskFactors = await getRiskFactors();
     
@@ -37,22 +38,22 @@ export async function getRiskFactorOptions(): Promise<string[]> {
     
     return riskFactors
       .filter(rf => rf.nome) // Filtra apenas RiskFactors válidos
-      .map(rf => rf.nome);
+      .map(rf => ({ nome: rf.nome, donoRisco: rf.donoRisco }));
   } catch (error) {
     console.error('Erro ao carregar RiskFactors:', error);
-    // Fallback para os valores estáticos em caso de erro
+    // Fallback para os valores estáticos em caso de erro (com donoRisco vazio)
     return [
-      "1.1 Paralisação e/ou indisponibilidade operacional por vandalismo, greve ou manifestação.",
-      "1.2 Limitação de capacidade operacional.",
-      "1.3 Paralização e/ou indisponibilidade operacional causado por acidentes",
-      "2.2 Comprometimento do CAPEX e cronograma planejado",
-      "3.2 Decisões regulatórias adversas: Cumprimento e gerenciamento do caderno de obrigações das concessões e autorizações.",
-      "3.3 Licenciamento e Atos Autorizativos : Não manutenção das licenças e/ou atendimento das condicionantes para operar",
-      "4.1 Danos físicos aos ativos e operação, principalmente corredor Santos",
-      "4.2 Danos ambientais causados pela Companhia",
-      "4.3 Impacto em demanda",
-      "5.2 Perdas financeiras devido a divergência de Interpretação do dispositivo legal ou mudança da jurisprudência",
-      "5.3 Decisões judiciais adversas.",
+      { nome: "1.1 Paralisação e/ou indisponibilidade operacional por vandalismo, greve ou manifestação.", donoRisco: "" },
+      { nome: "1.2 Limitação de capacidade operacional.", donoRisco: "" },
+      { nome: "1.3 Paralização e/ou indisponibilidade operacional causado por acidentes", donoRisco: "" },
+      { nome: "2.2 Comprometimento do CAPEX e cronograma planejado", donoRisco: "" },
+      { nome: "3.2 Decisões regulatórias adversas: Cumprimento e gerenciamento do caderno de obrigações das concessões e autorizações.", donoRisco: "" },
+      { nome: "3.3 Licenciamento e Atos Autorizativos : Não manutenção das licenças e/ou atendimento das condicionantes para operar", donoRisco: "" },
+      { nome: "4.1 Danos físicos aos ativos e operação, principalmente corredor Santos", donoRisco: "" },
+      { nome: "4.2 Danos ambientais causados pela Companhia", donoRisco: "" },
+      { nome: "4.3 Impacto em demanda", donoRisco: "" },
+      { nome: "5.2 Perdas financeiras devido a divergência de Interpretação do dispositivo legal ou mudança da jurisprudência", donoRisco: "" },
+      { nome: "5.3 Decisões judiciais adversas.", donoRisco: "" },
     ];
   }
 }

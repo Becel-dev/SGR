@@ -116,7 +116,7 @@ export default function CaptureRiskPage() {
     const isEditing = !!riskId;
     const [dataAlteracaoCuradoria, setDataAlteracaoCuradoria] = useState<Date>();
     const [topRisks, setTopRisks] = useState<string[]>([]); // Estado para TopRisks dinâmicos
-    const [riskFactors, setRiskFactors] = useState<string[]>([]); // Carregado dinamicamente
+    const [riskFactors, setRiskFactors] = useState<Array<{ nome: string; donoRisco: string }>>([]); // Carregado dinamicamente
     const [temasMateriais, setTemasMateriais] = useState<string[]>([]); // Carregado dinamicamente
     const [isLoadingRisk, setIsLoadingRisk] = useState(false);
     const [isLoadingOptions, setIsLoadingOptions] = useState(true); // Novo estado para controlar carregamento de opções
@@ -144,7 +144,7 @@ export default function CaptureRiskPage() {
                 setIsLoadingOptions(false);
             } catch (error) {
                 console.error('Erro ao carregar RiskFactors:', error);
-                setRiskFactors(['⚠️ ERRO: Não foi possível carregar fatores de risco']);
+                setRiskFactors([{ nome: '⚠️ ERRO: Não foi possível carregar fatores de risco', donoRisco: '' }]);
                 setIsLoadingOptions(false);
             }
         };
@@ -214,9 +214,9 @@ export default function CaptureRiskPage() {
                             console.log('🎯 Opções disponíveis no select:', Array.from(fatorRiscoSelect.options).map(opt => ({ value: opt.value, text: opt.text })));
 
                             // If the saved value is not present in the loaded options, append it to the runtime state
-                            if (riskData.riskFactor && !riskFactors.includes(riskData.riskFactor)) {
+                            if (riskData.riskFactor && !riskFactors.some(rf => rf.nome === riskData.riskFactor)) {
                                 console.log('➕ Saved risk factor not found in loaded options. Appending to state:', riskData.riskFactor);
-                                setRiskFactors(prev => [...prev, riskData.riskFactor]);
+                                setRiskFactors(prev => [...prev, { nome: riskData.riskFactor, donoRisco: '' }]);
 
                                 // As a DOM fallback (in case the Select component has already rendered), add an option element directly
                                 try {
@@ -337,7 +337,7 @@ export default function CaptureRiskPage() {
                   ) : riskFactors.length === 0 ? (
                     <SelectItem value="_empty" disabled>⚠️ Nenhum fator de risco dinâmico encontrado</SelectItem>
                   ) : (
-                    riskFactors.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)
+                    riskFactors.map(o => <SelectItem key={o.nome} value={o.nome}>{o.nome}</SelectItem>)
                   )}
                 </SelectContent>
               </Select>

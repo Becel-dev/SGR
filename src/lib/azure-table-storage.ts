@@ -971,6 +971,7 @@ export async function initializeDefaultRiskFactors(): Promise<void> {
         const defaultRiskFactors: Omit<RiskFactor, 'id'>[] = [
             {
                 nome: "1.1 Paralisação e/ou indisponibilidade operacional por vandalismo, greve ou manifestação.",
+                donoRisco: "",
                 createdBy: "Sistema",
                 createdAt: new Date().toISOString(),
                 updatedBy: "Sistema",
@@ -978,6 +979,7 @@ export async function initializeDefaultRiskFactors(): Promise<void> {
             },
             {
                 nome: "1.2 Limitação de capacidade operacional.",
+                donoRisco: "",
                 createdBy: "Sistema",
                 createdAt: new Date().toISOString(),
                 updatedBy: "Sistema",
@@ -985,6 +987,7 @@ export async function initializeDefaultRiskFactors(): Promise<void> {
             },
             {
                 nome: "1.3 Paralização e/ou indisponibilidade operacional causado por acidentes",
+                donoRisco: "",
                 createdBy: "Sistema",
                 createdAt: new Date().toISOString(),
                 updatedBy: "Sistema",
@@ -992,6 +995,7 @@ export async function initializeDefaultRiskFactors(): Promise<void> {
             },
             {
                 nome: "2.2 Comprometimento do CAPEX e cronograma planejado",
+                donoRisco: "",
                 createdBy: "Sistema",
                 createdAt: new Date().toISOString(),
                 updatedBy: "Sistema",
@@ -999,6 +1003,7 @@ export async function initializeDefaultRiskFactors(): Promise<void> {
             },
             {
                 nome: "3.2 Decisões regulatórias adversas: Cumprimento e gerenciamento do caderno de obrigações das concessões e autorizações.",
+                donoRisco: "",
                 createdBy: "Sistema",
                 createdAt: new Date().toISOString(),
                 updatedBy: "Sistema",
@@ -1006,6 +1011,7 @@ export async function initializeDefaultRiskFactors(): Promise<void> {
             },
             {
                 nome: "3.3 Licenciamento e Atos Autorizativos : Não manutenção das licenças e/ou atendimento das condicionantes para operar",
+                donoRisco: "",
                 createdBy: "Sistema",
                 createdAt: new Date().toISOString(),
                 updatedBy: "Sistema",
@@ -1013,6 +1019,7 @@ export async function initializeDefaultRiskFactors(): Promise<void> {
             },
             {
                 nome: "4.1 Danos físicos aos ativos e operação, principalmente corredor Santos",
+                donoRisco: "",
                 createdBy: "Sistema",
                 createdAt: new Date().toISOString(),
                 updatedBy: "Sistema",
@@ -1020,6 +1027,7 @@ export async function initializeDefaultRiskFactors(): Promise<void> {
             },
             {
                 nome: "4.2 Danos ambientais causados pela Companhia",
+                donoRisco: "",
                 createdBy: "Sistema",
                 createdAt: new Date().toISOString(),
                 updatedBy: "Sistema",
@@ -1027,6 +1035,7 @@ export async function initializeDefaultRiskFactors(): Promise<void> {
             },
             {
                 nome: "4.3 Impacto em demanda",
+                donoRisco: "",
                 createdBy: "Sistema",
                 createdAt: new Date().toISOString(),
                 updatedBy: "Sistema",
@@ -1034,6 +1043,7 @@ export async function initializeDefaultRiskFactors(): Promise<void> {
             },
             {
                 nome: "5.2 Perdas financeiras devido a divergência de Interpretação do dispositivo legal ou mudança da jurisprudência",
+                donoRisco: "",
                 createdBy: "Sistema",
                 createdAt: new Date().toISOString(),
                 updatedBy: "Sistema",
@@ -1041,6 +1051,7 @@ export async function initializeDefaultRiskFactors(): Promise<void> {
             },
             {
                 nome: "5.3 Decisões judiciais adversas.",
+                donoRisco: "",
                 createdBy: "Sistema",
                 createdAt: new Date().toISOString(),
                 updatedBy: "Sistema",
