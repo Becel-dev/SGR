@@ -1,0 +1,353 @@
+'use client'
+
+import { useState, useEffect } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  Loader2, 
+  Settings, 
+  Trash2, 
+  PlusCircle, 
+  Edit, 
+  Save, 
+  X 
+} from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { CategoriaControle } from '@/lib/types';
+
+const CategoriaControleRow = ({ 
+  categoriaControle, 
+  onEdit, 
+  onDelete 
+}: { 
+  categoriaControle: CategoriaControle;
+  onEdit: () => void;
+  onDelete: () => void;
+}) => (
+  <TableRow>
+    <TableCell className="font-medium">{categoriaControle.nome}</TableCell>
+    <TableCell>
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={onEdit}>
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onDelete}>
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </div>
+    </TableCell>
+  </TableRow>
+);
+
+const CategoriaControleForm = ({ 
+  categoriaControle, 
+  onSave, 
+  onCancel, 
+  isEdit = false 
+}: { 
+  categoriaControle?: CategoriaControle;
+  onSave: (data: Omit<CategoriaControle, 'id' | 'createdBy' | 'createdAt' | 'updatedBy' | 'updatedAt'>) => void;
+  onCancel: () => void;
+  isEdit?: boolean;
+}) => {
+  const [formData, setFormData] = useState({
+    nome: categoriaControle?.nome || '',
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="nome">Nome *</Label>
+        <Input
+          id="nome"
+          value={formData.nome}
+          onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+          placeholder="Nome da Categoria de Controle"
+          required
+        />
+      </div>
+      
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          <X className="mr-2 h-4 w-4" />
+          Cancelar
+        </Button>
+        <Button type="submit">
+          <Save className="mr-2 h-4 w-4" />
+          {isEdit ? 'Atualizar' : 'Salvar'}
+        </Button>
+      </div>
+    </form>
+  );
+};
+
+export default function CategoriaControlePage() {
+  const { toast } = useToast();
+  const [categoriasControle, setCategoriasControle] = useState<CategoriaControle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [editingCategoriaControle, setEditingCategoriaControle] = useState<CategoriaControle | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
+  // Carrega as Categorias de Controle do servidor
+  useEffect(() => {
+    loadCategoriasControle();
+  }, []);
+
+  const loadCategoriasControle = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/parameters/categoriacontrole');
+      if (response.ok) {
+        const data = await response.json();
+        setCategoriasControle(data);
+      } else {
+        throw new Error('Erro ao carregar Categorias de Controle');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar Categorias de Controle:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível carregar as Categorias de Controle.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (formData: Omit<CategoriaControle, 'id' | 'createdBy' | 'createdAt' | 'updatedBy' | 'updatedAt'>) => {
+    setSaving(true);
+    try {
+      const response = await fetch('/api/parameters/categoriacontrole', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Sucesso!',
+          description: 'Categoria de Controle salva com sucesso.',
+        });
+        setShowAddDialog(false);
+        await loadCategoriasControle();
+      } else {
+        throw new Error('Erro ao salvar Categoria de Controle');
+      }
+    } catch (error) {
+      console.error('Erro ao salvar Categoria de Controle:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível salvar a Categoria de Controle.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUpdate = async (formData: Omit<CategoriaControle, 'id' | 'createdBy' | 'createdAt' | 'updatedBy' | 'updatedAt'>) => {
+    if (!editingCategoriaControle) return;
+    
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/parameters/categoriacontrole`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...formData, id: editingCategoriaControle.id }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Sucesso!',
+          description: 'Categoria de Controle atualizada com sucesso.',
+        });
+        setShowEditDialog(false);
+        setEditingCategoriaControle(null);
+        await loadCategoriasControle();
+      } else {
+        throw new Error('Erro ao atualizar Categoria de Controle');
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar Categoria de Controle:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar a Categoria de Controle.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (categoriaControle: CategoriaControle) => {
+    if (!confirm(`Tem certeza que deseja excluir a Categoria de Controle "${categoriaControle.nome}"?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/parameters/categoriacontrole?id=${categoriaControle.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Sucesso!',
+          description: 'Categoria de Controle excluída com sucesso.',
+        });
+        await loadCategoriasControle();
+      } else {
+        throw new Error('Erro ao excluir Categoria de Controle');
+      }
+    } catch (error) {
+      console.error('Erro ao excluir Categoria de Controle:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível excluir a Categoria de Controle.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Settings />
+          Categorias de Controle
+        </CardTitle>
+        <CardDescription>
+          Gerencie as Categorias de Controle que serão utilizadas no módulo de Controles.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold">Lista de Categorias de Controle</h3>
+          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Adicionar Categoria de Controle
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Adicionar Categoria de Controle</DialogTitle>
+                <DialogDescription>
+                  Preencha os dados da nova Categoria de Controle.
+                </DialogDescription>
+              </DialogHeader>
+              <CategoriaControleForm
+                onSave={handleSave}
+                onCancel={() => setShowAddDialog(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-40">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {categoriasControle.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={2} className="text-center text-muted-foreground">
+                      Nenhuma Categoria de Controle cadastrada ainda.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  categoriasControle.map((categoriaControle) => (
+                    <CategoriaControleRow
+                      key={categoriaControle.id}
+                      categoriaControle={categoriaControle}
+                      onEdit={() => {
+                        setEditingCategoriaControle(categoriaControle);
+                        setShowEditDialog(true);
+                      }}
+                      onDelete={() => handleDelete(categoriaControle)}
+                    />
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        {/* Dialog de Edição */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Editar Categoria de Controle</DialogTitle>
+              <DialogDescription>
+                Edite os dados da Categoria de Controle.
+              </DialogDescription>
+            </DialogHeader>
+            {editingCategoriaControle && (
+              <CategoriaControleForm
+                categoriaControle={editingCategoriaControle}
+                onSave={handleUpdate}
+                onCancel={() => {
+                  setShowEditDialog(false);
+                  setEditingCategoriaControle(null);
+                }}
+                isEdit
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+      <CardFooter>
+        <div className="text-sm text-muted-foreground">
+          Total: {categoriasControle.length} Categoria{categoriasControle.length !== 1 ? 's' : ''} de Controle cadastrada{categoriasControle.length !== 1 ? 's' : ''}
+        </div>
+      </CardFooter>
+    </Card>
+  );
+}

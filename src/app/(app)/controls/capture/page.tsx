@@ -39,15 +39,14 @@ import {
 } from "@/components/ui/accordion"
 import { cn } from '@/lib/utils';
 import type { AssociatedRisk, Risk, Control } from '@/lib/types';
-import { addOrUpdateControl, getControlById } from '@/lib/azure-table-storage';
 import { useToast } from '@/hooks/use-toast';
+import { getCategoriaControleOptions } from '@/lib/form-options';
 
 
 // Add a 'key' property for React's reconciliation process
 type AssociatedRiskWithKey = AssociatedRisk & { key: number };
 
 const areaOptions = ['OPERAÇÃO', 'MANUTENÇÃO', 'SEGURANÇA', 'FINANCEIRO', 'RH', 'JURÍDICO', 'COMPLIANCE', 'TI'];
-const tipoOptions = ['Preventivo', 'Mitigatório'];
 const classificacaoOptions = ['Procedimento', 'Equipamento', 'Pessoa', 'Sistema'];
 const statusOptions = ['Implementado', 'Implementado com Pendência', 'Não Implementado', 'Implementação Futura'];
 const validacaoOptions = ['DENTRO DO PRAZO', 'ATRASADO', 'PENDENTE'];
@@ -60,7 +59,7 @@ const controlSchema = z.object({
         codigoMUE: z.string().optional(),
         titulo: z.string().optional(),
     })).min(1, "É necessário associar pelo menos um risco."),
-    tipo: z.string().min(1, "O tipo é obrigatório."),
+    categoria: z.string().min(1, "A categoria é obrigatória."),
     classificacao: z.string().min(1, "A classificação é obrigatória."),
     status: z.string().min(1, "O status é obrigatório."),
     criticidade: z.string().min(1, "A criticidade é obrigatória."),
@@ -114,6 +113,7 @@ export default function CaptureControlPage() {
     const [loadingRisks, setLoadingRisks] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoadingControl, setIsLoadingControl] = useState(false);
+    const [categoriasControle, setCategoriasControle] = useState<string[]>([]);
 
     const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<z.infer<typeof controlSchema>>({
         resolver: zodResolver(controlSchema),
@@ -141,6 +141,19 @@ export default function CaptureControlPage() {
         fetchRisks();
     }, []);
 
+    // Carrega Categorias de Controle dinamicamente
+    useEffect(() => {
+        const loadCategoriasControle = async () => {
+            try {
+                const dynamicCategorias = await getCategoriaControleOptions();
+                setCategoriasControle(dynamicCategorias);
+            } catch (error) {
+                console.error('Erro ao carregar Categorias de Controle:', error);
+            }
+        };
+        loadCategoriasControle();
+    }, []);
+
     // Carrega dados do controle para edição
     useEffect(() => {
         const fetchControlData = async () => {
@@ -153,6 +166,11 @@ export default function CaptureControlPage() {
                     throw new Error('Failed to fetch control');
                 }
                 const { control: controlData } = await response.json();
+                
+                // Garante que categoria tenha um valor padrão se não estiver definida
+                if (!controlData.categoria) {
+                    controlData.categoria = 'Inspeção'; // Valor padrão
+                }
                 
                 // Preenche os campos do formulário
                 Object.keys(controlData).forEach((key) => {
@@ -209,6 +227,8 @@ export default function CaptureControlPage() {
     };
 
     const onSubmit = async (data: z.infer<typeof controlSchema>) => {
+        console.log("=== DEBUG: onSubmit INICIADO ===");
+        console.log("Data recebida:", data);
         setIsSubmitting(true);
         try {
             const formData = new FormData();
@@ -238,14 +258,26 @@ export default function CaptureControlPage() {
                 evidenciaUrl = uploadResult.evidenciaUrl;
             }
 
+            // Constrói o objeto Control explicitamente para evitar incluir tipos incompatíveis (FileList)
             const controlData: Control = {
-                ...data,
                 id: controlId || `CTRL-${Date.now()}`, // Usa ID existente para edição ou gera novo
-                onePager: onePagerUrl || data.onePager || '',
-                evidencia: evidenciaUrl || data.evidencia || '',
+                nomeControle: data.nomeControle,
+                categoria: data.categoria,
+                classificacao: data.classificacao,
+                status: data.status,
+                criticidade: data.criticidade,
+                donoControle: data.donoControle,
+                emailDono: data.emailDono,
+                area: data.area,
+                frequenciaMeses: data.frequenciaMeses,
+                validacao: data.validacao,
+                preenchimentoKPI: data.preenchimentoKPI,
+                onePager: onePagerUrl || (typeof data.onePager === 'string' ? data.onePager : ''),
+                evidencia: evidenciaUrl || (typeof data.evidencia === 'string' ? data.evidencia : ''),
                 dataUltimaVerificacao: data.dataUltimaVerificacao?.toISOString() || '',
                 proximaVerificacao: data.proximaVerificacao?.toISOString() || '',
                 criadoEm: (typeof data.criadoEm === 'string' ? data.criadoEm : data.criadoEm?.toISOString()) || new Date().toISOString(),
+                criadoPor: data.criadoPor || 'Sistema',
                 modificadoEm: new Date().toISOString(),
                 modificadoPor: 'Sistema', // Substituir pelo usuário logado
                 associatedRisks: data.associatedRisks.map(({ riskId, codigoMUE, titulo }) => ({ 
@@ -255,22 +287,64 @@ export default function CaptureControlPage() {
                 }))
             };
 
-            await addOrUpdateControl(controlData);
+            console.log("=== DEBUG: Dados do controle antes de salvar ===");
+            console.log("controlId:", controlId);
+            console.log("isEditing:", isEditing);
+            console.log("controlData:", controlData);
+            console.log("categoria:", controlData.categoria);
+
+            // Usa a API REST ao invés de chamada direta
+            const apiUrl = isEditing ? `/api/controls/${controlId}` : '/api/controls';
+            const apiMethod = isEditing ? 'PUT' : 'POST';
+            
+            console.log("=== DEBUG: Chamando API ===");
+            console.log("URL:", apiUrl);
+            console.log("Method:", apiMethod);
+            
+            const saveResponse = await fetch(apiUrl, {
+                method: apiMethod,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(controlData),
+            });
+
+            console.log("=== DEBUG: Resposta da API ===");
+            console.log("Status:", saveResponse.status);
+            console.log("OK:", saveResponse.ok);
+
+            if (!saveResponse.ok) {
+                const errorData = await saveResponse.json();
+                console.error("=== DEBUG: Erro da API ===", errorData);
+                throw new Error(errorData.message || 'Falha ao salvar o controle.');
+            }
+
+            const responseData = await saveResponse.json();
+            console.log("=== DEBUG: Sucesso! ===", responseData);
 
             toast({
                 title: "Sucesso!",
                 description: isEditing ? "O controle foi atualizado com sucesso." : "O novo controle foi salvo com sucesso.",
             });
+            
+            console.log("=== DEBUG: Redirecionando para /controls ===");
             router.push('/controls');
 
         } catch (error) {
+            console.error("=== DEBUG: ERRO CAPTURADO ===");
             console.error("Erro ao salvar o controle:", error);
+            console.error("Tipo do erro:", typeof error);
+            console.error("Stack trace:", error instanceof Error ? error.stack : 'N/A');
+            
+            const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+            
             toast({
-                title: "Erro",
-                description: "Não foi possível salvar o controle. Tente novamente.",
+                title: "Erro ao salvar controle",
+                description: errorMessage,
                 variant: "destructive",
             });
         } finally {
+            console.log("=== DEBUG: Finally - setIsSubmitting(false) ===");
             setIsSubmitting(false);
         }
     };
@@ -343,18 +417,18 @@ export default function CaptureControlPage() {
             </div>
 
             <Section title="Detalhes do Controle">
-                <Field label="Tipo">
+                <Field label="Categoria">
                     <Controller
-                        name="tipo"
+                        name="categoria"
                         control={control}
                         render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <SelectTrigger><SelectValue placeholder="Selecione"/></SelectTrigger>
-                                <SelectContent>{tipoOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                                <SelectContent>{categoriasControle.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                             </Select>
                         )}
                     />
-                    {errors.tipo && <p className="text-sm text-destructive">{errors.tipo.message}</p>}
+                    {errors.categoria && <p className="text-sm text-destructive">{errors.categoria.message}</p>}
                 </Field>
                 <Field label="Classificação">
                      <Controller
@@ -483,14 +557,15 @@ export default function CaptureControlPage() {
                     <Textarea {...register("preenchimentoKPI")} placeholder="email1@rumo.com;email2@rumo.com" />
                 </Field>
             </Section>
+            
+            <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => router.push('/controls')}>Cancelar</Button>
+                <Button type="submit" disabled={isSubmitting || isLoadingControl}>
+                    {isSubmitting ? 'Salvando...' : (isEditing ? 'Atualizar Controle' : 'Salvar Controle')}
+                </Button>
+            </div>
         </form>
       </CardContent>
-      <CardFooter className="flex justify-end gap-2">
-        <Button variant="outline" onClick={() => router.push('/controls')}>Cancelar</Button>
-        <Button onClick={handleSubmit(onSubmit)} disabled={isSubmitting || isLoadingControl}>
-            {isSubmitting ? 'Salvando...' : (isEditing ? 'Atualizar Controle' : 'Salvar Controle')}
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

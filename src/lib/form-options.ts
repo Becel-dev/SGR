@@ -1,4 +1,4 @@
-import { getTopRisks, getRiskFactors } from './azure-table-storage';
+import { getTopRisks, getRiskFactors, getTemasMateriais, getCategoriasControle } from './azure-table-storage';
 
 // TopRisks dinâmicos - busca do Azure Storage
 export async function getTopRiskOptions(): Promise<string[]> {
@@ -53,6 +53,63 @@ export async function getRiskFactorOptions(): Promise<string[]> {
       "4.3 Impacto em demanda",
       "5.2 Perdas financeiras devido a divergência de Interpretação do dispositivo legal ou mudança da jurisprudência",
       "5.3 Decisões judiciais adversas.",
+    ];
+  }
+}
+
+// TemasMateriais dinâmicos - busca do Azure Storage
+export async function getTemasMaterialOptions(): Promise<string[]> {
+  try {
+    const temasMateriais = await getTemasMateriais();
+    
+    if (temasMateriais.length === 0) {
+      throw new Error('Nenhum tema material encontrado no Azure');
+    }
+    
+    return temasMateriais
+      .filter(tm => tm.nome) // Filtra apenas Temas Materiais válidos
+      .map(tm => tm.nome);
+  } catch (error) {
+    console.error('Erro ao carregar Temas Materiais:', error);
+    // Fallback para os valores estáticos em caso de erro
+    return [
+      "Integridade de Ativos",
+      "Não Aplicável",
+      "Governança e Ética",
+      "Meio Ambiente",
+      "Saúde e Segurança Pessoal",
+      "Direitos Humanos",
+      "Mudanças Climáticas e Gestão de Emissões",
+      "Diversidade, Equidade e Inclusão",
+    ];
+  }
+}
+
+// CategoriasControle dinâmicas - busca do Azure Storage
+export async function getCategoriaControleOptions(): Promise<string[]> {
+  try {
+    const categoriasControle = await getCategoriasControle();
+    
+    // Se não houver categorias, retorna fallback ao invés de lançar erro
+    if (categoriasControle.length === 0) {
+      console.warn('Nenhuma categoria de controle encontrada no Azure, usando valores padrão');
+      return [
+        "Inspeção",
+        "Procedimento",
+        "Checklist",
+      ];
+    }
+    
+    return categoriasControle
+      .filter(cc => cc.nome) // Filtra apenas Categorias de Controle válidas
+      .map(cc => cc.nome);
+  } catch (error) {
+    console.error('Erro ao carregar Categorias de Controle:', error);
+    // Fallback para os valores estáticos em caso de erro
+    return [
+      "Inspeção",
+      "Procedimento",
+      "Checklist",
     ];
   }
 }

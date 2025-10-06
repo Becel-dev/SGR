@@ -175,6 +175,48 @@ export default function ParametersPage() {
                 </div>
               </CardContent>
             </Card>
+
+            <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Settings className="h-6 w-6 text-primary" />
+                    <div>
+                      <h3 className="font-semibold">Temas Materiais</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Gerencie os Temas Materiais ESG
+                      </p>
+                    </div>
+                  </div>
+                  <Link href="/administration/parameters/temamaterial">
+                    <Button variant="ghost" size="sm">
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer hover:bg-accent/50 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Settings className="h-6 w-6 text-primary" />
+                    <div>
+                      <h3 className="font-semibold">Categorias de Controle</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Gerencie as Categorias de Controle
+                      </p>
+                    </div>
+                  </div>
+                  <Link href="/administration/parameters/categoriacontrole">
+                    <Button variant="ghost" size="sm">
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
             
             <Card className="cursor-pointer hover:bg-accent/50 transition-colors border-dashed">
               <CardContent className="p-4">

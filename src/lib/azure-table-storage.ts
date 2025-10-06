@@ -4,7 +4,7 @@
 
 import { TableClient, TableEntity, AzureNamedKeyCredential } from "@azure/data-tables";
 // Removido mockData: integração 100% Azure
-import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk, BowtieData, TopRisk, RiskFactor } from './types';
+import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk, BowtieData, TopRisk, RiskFactor, TemaMaterial, CategoriaControle } from './types';
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const identifiedRisksTableName = "identifiedrisks";
@@ -15,6 +15,8 @@ const parametersTableName = "parameters";
 const bowtieTableName = "bowties";
 const topRiskTableName = "toprisks";
 const riskFactorTableName = "riskfactors";
+const temaMaterialTableName = "temasmateriais";
+const categoriaControleTableName = "categoriascontrole";
 
 // Helper para converter o tipo da aplicação para o tipo da entidade da tabela (IdentifiedRisk)
 const toIdentifiedRiskTableEntity = (risk: Omit<IdentifiedRisk, 'id'> & { id?: string }): TableEntity<Omit<IdentifiedRisk, 'id' | 'businessObjectives'> & { businessObjectives: string }> => {
@@ -251,8 +253,10 @@ export async function addOrUpdateControl(controlData: Control): Promise<Control>
         control.modificadoPor = "Sistema"; // Substituir pelo usuário logado
 
         console.log("Tentando salvar controle:", control);
+        console.log("Campo categoria:", control.categoria, "Tipo:", typeof control.categoria);
         const entity = toControlTableEntity(control);
         console.log("Entity gerada:", entity);
+        console.log("Entity categoria:", entity.categoria, "Tipo:", typeof entity.categoria);
         await client.upsertEntity(entity, "Merge");
         return fromControlTableEntity(entity);
     } catch (error: any) {
@@ -1057,5 +1061,330 @@ export async function initializeDefaultRiskFactors(): Promise<void> {
     } catch (error) {
         console.error("Erro ao inicializar Risk Factors padrão:", error);
         throw new Error("Falha ao inicializar Risk Factors padrão no Azure Table Storage.");
+    }
+}
+
+// ---- Funções CRUD para TemaMaterial ----
+
+const toTemaMaterialTableEntity = (temaMaterial: TemaMaterial): TableEntity<any> => {
+    const { id, ...rest } = temaMaterial;
+    return {
+        partitionKey: "global", // Todos os Temas Materiais ficam na mesma partição
+        rowKey: id,
+        ...rest,
+    };
+};
+
+const fromTemaMaterialTableEntity = (entity: TableEntity<any>): TemaMaterial => {
+    const temaMaterial: any = {};
+    for (const key in entity) {
+        if (key !== 'partitionKey' && key !== 'rowKey' && key !== 'etag' && key !== 'timestamp' && !key.endsWith('@odata.type')) {
+            temaMaterial[key] = entity[key];
+        }
+    }
+    temaMaterial.id = entity.rowKey;
+
+    return temaMaterial as TemaMaterial;
+};
+
+export async function createTemaMaterialTable(): Promise<void> {
+    const client = getClient(temaMaterialTableName);
+    try {
+        await client.createTable();
+        console.log(`Tabela "${temaMaterialTableName}" criada ou já existente.`);
+    } catch (error) {
+        console.error(`Erro ao criar a tabela "${temaMaterialTableName}":`, error);
+    }
+}
+
+export async function getTemasMateriais(): Promise<TemaMaterial[]> {
+    const client = getClient(temaMaterialTableName);
+    try {
+        await client.createTable();
+        const entities = client.listEntities();
+        const temasMateriais: TemaMaterial[] = [];
+        for await (const entity of entities) {
+            temasMateriais.push(fromTemaMaterialTableEntity(entity));
+        }
+        return temasMateriais;
+    } catch (error) {
+        console.error("Erro ao buscar Temas Materiais:", error);
+        return [];
+    }
+}
+
+export async function getTemaMaterialById(id: string): Promise<TemaMaterial | undefined> {
+    const client = getClient(temaMaterialTableName);
+    try {
+        const entity = await client.getEntity<TableEntity<any>>("global", id);
+        return fromTemaMaterialTableEntity(entity);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            return undefined;
+        }
+        console.error(`Erro ao buscar Tema Material com ID ${id}:`, error);
+        return undefined;
+    }
+}
+
+export async function addOrUpdateTemaMaterial(temaMaterialData: TemaMaterial): Promise<TemaMaterial> {
+    const client = getClient(temaMaterialTableName);
+    try {
+        await client.createTable();
+        const entity = toTemaMaterialTableEntity(temaMaterialData);
+        await client.upsertEntity(entity, "Merge");
+        return fromTemaMaterialTableEntity(entity);
+    } catch (error) {
+        console.error("Erro ao salvar o Tema Material:", error);
+        throw new Error("Falha ao salvar o Tema Material no Azure Table Storage.");
+    }
+}
+
+export async function deleteTemaMaterial(id: string, partitionKey: string): Promise<void> {
+    const client = getClient(temaMaterialTableName);
+    try {
+        await client.deleteEntity(partitionKey, id);
+        console.log(`Tema Material com ID ${id} excluído com sucesso.`);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            console.warn(`Tentativa de excluir Tema Material não encontrado (ID: ${id}).`);
+            return;
+        }
+        console.error("Erro ao excluir o Tema Material:", error);
+        throw new Error("Falha ao excluir o Tema Material no Azure Table Storage.");
+    }
+}
+
+// ---- Função para inicializar Temas Materiais padrão ----
+
+export async function initializeDefaultTemasMateriais(): Promise<void> {
+    const client = getClient(temaMaterialTableName);
+    try {
+        await client.createTable();
+        
+        // Verifica se já existem Temas Materiais
+        const existingTemasMateriais = await getTemasMateriais();
+        if (existingTemasMateriais.length > 0) {
+            console.log("Temas Materiais já inicializados.");
+            return;
+        }
+
+        const defaultTemasMateriais: Omit<TemaMaterial, 'id'>[] = [
+            {
+                nome: "Integridade de Ativos",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Não Aplicável",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Governança e Ética",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Meio Ambiente",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Saúde e Segurança Pessoal",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Direitos Humanos",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Mudanças Climáticas e Gestão de Emissões",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Diversidade, Equidade e Inclusão",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+        ];
+
+        // Insere os Temas Materiais padrão
+        for (const temaMaterialData of defaultTemasMateriais) {
+            const temaMaterial: TemaMaterial = {
+                ...temaMaterialData,
+                id: `temamaterial_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+            };
+            await addOrUpdateTemaMaterial(temaMaterial);
+        }
+
+        console.log("Temas Materiais padrão inicializados com sucesso.");
+    } catch (error) {
+        console.error("Erro ao inicializar Temas Materiais padrão:", error);
+        throw new Error("Falha ao inicializar Temas Materiais padrão no Azure Table Storage.");
+    }
+}
+
+// ---- Funções CRUD para CategoriaControle ----
+
+const toCategoriaControleTableEntity = (categoriaControle: CategoriaControle): TableEntity<any> => {
+    const { id, ...rest } = categoriaControle;
+    return {
+        partitionKey: "global", // Todas as Categorias de Controle ficam na mesma partição
+        rowKey: id,
+        ...rest,
+    };
+};
+
+const fromCategoriaControleTableEntity = (entity: TableEntity<any>): CategoriaControle => {
+    const categoriaControle: any = {};
+    for (const key in entity) {
+        if (key !== 'partitionKey' && key !== 'rowKey' && key !== 'etag' && key !== 'timestamp' && !key.endsWith('@odata.type')) {
+            categoriaControle[key] = entity[key];
+        }
+    }
+    categoriaControle.id = entity.rowKey;
+
+    return categoriaControle as CategoriaControle;
+};
+
+export async function createCategoriaControleTable(): Promise<void> {
+    const client = getClient(categoriaControleTableName);
+    try {
+        await client.createTable();
+        console.log(`Tabela "${categoriaControleTableName}" criada ou já existente.`);
+    } catch (error) {
+        console.error(`Erro ao criar a tabela "${categoriaControleTableName}":`, error);
+    }
+}
+
+export async function getCategoriasControle(): Promise<CategoriaControle[]> {
+    const client = getClient(categoriaControleTableName);
+    try {
+        await client.createTable();
+        const entities = client.listEntities();
+        const categoriasControle: CategoriaControle[] = [];
+        for await (const entity of entities) {
+            categoriasControle.push(fromCategoriaControleTableEntity(entity));
+        }
+        return categoriasControle;
+    } catch (error) {
+        console.error("Erro ao buscar Categorias de Controle:", error);
+        return [];
+    }
+}
+
+export async function getCategoriaControleById(id: string): Promise<CategoriaControle | undefined> {
+    const client = getClient(categoriaControleTableName);
+    try {
+        const entity = await client.getEntity<TableEntity<any>>("global", id);
+        return fromCategoriaControleTableEntity(entity);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            return undefined;
+        }
+        console.error(`Erro ao buscar Categoria de Controle com ID ${id}:`, error);
+        return undefined;
+    }
+}
+
+export async function addOrUpdateCategoriaControle(categoriaControleData: CategoriaControle): Promise<CategoriaControle> {
+    const client = getClient(categoriaControleTableName);
+    try {
+        await client.createTable();
+        const entity = toCategoriaControleTableEntity(categoriaControleData);
+        await client.upsertEntity(entity, "Merge");
+        return fromCategoriaControleTableEntity(entity);
+    } catch (error) {
+        console.error("Erro ao salvar a Categoria de Controle:", error);
+        throw new Error("Falha ao salvar a Categoria de Controle no Azure Table Storage.");
+    }
+}
+
+export async function deleteCategoriaControle(id: string, partitionKey: string): Promise<void> {
+    const client = getClient(categoriaControleTableName);
+    try {
+        await client.deleteEntity(partitionKey, id);
+        console.log(`Categoria de Controle com ID ${id} excluída com sucesso.`);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            console.warn(`Tentativa de excluir Categoria de Controle não encontrada (ID: ${id}).`);
+            return;
+        }
+        console.error("Erro ao excluir a Categoria de Controle:", error);
+        throw new Error("Falha ao excluir a Categoria de Controle no Azure Table Storage.");
+    }
+}
+
+// ---- Função para inicializar Categorias de Controle padrão ----
+
+export async function initializeDefaultCategoriasControle(): Promise<void> {
+    const client = getClient(categoriaControleTableName);
+    try {
+        await client.createTable();
+        
+        // Verifica se já existem Categorias de Controle
+        const existingCategoriasControle = await getCategoriasControle();
+        if (existingCategoriasControle.length > 0) {
+            console.log("Categorias de Controle já inicializadas.");
+            return;
+        }
+
+        const defaultCategoriasControle: Omit<CategoriaControle, 'id'>[] = [
+            {
+                nome: "Inspeção",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Procedimento",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+            {
+                nome: "Checklist",
+                createdBy: "Sistema",
+                createdAt: new Date().toISOString(),
+                updatedBy: "Sistema",
+                updatedAt: new Date().toISOString(),
+            },
+        ];
+
+        // Insere as Categorias de Controle padrão
+        for (const categoriaControleData of defaultCategoriasControle) {
+            const categoriaControle: CategoriaControle = {
+                ...categoriaControleData,
+                id: `categoriacontrole_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+            };
+            await addOrUpdateCategoriaControle(categoriaControle);
+        }
+
+        console.log("Categorias de Controle padrão inicializadas com sucesso.");
+    } catch (error) {
+        console.error("Erro ao inicializar Categorias de Controle padrão:", error);
+        throw new Error("Falha ao inicializar Categorias de Controle padrão no Azure Table Storage.");
     }
 }

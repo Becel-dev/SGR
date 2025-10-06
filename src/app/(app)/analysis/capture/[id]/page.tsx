@@ -45,6 +45,8 @@ import {
   topRiskOptions,
   riskFactorOptions,
   getTopRiskOptions,
+  getRiskFactorOptions,
+  getTemasMaterialOptions,
 } from '@/lib/form-options';
 
 const analysisSchema = z.object({
@@ -199,6 +201,8 @@ export default function RiskAnalysisCapturePage() {
   const [isMarkingAsAnalyzed, setIsMarkingAsAnalyzed] = useState(false);
   const [calculatedIer, setCalculatedIer] = useState(0);
   const [topRisks, setTopRisks] = useState<string[]>(topRiskOptions); // Fallback estático
+  const [riskFactors, setRiskFactors] = useState<string[]>(riskFactorOptions); // Fallback estático
+  const [temasMateriais, setTemasMateriais] = useState<string[]>(temaMaterialOptions); // Fallback estático
 
   const { control, handleSubmit, reset, watch, setValue, getValues, trigger, formState: { errors } } = useForm<z.infer<typeof analysisSchema>>({
     resolver: zodResolver(analysisSchema),
@@ -256,6 +260,34 @@ export default function RiskAnalysisCapturePage() {
       }
     };
     loadTopRisks();
+  }, []);
+
+  // Carrega RiskFactors dinamicamente
+  useEffect(() => {
+    const loadRiskFactors = async () => {
+      try {
+        const dynamicRiskFactors = await getRiskFactorOptions();
+        setRiskFactors(dynamicRiskFactors);
+      } catch (error) {
+        console.error('Erro ao carregar RiskFactors:', error);
+        // Mantém o fallback estático
+      }
+    };
+    loadRiskFactors();
+  }, []);
+
+  // Carrega Temas Materiais dinamicamente
+  useEffect(() => {
+    const loadTemasMateriais = async () => {
+      try {
+        const dynamicTemasMateriais = await getTemasMaterialOptions();
+        setTemasMateriais(dynamicTemasMateriais);
+      } catch (error) {
+        console.error('Erro ao carregar Temas Materiais:', error);
+        // Mantém o fallback estático
+      }
+    };
+    loadTemasMateriais();
   }, []);
 
   const watchedFields = watch([
@@ -508,7 +540,7 @@ export default function RiskAnalysisCapturePage() {
                             <Select onValueChange={field.onChange} value={field.value}>
                                 <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                                 <SelectContent>
-                                    {riskFactorOptions.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                                    {riskFactors.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
                                 </SelectContent>
                             </Select></div>
                         )} />
@@ -595,7 +627,7 @@ export default function RiskAnalysisCapturePage() {
                         <Select onValueChange={field.onChange} value={field.value}>
                             <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                             <SelectContent>
-                                {temaMaterialOptions.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                                {temasMateriais.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
                             </SelectContent>
                         </Select></div>
                     )} />

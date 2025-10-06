@@ -1,5 +1,3 @@
-
-
 'use client'
 
 import {
@@ -39,7 +37,7 @@ import {
 } from "@/components/ui/accordion"
 
 
-import { getTopRiskOptions, getRiskFactorOptions } from '@/lib/form-options';
+import { getTopRiskOptions, getRiskFactorOptions, getTemasMaterialOptions } from '@/lib/form-options';
 import { getRisksForAnalysis } from '@/lib/azure-table-storage';
 
 // TopRisks dinâmicos serão carregados do Azure Storage
@@ -60,16 +58,6 @@ const origemOptions = ['Técnico', 'Negócio'];
 const tipoIerOptions = ['Crítico', 'Prioritário', 'Gerenciável', 'Aceitável'];
 const bowtieRealizadoOptions = ['Realizado', 'Não Realizado', 'Em Andamento'];
 const pilarOptions = ['G - Governança', 'E - Ambiente', 'S - Social'];
-const temaMaterialOptions = [
-    'Integridade de Ativos',
-    'Não Aplicável',
-    'Governança e Ética',
-    'Meio Ambiente',
-    'Saúde e Segurança Pessoal',
-    'Direitos Humanos',
-    'Mudanças Climáticas e Gestão de Emissões',
-    'Diversidade, Equidade e Inclusão'
-];
 const englobadorOptions = ['Negócio', 'Operacional'];
 const horizonteTempoOptions = ['Curto Prazo', 'Longo Prazo', 'Médio Prazo'];
 const geOrigemRiscoOptions = [
@@ -129,6 +117,7 @@ export default function CaptureRiskPage() {
     const [dataAlteracaoCuradoria, setDataAlteracaoCuradoria] = useState<Date>();
     const [topRisks, setTopRisks] = useState<string[]>([]); // Estado para TopRisks dinâmicos
     const [riskFactors, setRiskFactors] = useState<string[]>([]); // Carregado dinamicamente
+    const [temasMateriais, setTemasMateriais] = useState<string[]>([]); // Carregado dinamicamente
     const [isLoadingRisk, setIsLoadingRisk] = useState(false);
     const [isLoadingOptions, setIsLoadingOptions] = useState(true); // Novo estado para controlar carregamento de opções
 
@@ -160,6 +149,19 @@ export default function CaptureRiskPage() {
             }
         };
         loadRiskFactors();
+    }, []);
+
+    // Carrega Temas Materiais dinamicamente
+    useEffect(() => {
+        const loadTemasMateriais = async () => {
+            try {
+                const dynamicTemasMateriais = await getTemasMaterialOptions();
+                setTemasMateriais(dynamicTemasMateriais);
+            } catch (error) {
+                console.error('Erro ao carregar Temas Materiais:', error);
+            }
+        };
+        loadTemasMateriais();
     }, []);
 
     // Carrega dados do risco para edição
@@ -210,11 +212,28 @@ export default function CaptureRiskPage() {
                         if (fatorRiscoSelect) {
                             console.log('🔍 Tentando preencher RiskFactor com:', riskData.riskFactor);
                             console.log('🎯 Opções disponíveis no select:', Array.from(fatorRiscoSelect.options).map(opt => ({ value: opt.value, text: opt.text })));
-                            
+
+                            // If the saved value is not present in the loaded options, append it to the runtime state
+                            if (riskData.riskFactor && !riskFactors.includes(riskData.riskFactor)) {
+                                console.log('➕ Saved risk factor not found in loaded options. Appending to state:', riskData.riskFactor);
+                                setRiskFactors(prev => [...prev, riskData.riskFactor]);
+
+                                // As a DOM fallback (in case the Select component has already rendered), add an option element directly
+                                try {
+                                    const opt = document.createElement('option');
+                                    opt.value = riskData.riskFactor;
+                                    opt.text = riskData.riskFactor;
+                                    fatorRiscoSelect.appendChild(opt);
+                                    console.log('DOM fallback: option appended to select for saved risk factor');
+                                } catch (domErr) {
+                                    console.warn('Could not append DOM option fallback:', domErr);
+                                }
+                            }
+
                             // Verifica se o valor existe nas opções
                             const optionExists = Array.from(fatorRiscoSelect.options).some(opt => opt.value === riskData.riskFactor);
                             console.log('✓ Opção existe no select?', optionExists);
-                            
+
                             fatorRiscoSelect.value = riskData.riskFactor || '';
                             console.log('📝 RiskFactor preenchido. Valor atual do select:', fatorRiscoSelect.value);
                         }
@@ -308,16 +327,20 @@ export default function CaptureRiskPage() {
             </Field>
 
             <Field label="Fator de Risco" className="sm:col-span-2">
-                 <Select name="fatorDeRisco">
-                    <SelectTrigger><SelectValue placeholder={isLoadingOptions ? "Carregando..." : "Selecione..."}/></SelectTrigger>
-                    <SelectContent>
-                        {isLoadingOptions ? (
-                            <SelectItem value="_loading" disabled>Carregando fatores de risco...</SelectItem>
-                        ) : (
-                            riskFactors.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)
-                        )}
-                    </SelectContent>
-                </Select>
+              <Select name="fatorDeRisco">
+                <SelectTrigger>
+                  <SelectValue placeholder={isLoadingOptions ? "Carregando..." : (riskFactors.length === 0 ? "Nenhum fator de risco encontrado" : "Selecione...")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {isLoadingOptions ? (
+                    <SelectItem value="_loading" disabled>Carregando fatores de risco...</SelectItem>
+                  ) : riskFactors.length === 0 ? (
+                    <SelectItem value="_empty" disabled>⚠️ Nenhum fator de risco dinâmico encontrado</SelectItem>
+                  ) : (
+                    riskFactors.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)
+                  )}
+                </SelectContent>
+              </Select>
             </Field>
             
             <Field label="Taxonomia (Código)"><Input name="taxonomia" placeholder="RISK-CR-Negócio-1" /></Field>
@@ -389,7 +412,7 @@ export default function CaptureRiskPage() {
                 <Select name="temaMaterial">
                     <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
                     <SelectContent>
-                        {temaMaterialOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        {temasMateriais.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                     </SelectContent>
                 </Select>
               </Field>

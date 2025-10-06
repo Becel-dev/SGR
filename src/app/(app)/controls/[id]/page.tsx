@@ -242,7 +242,7 @@ export default function ControlDetailPage() {
         </div>
         
         <Section title="Classificação e Status" icon={ClipboardList}>
-            <DetailItem label="Tipo (Preventivo/Mitigatório)" value={control.tipo} />
+            <DetailItem label="Categoria" value={control.categoria || '-'} />
             <DetailItem label="Classificação" value={control.classificacao} />
             <DetailItem label="Status" value={control.status} />
             <DetailItem label="Criticidade" value={control.criticidade} />

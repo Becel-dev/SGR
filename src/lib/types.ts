@@ -29,7 +29,7 @@ export type Control = {
   criadoEm: string;
   id: string;
   nomeControle: string;
-  tipo: string;
+  categoria: string; // Inspeção, Procedimento, Checklist
   classificacao: string;
   status: string;
   donoControle: string;
@@ -302,4 +302,34 @@ export type RiskFactor = {
 export type RiskFactorParameter = {
   name: 'riskFactors';
   items: RiskFactor[];
+};
+
+// TemaMaterial Parameter
+export type TemaMaterial = {
+  id: string;
+  nome: string;
+  createdBy: string;
+  createdAt: string;
+  updatedBy: string;
+  updatedAt: string;
+};
+
+export type TemaMaterialParameter = {
+  name: 'temasMateriais';
+  items: TemaMaterial[];
+};
+
+// CategoriaControle Parameter
+export type CategoriaControle = {
+  id: string;
+  nome: string;
+  createdBy: string;
+  createdAt: string;
+  updatedBy: string;
+  updatedAt: string;
+};
+
+export type CategoriaControleParameter = {
+  name: 'categoriasControle';
+  items: CategoriaControle[];
 };
