@@ -4,7 +4,7 @@
 
 import { TableClient, TableEntity, AzureNamedKeyCredential } from "@azure/data-tables";
 // Removido mockData: integração 100% Azure
-import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk, BowtieData, TopRisk, RiskFactor, TemaMaterial, CategoriaControle } from './types';
+import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk, BowtieData, TopRisk, RiskFactor, TemaMaterial, CategoriaControle, EscalationConfig } from './types';
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const identifiedRisksTableName = "identifiedrisks";
@@ -17,6 +17,7 @@ const topRiskTableName = "toprisks";
 const riskFactorTableName = "riskfactors";
 const temaMaterialTableName = "temasmateriais";
 const categoriaControleTableName = "categoriascontrole";
+const escalationTableName = "escalations";
 
 // Helper para converter o tipo da aplicação para o tipo da entidade da tabela (IdentifiedRisk)
 const toIdentifiedRiskTableEntity = (risk: Omit<IdentifiedRisk, 'id'> & { id?: string }): TableEntity<Omit<IdentifiedRisk, 'id' | 'businessObjectives'> & { businessObjectives: string }> => {
@@ -1458,5 +1459,134 @@ export async function initializeDefaultCategoriasControle(): Promise<void> {
     } catch (error) {
         console.error("Erro ao inicializar Categorias de Controle padrão:", error);
         throw new Error("Falha ao inicializar Categorias de Controle padrão no Azure Table Storage.");
+    }
+}
+
+// ---- Funções CRUD para Escalation ----
+
+const toEscalationTableEntity = (escalation: EscalationConfig): TableEntity<any> => {
+    const { id, controlId, ...rest } = escalation;
+    return {
+        partitionKey: "global", // Todos os escalonamentos na mesma partição
+        rowKey: id,
+        controlId,
+        ...rest,
+        // Serializar objetos complexos
+        percentageConfig: JSON.stringify(escalation.percentageConfig),
+        daysConfig: JSON.stringify(escalation.daysConfig),
+    };
+};
+
+const fromEscalationTableEntity = (entity: TableEntity<any>): EscalationConfig => {
+    const escalation: any = {};
+    for (const key in entity) {
+        if (key !== 'partitionKey' && key !== 'rowKey' && key !== 'etag' && key !== 'timestamp' && !key.endsWith('@odata.type')) {
+            escalation[key] = entity[key];
+        }
+    }
+    escalation.id = entity.rowKey;
+
+    // Deserializar objetos complexos
+    try {
+        escalation.percentageConfig = JSON.parse(entity.percentageConfig);
+        escalation.daysConfig = JSON.parse(entity.daysConfig);
+    } catch (e) {
+        console.error("Erro ao deserializar configs de escalonamento:", e);
+    }
+
+    return escalation as EscalationConfig;
+};
+
+export async function createEscalationTable(): Promise<void> {
+    const client = getClient(escalationTableName);
+    try {
+        await client.createTable();
+        console.log(`Tabela "${escalationTableName}" criada ou já existente.`);
+    } catch (error) {
+        console.error(`Erro ao criar a tabela "${escalationTableName}":`, error);
+    }
+}
+
+export async function getAllEscalations(): Promise<EscalationConfig[]> {
+    const client = getClient(escalationTableName);
+    try {
+        await client.createTable();
+        const entities = client.listEntities();
+        const escalations: EscalationConfig[] = [];
+        for await (const entity of entities) {
+            escalations.push(fromEscalationTableEntity(entity));
+        }
+        return escalations;
+    } catch (error) {
+        console.error("Erro ao buscar Escalations:", error);
+        return [];
+    }
+}
+
+export async function getEscalationById(id: string): Promise<EscalationConfig | undefined> {
+    const client = getClient(escalationTableName);
+    try {
+        const entity = await client.getEntity("global", id);
+        return fromEscalationTableEntity(entity);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            return undefined;
+        }
+        console.error(`Erro ao buscar Escalation com ID ${id}:`, error);
+        return undefined;
+    }
+}
+
+export async function getEscalationByControlId(controlId: string): Promise<EscalationConfig | undefined> {
+    const client = getClient(escalationTableName);
+    try {
+        const entities = client.listEntities<TableEntity<any>>({
+            queryOptions: { filter: `controlId eq '${controlId}'` }
+        });
+        for await (const entity of entities) {
+            return fromEscalationTableEntity(entity);
+        }
+        return undefined;
+    } catch (error) {
+        console.error(`Erro ao buscar Escalation para controlId ${controlId}:`, error);
+        return undefined;
+    }
+}
+
+export async function addOrUpdateEscalation(escalation: EscalationConfig): Promise<EscalationConfig> {
+    const client = getClient(escalationTableName);
+    try {
+        await client.createTable();
+        const now = new Date().toISOString();
+        
+        let escalationToSave = { ...escalation };
+        if (!escalationToSave.createdAt) {
+            escalationToSave.createdAt = now;
+            escalationToSave.createdBy = "Sistema"; // Substituir pelo usuário logado
+        }
+        escalationToSave.updatedAt = now;
+        escalationToSave.updatedBy = "Sistema"; // Substituir pelo usuário logado
+
+        const entity = toEscalationTableEntity(escalationToSave);
+        await client.upsertEntity(entity, "Merge");
+        return fromEscalationTableEntity(entity);
+    } catch (error) {
+        console.error("Erro ao salvar o Escalation:", error);
+        throw new Error("Falha ao salvar o Escalation no Azure Table Storage.");
+    }
+}
+
+export async function deleteEscalation(id: string): Promise<void> {
+    const client = getClient(escalationTableName);
+    try {
+        await client.deleteEntity("global", id);
+        console.log(`Escalation com ID ${id} excluído com sucesso.`);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            console.warn(`Tentativa de excluir Escalation não encontrado (ID: ${id}).`);
+            return;
+        }
+        console.error("Erro ao excluir o Escalation:", error);
+        throw new Error("Falha ao excluir o Escalation no Azure Table Storage.");
     }
 }

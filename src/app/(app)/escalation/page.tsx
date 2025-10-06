@@ -1,124 +1,273 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Rss, Settings, Search } from 'lucide-react';
-import { risksData } from '@/lib/mock-data';
-import type { Risk, EscalationRule } from '@/lib/types';
+import { useState, useEffect } from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Rss, Settings, Search, Plus, Eye, Trash2, Power, PowerOff } from 'lucide-react';
+import type { Control, EscalationConfig } from '@/lib/types';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { EscalationForm } from '@/components/escalation/escalation-form';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
-} from '@/components/ui/sheet';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Switch } from '@/components/ui/switch';
+
+type ControlWithEscalation = Control & {
+  escalation?: EscalationConfig;
+};
 
 export default function EscalationPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [allRisks, setAllRisks] = useState<Risk[]>(risksData);
-  const [selectedRisk, setSelectedRisk] = useState<Risk | null>(null);
+  const [controls, setControls] = useState<ControlWithEscalation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  const router = useRouter();
 
-  const handleUpdateRule = (riskId: string, newRule: EscalationRule) => {
-    setAllRisks(prevRisks =>
-      prevRisks.map(risk =>
-        risk.id === riskId ? { ...risk, escalationRule: newRule } : risk
-      )
-    );
-    setSelectedRisk(null); // Fecha o Sheet após salvar
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [controlsRes, escalationsRes] = await Promise.all([
+        fetch('/api/controls'),
+        fetch('/api/escalation')
+      ]);
+
+      if (!controlsRes.ok || !escalationsRes.ok) {
+        throw new Error('Falha ao carregar dados');
+      }
+
+      const controlsData: Control[] = await controlsRes.json();
+      const escalationsData: EscalationConfig[] = await escalationsRes.json();
+
+      // Mapear escalations aos controles
+      const controlsWithEscalation = controlsData.map(control => {
+        const escalation = escalationsData.find(esc => esc.controlId === control.id);
+        return { ...control, escalation };
+      });
+
+      setControls(controlsWithEscalation);
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os dados.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const filteredRisks = allRisks.filter(risk =>
-    risk.risco.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    risk.id.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleToggleEnabled = async (escalation: EscalationConfig) => {
+    try {
+      const updated = { ...escalation, enabled: !escalation.enabled };
+      const response = await fetch(`/api/escalation/${escalation.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+
+      if (!response.ok) throw new Error('Falha ao atualizar');
+
+      toast({
+        title: "Sucesso",
+        description: `Escalonamento ${updated.enabled ? 'ativado' : 'desativado'} com sucesso.`,
+      });
+
+      fetchData();
+    } catch (error) {
+      console.error('Erro ao atualizar:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o escalonamento.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (escalationId: string) => {
+    try {
+      const response = await fetch(`/api/escalation/${escalationId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Falha ao excluir');
+
+      toast({
+        title: "Sucesso",
+        description: "Escalonamento excluído com sucesso.",
+      });
+
+      fetchData();
+    } catch (error) {
+      console.error('Erro ao excluir:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o escalonamento.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredControls = controls.filter(control =>
+    control.nomeControle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    control.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    control.donoControle.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Rss />
-                Regras de Escalonamento
-              </CardTitle>
-              <CardDescription>
-                Gerencie os gatilhos e as regras de notificação para cada risco.
-              </CardDescription>
-            </div>
-            <div className="relative flex-1 sm:flex-grow-0">
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Rss />
+              Escalonamentos de Controles
+            </CardTitle>
+            <CardDescription>
+              Configure regras de escalonamento por % fora da meta e dias vencidos.
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Buscar por nome ou ID do risco..."
-                className="pl-8 w-full sm:w-[300px] lg:w-[400px]"
+                placeholder="Buscar controle..."
+                className="pl-8 w-[300px]"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
+            <Button onClick={() => router.push('/escalation/capture')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Escalonamento
+            </Button>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="text-center p-8">Carregando...</div>
+        ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID do Risco</TableHead>
-                  <TableHead>Nome do Risco</TableHead>
-                  <TableHead>Responsável pelo Bowtie</TableHead>
+                  <TableHead>Nome do Controle</TableHead>
+                  <TableHead>Dono do Controle</TableHead>
+                  <TableHead>Categoria</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Escalonamento</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredRisks.map(risk => (
-                  <TableRow key={risk.id}>
-                    <TableCell className="font-mono">{risk.id}</TableCell>
-                    <TableCell className="font-medium">{risk.risco}</TableCell>
-                    <TableCell>{risk.responsavelBowtie || 'Não definido'}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="outline" size="sm" onClick={() => setSelectedRisk(risk)}>
-                        <Settings className="mr-2 h-4 w-4" />
-                        Configurar
-                      </Button>
+                {filteredControls.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center p-8 text-muted-foreground">
+                      Nenhum controle encontrado.
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredControls.map(control => (
+                    <TableRow key={control.id}>
+                      <TableCell className="font-medium">{control.nomeControle}</TableCell>
+                      <TableCell>{control.donoControle}</TableCell>
+                      <TableCell>{control.categoria}</TableCell>
+                      <TableCell>{control.status}</TableCell>
+                      <TableCell>
+                        {control.escalation ? (
+                          <div className="flex items-center gap-2">
+                            <Badge variant={control.escalation.enabled ? "default" : "secondary"}>
+                              {control.escalation.enabled ? "Ativo" : "Inativo"}
+                            </Badge>
+                            <Switch
+                              checked={control.escalation.enabled}
+                              onCheckedChange={() => handleToggleEnabled(control.escalation!)}
+                            />
+                          </div>
+                        ) : (
+                          <Badge variant="outline">Não configurado</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {control.escalation ? (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => router.push(`/escalation/${control.escalation!.id}`)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => router.push(`/escalation/capture?id=${control.escalation!.id}`)}
+                              >
+                                <Settings className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Tem certeza que deseja excluir o escalonamento do controle &quot;{control.nomeControle}&quot;?
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(control.escalation!.id)}
+                                      className="bg-destructive hover:bg-destructive/90"
+                                    >
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => router.push(`/escalation/capture?controlId=${control.id}&controlName=${encodeURIComponent(control.nomeControle)}`)}
+                            >
+                              <Plus className="mr-2 h-4 w-4" />
+                              Configurar
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
-          {filteredRisks.length === 0 && (
-            <div className="text-center p-8 text-muted-foreground">
-              Nenhum risco encontrado para &quot;{searchTerm}&quot;.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Sheet open={!!selectedRisk} onOpenChange={(isOpen) => !isOpen && setSelectedRisk(null)}>
-        <SheetContent className="sm:max-w-xl">
-            {selectedRisk && (
-                <>
-                    <SheetHeader>
-                        <SheetTitle>Configurar Escalonamento</SheetTitle>
-                        <SheetDescription>
-                            Defina as regras para o risco: <span className="font-semibold text-foreground">[{selectedRisk.id}] {selectedRisk.risco}</span>
-                        </SheetDescription>
-                    </SheetHeader>
-                    <EscalationForm
-                        risk={selectedRisk}
-                        onSave={handleUpdateRule}
-                        onCancel={() => setSelectedRisk(null)}
-                    />
-                </>
-            )}
-        </SheetContent>
-      </Sheet>
-    </>
+        )}
+      </CardContent>
+    </Card>
   );
 }

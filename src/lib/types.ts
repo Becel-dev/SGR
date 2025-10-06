@@ -97,7 +97,6 @@ export type Risk = {
   responsavel?: string;
   probabilidadeResidual?: "Raro" | "Improvável" | "Possível" | "Provável" | "Quase Certo";
   impactoResidual?: "Insignificante" | "Menor" | "Moderado" | "Maior" | "Catastrófico";
-  escalationRule?: EscalationRule;
 };
 
 
@@ -201,19 +200,38 @@ export type IdentifiedRisk = {
   updatedAt: string; // Data da última alteração (ISO)
 };
 
-// Escalation Module Types
+// Escalation Module Types (Reformulado)
 export type EscalationLevel = {
-  level: number;
-  triggerDays: number; // X, Y, Z dias
-  triggerPercentage: number; // N% fora da meta
-  role: string;
-  responsible: string;
-  enabled: boolean;
+  threshold: number; // % abaixo da meta OU dias vencidos
+  supervisor: string; // Nome do superior
+  supervisorEmail: string; // E-mail do superior
 };
 
-export type EscalationRule = {
-  metricType: 'days' | 'percentage';
-  levels: EscalationLevel[];
+export type EscalationPercentageConfig = {
+  enabled: boolean;
+  level1: EscalationLevel;
+  level2: EscalationLevel;
+  level3: EscalationLevel;
+};
+
+export type EscalationDaysConfig = {
+  enabled: boolean;
+  level1: EscalationLevel;
+  level2: EscalationLevel;
+  level3: EscalationLevel;
+};
+
+export type EscalationConfig = {
+  id: string; // UUID
+  controlId: string; // ID do controle
+  controlName?: string; // Nome do controle (denormalizado para exibição)
+  percentageConfig: EscalationPercentageConfig;
+  daysConfig: EscalationDaysConfig;
+  enabled: boolean; // Habilitar/desabilitar o escalonamento inteiro
+  createdBy: string;
+  createdAt: string;
+  updatedBy: string;
+  updatedAt: string;
 };
 
 // Risk Analysis Module Types
