@@ -26,7 +26,7 @@ export type AssociatedRisk = {
 };
 
 export type Control = {
-  criadoEm: string;
+  criadoEm: string | Date;
   id: string;
   nomeControle: string;
   categoria: string; // Inspeção, Procedimento, Checklist
@@ -35,9 +35,9 @@ export type Control = {
   donoControle: string;
   emailDono: string;
   area: string;
-  dataUltimaVerificacao: string;
+  dataUltimaVerificacao: string | Date;
   frequenciaMeses?: number;
-  proximaVerificacao: string;
+  proximaVerificacao: string | Date;
   validacao?: string;
   onePager: string;
   evidencia: string;

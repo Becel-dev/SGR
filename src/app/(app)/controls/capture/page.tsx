@@ -40,6 +40,9 @@ import {
 import { cn } from '@/lib/utils';
 import type { AssociatedRisk, Risk, Control } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+
+// Fallback visual para mensagens
+import { useRef } from 'react';
 import { getCategoriaControleOptions } from '@/lib/form-options';
 
 
@@ -115,6 +118,9 @@ export default function CaptureControlPage() {
     const [isLoadingControl, setIsLoadingControl] = useState(false);
     const [categoriasControle, setCategoriasControle] = useState<string[]>([]);
 
+    const [formMessage, setFormMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const formRef = useRef<HTMLFormElement>(null);
+
     const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<z.infer<typeof controlSchema>>({
         resolver: zodResolver(controlSchema),
         defaultValues: {
@@ -173,6 +179,7 @@ export default function CaptureControlPage() {
                 }
                 
                 // Preenche os campos do formulário
+
                 Object.keys(controlData).forEach((key) => {
                     if (key === 'associatedRisks') {
                         const risksWithKeys = controlData[key].map((risk: AssociatedRisk, index: number) => ({
@@ -181,10 +188,22 @@ export default function CaptureControlPage() {
                         }));
                         setAssociatedRisks(risksWithKeys);
                         setValue('associatedRisks', controlData[key]);
-                    } else if (key === 'dataUltimaVerificacao' || key === 'proximaVerificacao') {
-                        if (controlData[key]) {
-                            setValue(key as any, new Date(controlData[key]));
+                    } else if (key === 'dataUltimaVerificacao' || key === 'proximaVerificacao' || key === 'criadoEm') {
+                        const value = controlData[key];
+                        let dateValue: Date | undefined = undefined;
+                        if (value instanceof Date && !isNaN(value.getTime())) {
+                            dateValue = value;
+                        } else if (typeof value === 'string' && value.trim().length > 0) {
+                            const parsed = new Date(value);
+                            if (!isNaN(parsed.getTime()) && parsed.toISOString() !== 'Invalid Date') {
+                                dateValue = parsed;
+                            } else {
+                                dateValue = undefined;
+                            }
+                        } else {
+                            dateValue = undefined;
                         }
+                        setValue(key as any, dateValue);
                     } else {
                         setValue(key as any, controlData[key]);
                     }
@@ -230,6 +249,14 @@ export default function CaptureControlPage() {
         console.log("=== DEBUG: onSubmit INICIADO ===");
         console.log("Data recebida:", data);
         setIsSubmitting(true);
+        setFormMessage(null);
+
+        // Timeout de 5s para garantir feedback
+        let timeoutId = setTimeout(() => {
+            setFormMessage({ type: 'error', text: 'A operação está demorando mais que o esperado. Verifique sua conexão ou tente novamente.' });
+            setIsSubmitting(false);
+        }, 5000);
+
         try {
             const formData = new FormData();
             let onePagerFile, evidenciaFile;
@@ -260,7 +287,7 @@ export default function CaptureControlPage() {
 
             // Constrói o objeto Control explicitamente para evitar incluir tipos incompatíveis (FileList)
             const controlData: Control = {
-                id: controlId || `CTRL-${Date.now()}`, // Usa ID existente para edição ou gera novo
+                id: controlId || `CTRL-${Date.now()}`,
                 nomeControle: data.nomeControle,
                 categoria: data.categoria,
                 classificacao: data.classificacao,
@@ -274,17 +301,26 @@ export default function CaptureControlPage() {
                 preenchimentoKPI: data.preenchimentoKPI,
                 onePager: onePagerUrl || (typeof data.onePager === 'string' ? data.onePager : ''),
                 evidencia: evidenciaUrl || (typeof data.evidencia === 'string' ? data.evidencia : ''),
-                dataUltimaVerificacao: data.dataUltimaVerificacao?.toISOString() || '',
-                proximaVerificacao: data.proximaVerificacao?.toISOString() || '',
-                criadoEm: (typeof data.criadoEm === 'string' ? data.criadoEm : data.criadoEm?.toISOString()) || new Date().toISOString(),
+                // Garante que nunca seja undefined
+                dataUltimaVerificacao: data.dataUltimaVerificacao || '',
+                proximaVerificacao: data.proximaVerificacao || '',
+                criadoEm: data.criadoEm || '',
                 criadoPor: data.criadoPor || 'Sistema',
                 modificadoEm: new Date().toISOString(),
-                modificadoPor: 'Sistema', // Substituir pelo usuário logado
-                associatedRisks: data.associatedRisks.map(({ riskId, codigoMUE, titulo }) => ({ 
-                    riskId, 
-                    codigoMUE: codigoMUE || '', 
-                    titulo: titulo || '' 
+                modificadoPor: 'Sistema',
+                associatedRisks: data.associatedRisks.map(({ riskId, codigoMUE, titulo }) => ({
+                    riskId,
+                    codigoMUE: codigoMUE || '',
+                    titulo: titulo || ''
                 }))
+            };
+
+            // Converte datas para string só na hora de enviar para API
+            const controlDataToSend = {
+                ...controlData,
+                dataUltimaVerificacao: controlData.dataUltimaVerificacao instanceof Date ? controlData.dataUltimaVerificacao.toISOString() : '',
+                proximaVerificacao: controlData.proximaVerificacao instanceof Date ? controlData.proximaVerificacao.toISOString() : '',
+                criadoEm: controlData.criadoEm instanceof Date ? controlData.criadoEm.toISOString() : (controlData.criadoEm || new Date().toISOString()),
             };
 
             console.log("=== DEBUG: Dados do controle antes de salvar ===");
@@ -306,7 +342,7 @@ export default function CaptureControlPage() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(controlData),
+                body: JSON.stringify(controlDataToSend),
             });
 
             console.log("=== DEBUG: Resposta da API ===");
@@ -322,10 +358,12 @@ export default function CaptureControlPage() {
             const responseData = await saveResponse.json();
             console.log("=== DEBUG: Sucesso! ===", responseData);
 
+            clearTimeout(timeoutId);
             toast({
                 title: "Sucesso!",
                 description: isEditing ? "O controle foi atualizado com sucesso." : "O novo controle foi salvo com sucesso.",
             });
+            setFormMessage({ type: 'success', text: isEditing ? 'O controle foi atualizado com sucesso.' : 'O novo controle foi salvo com sucesso.' });
             
             console.log("=== DEBUG: Redirecionando para /controls ===");
             router.push('/controls');
@@ -338,12 +376,15 @@ export default function CaptureControlPage() {
             
             const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
             
+            clearTimeout(timeoutId);
             toast({
                 title: "Erro ao salvar controle",
                 description: errorMessage,
                 variant: "destructive",
             });
+            setFormMessage({ type: 'error', text: errorMessage });
         } finally {
+            clearTimeout(timeoutId);
             console.log("=== DEBUG: Finally - setIsSubmitting(false) ===");
             setIsSubmitting(false);
         }
@@ -363,7 +404,27 @@ export default function CaptureControlPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* DEBUG: Exibe controlId e isEditing */}
+            <div className="mb-2 text-xs text-gray-500">
+                <strong>DEBUG:</strong> controlId: {String(controlId)} | isEditing: {String(isEditing)}
+            </div>
+            {/* Exibe erros de validação do React Hook Form/Zod no topo */}
+            {Object.keys(errors).length > 0 && (
+                <div className="rounded p-3 mb-4 text-sm font-medium bg-red-100 text-red-800 border border-red-300" role="alert">
+                    <ul className="list-disc pl-4">
+                        {Object.entries(errors).map(([field, err]) => (
+                            <li key={field}>{(err as any).message || String(field)}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+            {formMessage && (
+                <div className={`rounded p-3 mb-4 text-sm font-medium ${formMessage.type === 'error' ? 'bg-red-100 text-red-800 border border-red-300' : 'bg-green-100 text-green-800 border border-green-300'}`}
+                    role={formMessage.type === 'error' ? 'alert' : 'status'}>
+                    {formMessage.text}
+                </div>
+            )}
             <Section title="Identificação do Controle" defaultOpen>
                 <Field label="ID do Controle"><Input placeholder="Gerado automaticamente" disabled /></Field>
                 <Field label="Nome do Controle (CC)" className="sm:col-span-3">

@@ -60,15 +60,12 @@ const kpiStatusVariantMap: { [key: string]: "default" | "secondary" | "destructi
     'Pendente': 'secondary',
 };
 
-const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return '-';
-    try {
-        const date = new Date(dateString);
-        const utcDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12);
-        return utcDate.toLocaleDateString('pt-BR');
-    } catch(e) {
-        return dateString;
-    }
+const formatDate = (value: unknown) => {
+    if (!value || typeof value !== 'string' || value.trim() === '') return '-';
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return '-';
+    const utcDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12);
+    return utcDate.toLocaleDateString('pt-BR');
 }
 
 
@@ -167,12 +164,14 @@ export default function ControlDetailPage() {
     }
     
     const fileDisplay = (fileName: string) => (
-        <Button variant="link" asChild className="p-0 h-auto text-base">
-            <a href="#" download={fileName}>
-                <FileText className="mr-2 h-4 w-4" />
-                {fileName}
-            </a>
-        </Button>
+        fileName && fileName.trim() !== '' ? (
+            <Button variant="link" asChild className="p-0 h-auto text-base">
+                <a href="#" download={fileName}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    {fileName}
+                </a>
+            </Button>
+        ) : '-'
     )
 
     return (
