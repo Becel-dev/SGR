@@ -268,6 +268,8 @@ export default function CaptureRiskPage() {
     const [tempo, setTempo] = useState(0);
     const [facil, setFacil] = useState(0);
     const [ier, setIer] = useState(0);
+    const [x, setX] = useState(0);
+    const [y, setY] = useState(0);
 
     // Calculate IER whenever a dependency changes
     useEffect(() => {
@@ -289,6 +291,17 @@ export default function CaptureRiskPage() {
 
         setIer(Math.round(calculatedIer));
     }, [imp, org, prob, ctrl, tempo, facil]);
+
+    // Calculate X and Y automatically
+    useEffect(() => {
+        // X = média de IMP e ORG
+        const calculatedX = (Number(imp) + Number(org)) / 2;
+        setX(calculatedX);
+        
+        // Y = média de PROB e FACIL
+        const calculatedY = (Number(prob) + Number(facil)) / 2;
+        setY(calculatedY);
+    }, [imp, org, prob, facil]);
 
 
   return (
@@ -387,8 +400,12 @@ export default function CaptureRiskPage() {
                         </SelectContent>
                     </Select>
                 </Field>
-                <Field label="X"><Input name="x" /></Field>
-                <Field label="Y"><Input name="y" /></Field>
+                <Field label="X (Auto)">
+                    <Input name="x" type="number" value={x.toFixed(1)} disabled className="bg-green-100 dark:bg-green-900/50 font-bold text-center" title="Calculado automaticamente: média de IMP e ORG" />
+                </Field>
+                <Field label="Y (Auto)">
+                    <Input name="y" type="number" value={y.toFixed(1)} disabled className="bg-green-100 dark:bg-green-900/50 font-bold text-center" title="Calculado automaticamente: média de PROB e FACIL" />
+                </Field>
           </Section>
 
           <Section title="ESG e Governança" icon={ClipboardList}>

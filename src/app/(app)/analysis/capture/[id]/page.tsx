@@ -299,6 +299,22 @@ export default function RiskAnalysisCapturePage() {
     "technicalFeasibility"
   ]);
 
+  // Calcula automaticamente X e Y quando os ponderadores mudam
+  useEffect(() => {
+    const imp = Number(getValues('corporateImpact')) || 0;
+    const org = Number(getValues('organizationalRelevance')) || 0;
+    const prob = Number(getValues('contextualizedProbability')) || 0;
+    const facil = Number(getValues('technicalFeasibility')) || 0;
+
+    // X = média de IMP e ORG
+    const calculatedX = (imp + org) / 2;
+    // Y = média de PROB e FACIL
+    const calculatedY = (prob + facil) / 2;
+
+    setValue('x', Number(calculatedX.toFixed(1)));
+    setValue('y', Number(calculatedY.toFixed(1)));
+  }, [watchedFields[0], watchedFields[1], watchedFields[2], watchedFields[5], getValues, setValue]);
+
   useEffect(() => {
     const [imp, org, prob, ctrl, tempo, facil] = watchedFields;
     
@@ -370,7 +386,18 @@ export default function RiskAnalysisCapturePage() {
             },
             ...riskData, // Sobrescreve com os dados carregados (seja da análise ou identificação)
           };
+          
+          // Calcula X e Y automaticamente com os dados carregados
+          const imp = Number(completeData.corporateImpact) || 0;
+          const org = Number(completeData.organizationalRelevance) || 0;
+          const prob = Number(completeData.contextualizedProbability) || 0;
+          const facil = Number(completeData.technicalFeasibility) || 0;
+          
+          completeData.x = Number(((imp + org) / 2).toFixed(1));
+          completeData.y = Number(((prob + facil) / 2).toFixed(1));
+          
           console.log("Dados completos sendo enviados para o formulário (reset):", completeData);
+          console.log("X calculado:", completeData.x, "Y calculado:", completeData.y);
           reset(completeData);
         } else {
             toast({
@@ -595,8 +622,18 @@ export default function RiskAnalysisCapturePage() {
                             <Input {...field} value={field.value ?? ''} readOnly className="bg-muted/60 font-bold" />
                         </div>
                     )} />
-                    <Controller name="x" control={control} render={({ field }) => (<div><Label>X</Label><Input type="number" {...field} /></div>)} />
-                    <Controller name="y" control={control} render={({ field }) => (<div><Label>Y</Label><Input type="number" {...field} /></div>)} />
+                    <Controller name="x" control={control} render={({ field }) => (
+                        <div>
+                            <Label>X (Auto)</Label>
+                            <Input type="number" {...field} readOnly className="bg-green-100 dark:bg-green-900/50 font-bold text-center" title="Calculado automaticamente: média de IMP e ORG" />
+                        </div>
+                    )} />
+                    <Controller name="y" control={control} render={({ field }) => (
+                        <div>
+                            <Label>Y (Auto)</Label>
+                            <Input type="number" {...field} readOnly className="bg-green-100 dark:bg-green-900/50 font-bold text-center" title="Calculado automaticamente: média de PROB e FACIL" />
+                        </div>
+                    )} />
                     <Controller name="englobador" control={control} render={({ field }) => (
                         <div><Label>Englobador</Label>
                         <Select onValueChange={field.onChange} value={field.value}>
