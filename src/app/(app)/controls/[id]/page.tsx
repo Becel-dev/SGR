@@ -218,8 +218,8 @@ export default function ControlDetailPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {associatedRisks.map(risk => (
-                            <TableRow key={risk.id}>
+                        {[...new Map(associatedRisks.map(risk => [risk.id, risk])).values()].map((risk, idx) => (
+                            <TableRow key={risk.id + '-' + idx}>
                                 <TableCell>
                                     <Button variant="link" asChild className="p-0 h-auto">
                                         <Link href={`/analysis/risks/${risk.id}`}>{risk.id}</Link>
