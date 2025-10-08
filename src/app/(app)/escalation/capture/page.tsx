@@ -25,13 +25,13 @@ export default function EscalationCapturePage() {
   const [isControlLocked, setIsControlLocked] = useState(false);
 
   // Estados para configuração de Percentual
-  const [percentageEnabled, setPercentageEnabled] = useState(false);
+  const [percentageEnabled, setPercentageEnabled] = useState(true);
   const [pctLevel1, setPctLevel1] = useState<EscalationLevel>({ threshold: 0, supervisor: '', supervisorEmail: '' });
   const [pctLevel2, setPctLevel2] = useState<EscalationLevel>({ threshold: 0, supervisor: '', supervisorEmail: '' });
   const [pctLevel3, setPctLevel3] = useState<EscalationLevel>({ threshold: 0, supervisor: '', supervisorEmail: '' });
 
   // Estados para configuração de Dias
-  const [daysEnabled, setDaysEnabled] = useState(false);
+  const [daysEnabled, setDaysEnabled] = useState(true);
   const [daysLevel1, setDaysLevel1] = useState<EscalationLevel>({ threshold: 0, supervisor: '', supervisorEmail: '' });
   const [daysLevel2, setDaysLevel2] = useState<EscalationLevel>({ threshold: 0, supervisor: '', supervisorEmail: '' });
   const [daysLevel3, setDaysLevel3] = useState<EscalationLevel>({ threshold: 0, supervisor: '', supervisorEmail: '' });
@@ -53,7 +53,7 @@ export default function EscalationCapturePage() {
       if (escalationId) {
         setIsEdit(true);
         setIsControlLocked(true); // Bloqueia o campo no modo edição
-        loadEscalation(escalationId);
+        await loadEscalation(escalationId);
       }
     };
     
