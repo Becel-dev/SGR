@@ -17,6 +17,7 @@ import {
   ChevronDown,
   ChevronRight,
   FileText,
+  LayoutDashboard,
 } from 'lucide-react';
 import { useUser } from '@/hooks/use-user';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +29,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/
 
 // Estrutura de navegação atualizada com submenu para Administração
 const navigationItems = [
+  { href: '/painel', icon: LayoutDashboard, label: 'Painel' },
   { href: '/identification', icon: Lightbulb, label: 'Identificação de Risco' },
   { href: '/analysis', icon: Siren, label: 'Análise de Riscos' },
   { href: '/controls', icon: Shield, label: 'Governança de Controles' },
