@@ -109,3 +109,27 @@ export const getBlobSasUrl = async (blobUrl: string): Promise<string> => {
     
     return generateSasUrl(containerName, blobName);
 };
+
+export const uploadActionEvidence = async (actionId: string, file: File): Promise<{ fileName: string; fileUrl: string }> => {
+    const containerName = 'action-evidences';
+    const containerClient = getContainerClient(containerName);
+    // Criar container privado (sem acesso público)
+    await containerClient.createIfNotExists();
+
+    const timestamp = new Date().getTime();
+    const blobName = `${actionId}/${timestamp}-${file.name}`;
+    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await blockBlobClient.uploadData(buffer, {
+        blobHTTPHeaders: { blobContentType: file.type }
+    });
+
+    // Gerar URL com SAS token para acesso seguro
+    const sasUrl = await generateSasUrl(containerName, blobName);
+
+    return {
+        fileName: file.name,
+        fileUrl: sasUrl,
+    };
+};

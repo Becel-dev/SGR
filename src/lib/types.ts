@@ -370,3 +370,31 @@ export type CategoriaControleParameter = {
   name: 'categoriasControle';
   items: CategoriaControle[];
 };
+
+// Action Module Types (Controle de Ações)
+export type ActionEvidence = {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  uploadedAt: string;
+  uploadedBy: string;
+};
+
+export type Action = {
+  id: string;
+  controlId: string; // Vinculado ao controle crítico não implementado
+  controlName: string; // Nome do controle (denormalizado para exibição)
+  responsavel: string; // Nome do responsável pela ação
+  email: string; // Email do responsável
+  prazo: string; // Data limite (ISO date string)
+  descricao: string; // Descrição da ação de correção
+  contingencia: string; // Plano de contingência
+  criticidadeAcao: number; // Criticidade de 0 a 10
+  valorEstimado: number; // Valor estimado em R$
+  status: 'Pendente' | 'Em Andamento' | 'Concluída' | 'Vencida'; // Status da ação
+  evidences: ActionEvidence[]; // Evidências de execução da tarefa
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+};

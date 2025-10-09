@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Shield, ArrowRight, Search } from "lucide-react";
+import { PlusCircle, Shield, ArrowRight, Search, AlertCircle, FileText } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
-import type { Control, Kpi } from "@/lib/types";
+import type { Control, Kpi, Action } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
@@ -45,6 +45,7 @@ export default function ControlsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [controls, setControls] = useState<Control[]>([]);
   const [kpis, setKpis] = useState<Kpi[]>([]);
+  const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -65,6 +66,13 @@ export default function ControlsPage() {
           const kpisData = await kpisResponse.json();
           setKpis(kpisData);
         }
+
+        // Buscar Actions
+        const actionsResponse = await fetch('/api/actions');
+        if (actionsResponse.ok) {
+          const actionsData = await actionsResponse.json();
+          setActions(actionsData);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -74,6 +82,43 @@ export default function ControlsPage() {
 
     fetchData();
   }, []);
+
+  // Função para verificar se um controle é crítico e não implementado
+  const isCriticalNotImplemented = (control: Control): boolean => {
+    const isCritical = control.criticidade?.toLowerCase().includes('crítico') || 
+                       control.criticidade?.toLowerCase().includes('critico') ||
+                       control.criticidade === 'Sim'; // Também aceita "Sim" como crítico
+    const isNotImplemented = control.status === 'Não Implementado';
+    
+    // Log para debug (remover após testar)
+    if (isCritical || isNotImplemented) {
+      console.log('Debug controle:', {
+        id: control.id,
+        nome: control.nomeControle,
+        criticidade: control.criticidade,
+        status: control.status,
+        isCritical,
+        isNotImplemented,
+        showButton: isCritical && isNotImplemented
+      });
+    }
+    
+    return isCritical && isNotImplemented;
+  };
+
+  // Função para verificar se há ações vencidas para um controle
+  const hasOverdueActions = (controlId: string): boolean => {
+    const controlActions = actions.filter(action => action.controlId === controlId);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return controlActions.some(action => {
+      if (action.status === 'Concluída') return false;
+      const deadline = new Date(action.prazo);
+      deadline.setHours(0, 0, 0, 0);
+      return deadline < today;
+    });
+  };
 
   // Função para obter o status do KPI de um controle
   const getControlKpiStatus = (controlId: string): 'OK' | 'NOK' | 'Sem KPI' => {
@@ -178,10 +223,23 @@ export default function ControlsPage() {
               ) : filteredControls.length > 0 ? (
                 filteredControls.map(control => {
                   const kpiStatus = getControlKpiStatus(control.id);
+                  const showCreateAction = isCriticalNotImplemented(control);
+                  const hasOverdue = hasOverdueActions(control.id);
+                  
                   return (
-                    <TableRow key={control.id}>
+                    <TableRow key={control.id} className={hasOverdue ? 'bg-red-50' : ''}>
                       <TableCell className="font-mono">{control.id}</TableCell>
-                      <TableCell>{control.nomeControle}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {control.nomeControle}
+                          {hasOverdue && (
+                            <Badge variant="destructive" className="text-xs">
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                              Ação Vencida
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>{control.area}</TableCell>
                       <TableCell>{control.donoControle}</TableCell>
                       <TableCell>
@@ -191,12 +249,22 @@ export default function ControlsPage() {
                         <Badge variant={getKpiStatusVariant(kpiStatus)}>{kpiStatus}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/controls/${control.id}`}>
-                            <ArrowRight className="h-4 w-4" />
-                            <span className="sr-only">Ver Detalhes</span>
-                          </Link>
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          {showCreateAction && (
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/actions/capture?controlId=${control.id}&controlName=${encodeURIComponent(control.nomeControle)}`}>
+                                <FileText className="h-4 w-4 mr-1" />
+                                Criar Ação
+                              </Link>
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="icon" asChild>
+                            <Link href={`/controls/${control.id}`}>
+                              <ArrowRight className="h-4 w-4" />
+                              <span className="sr-only">Ver Detalhes</span>
+                            </Link>
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

@@ -4,7 +4,7 @@
 
 import { TableClient, TableEntity, AzureNamedKeyCredential } from "@azure/data-tables";
 // Removido mockData: integração 100% Azure
-import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk, BowtieData, TopRisk, RiskFactor, TemaMaterial, CategoriaControle, EscalationConfig } from './types';
+import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk, BowtieData, TopRisk, RiskFactor, TemaMaterial, CategoriaControle, EscalationConfig, Action } from './types';
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const identifiedRisksTableName = "identifiedrisks";
@@ -1712,5 +1712,148 @@ export async function deleteEscalation(id: string): Promise<void> {
         }
         console.error("Erro ao excluir o Escalation:", error);
         throw new Error("Falha ao excluir o Escalation no Azure Table Storage.");
+    }
+}
+
+// ---- Funções CRUD para Actions (Controle de Ações) ----
+
+const actionsTableName = "actions";
+
+const toActionTableEntity = (action: Action): TableEntity<any> => {
+    const { id, ...rest } = action;
+    return {
+        partitionKey: "global", // Todas as ações na mesma partição
+        rowKey: id,
+        controlId: action.controlId,
+        controlName: action.controlName,
+        responsavel: action.responsavel,
+        email: action.email,
+        prazo: action.prazo,
+        descricao: action.descricao,
+        contingencia: action.contingencia,
+        criticidadeAcao: action.criticidadeAcao,
+        valorEstimado: action.valorEstimado,
+        status: action.status,
+        evidences: JSON.stringify(action.evidences || []),
+        createdAt: action.createdAt,
+        updatedAt: action.updatedAt,
+        createdBy: action.createdBy,
+        updatedBy: action.updatedBy,
+    };
+};
+
+const fromActionTableEntity = (entity: TableEntity<any>): Action => {
+    const action: any = {};
+    for (const key in entity) {
+        if (key !== 'partitionKey' && key !== 'rowKey' && key !== 'etag' && key !== 'timestamp' && !key.endsWith('@odata.type')) {
+            action[key] = entity[key];
+        }
+    }
+    action.id = entity.rowKey;
+
+    // Deserializar evidences
+    try {
+        action.evidences = JSON.parse(entity.evidences || '[]');
+    } catch (e) {
+        action.evidences = [];
+    }
+
+    return action as Action;
+};
+
+export async function createActionsTable(): Promise<void> {
+    const client = getClient(actionsTableName);
+    try {
+        await client.createTable();
+        console.log(`Tabela "${actionsTableName}" criada ou já existente.`);
+    } catch (error) {
+        console.error(`Erro ao criar a tabela "${actionsTableName}":`, error);
+    }
+}
+
+export async function getAllActions(): Promise<Action[]> {
+    const client = getClient(actionsTableName);
+    try {
+        await client.createTable();
+        const entities = client.listEntities();
+        const actions: Action[] = [];
+        for await (const entity of entities) {
+            actions.push(fromActionTableEntity(entity));
+        }
+        return actions;
+    } catch (error) {
+        console.error("Erro ao buscar Actions:", error);
+        return [];
+    }
+}
+
+export async function getActionById(id: string): Promise<Action | undefined> {
+    const client = getClient(actionsTableName);
+    try {
+        const entity = await client.getEntity("global", id);
+        return fromActionTableEntity(entity);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            return undefined;
+        }
+        console.error(`Erro ao buscar Action com ID ${id}:`, error);
+        return undefined;
+    }
+}
+
+export async function getActionsByControlId(controlId: string): Promise<Action[]> {
+    const client = getClient(actionsTableName);
+    try {
+        await client.createTable();
+        const filter = `controlId eq '${controlId}'`;
+        const entities = client.listEntities<TableEntity<any>>({
+            queryOptions: { filter }
+        });
+        const actions: Action[] = [];
+        for await (const entity of entities) {
+            actions.push(fromActionTableEntity(entity));
+        }
+        return actions;
+    } catch (error) {
+        console.error(`Erro ao buscar Actions para o controle ${controlId}:`, error);
+        return [];
+    }
+}
+
+export async function addOrUpdateAction(action: Action): Promise<Action> {
+    const client = getClient(actionsTableName);
+    try {
+        await client.createTable();
+        const now = new Date().toISOString();
+        
+        let actionToSave = { ...action };
+        if (!actionToSave.createdAt) {
+            actionToSave.createdAt = now;
+            actionToSave.createdBy = "Sistema"; // Substituir pelo usuário logado
+        }
+        actionToSave.updatedAt = now;
+        actionToSave.updatedBy = "Sistema"; // Substituir pelo usuário logado
+
+        const entity = toActionTableEntity(actionToSave);
+        await client.upsertEntity(entity, "Merge");
+        return fromActionTableEntity(entity);
+    } catch (error) {
+        console.error("Erro ao salvar a Action:", error);
+        throw new Error("Falha ao salvar a Action no Azure Table Storage.");
+    }
+}
+
+export async function deleteAction(id: string): Promise<void> {
+    const client = getClient(actionsTableName);
+    try {
+        await client.deleteEntity("global", id);
+        console.log(`Action com ID ${id} excluída com sucesso.`);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            console.warn(`Tentativa de excluir Action não encontrada (ID: ${id}).`);
+            return;
+        }
+        console.error("Erro ao excluir a Action:", error);
+        throw new Error("Falha ao excluir a Action no Azure Table Storage.");
     }
 }

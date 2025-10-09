@@ -16,6 +16,7 @@ import {
   Lightbulb,
   ChevronDown,
   ChevronRight,
+  FileText,
 } from 'lucide-react';
 import { useUser } from '@/hooks/use-user';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,7 @@ const navigationItems = [
   { href: '/analysis', icon: Siren, label: 'Análise de Riscos' },
   { href: '/controls', icon: Shield, label: 'Governança de Controles' },
   { href: "/kpis", icon: GanttChartSquare, label: "Gestão de KPI's" },
+  { href: '/actions', icon: FileText, label: 'Controle de Ações' },
   { href: '/escalation', icon: Rss, label: 'Escalonamento' },
   { href: '/bowtie', icon: GitFork, label: 'Visualização Bowtie' },
   { href: '/reports/generate', icon: Bot, label: 'Gerador de Relatório IA' },
