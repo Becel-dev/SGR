@@ -67,13 +67,9 @@ const controlSchema = z.object({
     status: z.string().min(1, "O status é obrigatório."),
     criticidade: z.string().min(1, "A criticidade é obrigatória."),
     onePager: z.any().optional(),
-    evidencia: z.any().optional(),
     donoControle: z.string().min(1, "O dono do controle é obrigatório."),
     emailDono: z.string().email("Formato de e-mail inválido.").min(1, "O e-mail do dono é obrigatório."),
     area: z.string().min(1, "A área é obrigatória."),
-    frequenciaMeses: z.coerce.number().positive("A frequência deve ser um número positivo.").optional(),
-    dataUltimaVerificacao: z.date().optional(),
-    proximaVerificacao: z.date().optional(),
     validacao: z.string().optional(),
     criadoEm: z.date().optional(),
     criadoPor: z.string().optional(),
@@ -188,7 +184,7 @@ export default function CaptureControlPage() {
                         }));
                         setAssociatedRisks(risksWithKeys);
                         setValue('associatedRisks', controlData[key]);
-                    } else if (key === 'dataUltimaVerificacao' || key === 'proximaVerificacao' || key === 'criadoEm') {
+                    } else if (key === 'criadoEm') {
                         const value = controlData[key];
                         let dateValue: Date | undefined = undefined;
                         if (value instanceof Date && !isNaN(value.getTime())) {
@@ -259,19 +255,15 @@ export default function CaptureControlPage() {
 
         try {
             const formData = new FormData();
-            let onePagerFile, evidenciaFile;
+            let onePagerFile;
 
             if (data.onePager && data.onePager[0]) {
                 onePagerFile = data.onePager[0] as File;
                 formData.append('onePager', onePagerFile);
             }
-            if (data.evidencia && data.evidencia[0]) {
-                evidenciaFile = data.evidencia[0] as File;
-                formData.append('evidencia', evidenciaFile);
-            }
 
-            let onePagerUrl, evidenciaUrl;
-            if (onePagerFile || evidenciaFile) {
+            let onePagerUrl;
+            if (onePagerFile) {
                 const uploadResponse = await fetch('/api/upload', {
                     method: 'POST',
                     body: formData,
@@ -282,7 +274,6 @@ export default function CaptureControlPage() {
                 }
                 const uploadResult = await uploadResponse.json();
                 onePagerUrl = uploadResult.onePagerUrl;
-                evidenciaUrl = uploadResult.evidenciaUrl;
             }
 
             // Constrói o objeto Control explicitamente para evitar incluir tipos incompatíveis (FileList)
@@ -296,14 +287,9 @@ export default function CaptureControlPage() {
                 donoControle: data.donoControle,
                 emailDono: data.emailDono,
                 area: data.area,
-                frequenciaMeses: data.frequenciaMeses,
                 validacao: data.validacao,
                 preenchimentoKPI: data.preenchimentoKPI,
                 onePager: onePagerUrl || (typeof data.onePager === 'string' ? data.onePager : ''),
-                evidencia: evidenciaUrl || (typeof data.evidencia === 'string' ? data.evidencia : ''),
-                // Garante que nunca seja undefined
-                dataUltimaVerificacao: data.dataUltimaVerificacao || '',
-                proximaVerificacao: data.proximaVerificacao || '',
                 criadoEm: data.criadoEm || '',
                 criadoPor: data.criadoPor || 'Sistema',
                 modificadoEm: new Date().toISOString(),
@@ -318,8 +304,6 @@ export default function CaptureControlPage() {
             // Converte datas para string só na hora de enviar para API
             const controlDataToSend = {
                 ...controlData,
-                dataUltimaVerificacao: controlData.dataUltimaVerificacao instanceof Date ? controlData.dataUltimaVerificacao.toISOString() : '',
-                proximaVerificacao: controlData.proximaVerificacao instanceof Date ? controlData.proximaVerificacao.toISOString() : '',
                 criadoEm: controlData.criadoEm instanceof Date ? controlData.criadoEm.toISOString() : (controlData.criadoEm || new Date().toISOString()),
             };
 
@@ -531,7 +515,6 @@ export default function CaptureControlPage() {
                     {errors.criticidade && <p className="text-sm text-destructive">{errors.criticidade.message}</p>}
                 </Field>
                 <Field label="OnePager"><Input {...register("onePager")} type="file" /></Field>
-                <Field label="Evidência"><Input {...register("evidencia")} type="file" /></Field>
             </Section>
             
             <Section title="Responsabilidade e Prazos">
@@ -555,44 +538,6 @@ export default function CaptureControlPage() {
                         )}
                     />
                     {errors.area && <p className="text-sm text-destructive">{errors.area.message}</p>}
-                </Field>
-                <Field label="Frequência (em meses)">
-                    <Input {...register("frequenciaMeses")} type="number" placeholder="Ex: 6" />
-                    {errors.frequenciaMeses && <p className="text-sm text-destructive">{errors.frequenciaMeses.message}</p>}
-                </Field>
-                <Field label="Data da Última Verificação">
-                    <Controller
-                        name="dataUltimaVerificacao"
-                        control={control}
-                        render={({ field }) => (
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {field.value ? <span>{field.value.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span> : <span>Selecione</span>}
-                                </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus/></PopoverContent>
-                            </Popover>
-                        )}
-                    />
-                </Field>
-                <Field label="Próxima Verificação">
-                    <Controller
-                        name="proximaVerificacao"
-                        control={control}
-                        render={({ field }) => (
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {field.value ? <span>{field.value.toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</span> : <span>Selecione</span>}
-                                </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value} onSelect={field.onChange} /></PopoverContent>
-                            </Popover>
-                        )}
-                    />
                 </Field>
                 <Field label="Validação">
                     <Controller

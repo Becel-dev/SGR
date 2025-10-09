@@ -7,16 +7,35 @@ export type User = {
   role: Role;
 };
 
+export type EvidenceFile = {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  uploadedAt: string;
+  uploadedBy: string;
+};
+
+export type KpiResponsible = {
+  name: string;
+  email: string;
+};
+
 export type Kpi = {
   id: string;
-  controlId: number;
-  frequencia: string;
-  ultimoKpiInformado?: string;
-  prazoProximoRegistro: string;
-  diasPendentes: number;
-  status: 'Em dia' | 'Atrasado' | 'Pendente';
-  responsavel: string;
-  emailResponsavel: string;
+  controlId: string;
+  controlName: string;
+  donoControle: string;
+  emailDonoControle: string;
+  responsibles: KpiResponsible[]; // Responsáveis adicionais
+  status: 'OK' | 'NOK';
+  dataInicioVerificacao: string; // Data de início da verificação (imutável após criação)
+  dataProximaVerificacao: string; // Data da próxima verificação (atualizada após evidência)
+  frequenciaDias: number; // Frequência em dias
+  evidenceFiles: EvidenceFile[]; // Histórico de evidências
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
 };
 
 export type AssociatedRisk = {
@@ -35,12 +54,8 @@ export type Control = {
   donoControle: string;
   emailDono: string;
   area: string;
-  dataUltimaVerificacao: string | Date;
-  frequenciaMeses?: number;
-  proximaVerificacao: string | Date;
   validacao?: string;
   onePager: string;
-  evidencia: string;
   criadoPor?: string;
   modificadoEm: string;
   modificadoPor: string;

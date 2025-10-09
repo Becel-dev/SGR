@@ -55,9 +55,8 @@ const Section = ({ title, children, icon: Icon }: { title: string, children: Rea
 )
 
 const kpiStatusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
-    'Em dia': 'default',
-    'Atrasado': 'destructive',
-    'Pendente': 'secondary',
+    'OK': 'default',
+    'NOK': 'destructive',
 };
 
 const formatDate = (value: unknown) => {
@@ -187,12 +186,20 @@ export default function ControlDetailPage() {
                     {control.nomeControle}
                 </CardDescription>
             </div>
-            <Button variant="outline" asChild>
-                <Link href="/controls">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Voltar para Lista
-                </Link>
-            </Button>
+            <div className="flex gap-2">
+                <Button variant="default" asChild>
+                    <Link href={`/kpis/capture?controlId=${control.id}`}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Adicionar KPI
+                    </Link>
+                </Button>
+                <Button variant="outline" asChild>
+                    <Link href="/controls">
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Voltar para Lista
+                    </Link>
+                </Button>
+            </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -247,16 +254,12 @@ export default function ControlDetailPage() {
             <DetailItem label="Criticidade" value={control.criticidade} />
             <DetailItem label="Validação" value={control.validacao} />
             <DetailItem label="OnePager" value={control.onePager ? fileDisplay(control.onePager) : '-'} />
-            <DetailItem label="Evidência" value={control.evidencia ? fileDisplay(control.evidencia) : '-'} />
         </Section>
         
-        <Section title="Responsabilidade e Prazos" icon={User}>
+        <Section title="Responsabilidade e Governança" icon={User}>
             <DetailItem label="Dono do Controle" value={control.donoControle} />
             <DetailItem label="E-mail do Dono" value={control.emailDono} />
             <DetailItem label="Área" value={control.area} />
-            <DetailItem label="Frequência (em meses)" value={control.frequenciaMeses} />
-            <DetailItem label="Data da Última Verificação" value={formatDate(control.dataUltimaVerificacao)} />
-            <DetailItem label="Próxima Verificação" value={formatDate(control.proximaVerificacao)} />
         </Section>
 
         <Section title="Metadados de Cadastro" icon={Calendar}>
@@ -278,9 +281,9 @@ export default function ControlDetailPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>ID do KPI</TableHead>
-                                <TableHead>Responsável</TableHead>
-                                <TableHead>Frequência</TableHead>
-                                <TableHead>Próximo Registro</TableHead>
+                                <TableHead>Dono do Controle</TableHead>
+                                <TableHead>Frequência (dias)</TableHead>
+                                <TableHead>Próxima Verificação</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>Ações</TableHead>
                             </TableRow>
@@ -289,9 +292,9 @@ export default function ControlDetailPage() {
                             {relatedKpis.map(kpi => (
                                 <TableRow key={kpi.id}>
                                     <TableCell className="font-mono">{kpi.id}</TableCell>
-                                    <TableCell>{kpi.responsavel}</TableCell>
-                                    <TableCell>{kpi.frequencia}</TableCell>
-                                    <TableCell>{formatDate(kpi.prazoProximoRegistro)}</TableCell>
+                                    <TableCell>{kpi.donoControle}</TableCell>
+                                    <TableCell>{kpi.frequenciaDias}</TableCell>
+                                    <TableCell>{formatDate(kpi.dataProximaVerificacao)}</TableCell>
                                     <TableCell>
                                         <Badge variant={kpiStatusVariantMap[kpi.status] || 'default'}>{kpi.status}</Badge>
                                     </TableCell>

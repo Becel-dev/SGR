@@ -178,7 +178,31 @@ const fromControlTableEntity = (entity: TableEntity<any>): Control => {
     return control as Control;
 };
 
-// --- Novas Funções para Kpi ---
+// --- Funções de conversão para KPI ---
+const toKpiTableEntity = (kpi: Omit<Kpi, 'id'> & { id?: string }): TableEntity<any> => {
+    const partitionKey = "KPI";
+    const rowKey = kpi.id || `kpi_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+    return {
+        partitionKey,
+        rowKey,
+        controlId: kpi.controlId,
+        controlName: kpi.controlName,
+        donoControle: kpi.donoControle,
+        emailDonoControle: kpi.emailDonoControle,
+        responsibles: JSON.stringify(kpi.responsibles),
+        status: kpi.status,
+        dataInicioVerificacao: kpi.dataInicioVerificacao,
+        dataProximaVerificacao: kpi.dataProximaVerificacao,
+        frequenciaDias: kpi.frequenciaDias,
+        evidenceFiles: JSON.stringify(kpi.evidenceFiles),
+        createdAt: kpi.createdAt,
+        updatedAt: kpi.updatedAt,
+        createdBy: kpi.createdBy,
+        updatedBy: kpi.updatedBy,
+    };
+};
+
 const fromKpiTableEntity = (entity: TableEntity<any>): Kpi => {
     const kpi: any = {};
     for (const key in entity) {
@@ -187,6 +211,24 @@ const fromKpiTableEntity = (entity: TableEntity<any>): Kpi => {
         }
     }
     kpi.id = entity.rowKey;
+    
+    // Deserializa campos JSON
+    if (kpi.responsibles && typeof kpi.responsibles === 'string') {
+        try {
+            kpi.responsibles = JSON.parse(kpi.responsibles);
+        } catch (e) {
+            kpi.responsibles = [];
+        }
+    }
+    
+    if (kpi.evidenceFiles && typeof kpi.evidenceFiles === 'string') {
+        try {
+            kpi.evidenceFiles = JSON.parse(kpi.evidenceFiles);
+        } catch (e) {
+            kpi.evidenceFiles = [];
+        }
+    }
+    
     return kpi as Kpi;
 };
 
@@ -302,10 +344,39 @@ export async function getRisksByIds(riskIds: string[]): Promise<RiskAnalysis[]> 
     }
 }
 
+// ---- Funções CRUD para KPI ----
+
+export async function getAllKpis(): Promise<Kpi[]> {
+    const client = getClient(kpisTableName);
+    try {
+        await client.createTable();
+        const entities = client.listEntities<TableEntity<any>>();
+        const kpis: Kpi[] = [];
+        for await (const entity of entities) {
+            kpis.push(fromKpiTableEntity(entity));
+        }
+        return kpis;
+    } catch (error) {
+        console.error("Erro ao buscar KPIs:", error);
+        return [];
+    }
+}
+
+export async function getKpiById(id: string): Promise<Kpi | undefined> {
+    const client = getClient(kpisTableName);
+    try {
+        const entity = await client.getEntity("KPI", id);
+        return fromKpiTableEntity(entity);
+    } catch (error) {
+        console.error(`Erro ao buscar KPI com ID ${id}:`, error);
+        return undefined;
+    }
+}
+
 export async function getKpisByControlId(controlId: string): Promise<Kpi[]> {
     const client = getClient(kpisTableName);
     try {
-        await client.createTable(); // Garante que a tabela de KPIs exista
+        await client.createTable();
         const filter = `controlId eq '${controlId}'`;
         const entities = client.listEntities<TableEntity<any>>({
             queryOptions: { filter }
@@ -318,6 +389,59 @@ export async function getKpisByControlId(controlId: string): Promise<Kpi[]> {
     } catch (error) {
         console.error(`Erro ao buscar KPIs para o controle ${controlId}:`, error);
         return [];
+    }
+}
+
+export async function createKpi(kpi: Omit<Kpi, 'id' | 'createdAt' | 'updatedAt'>): Promise<Kpi> {
+    const client = getClient(kpisTableName);
+    try {
+        await client.createTable();
+        const now = new Date().toISOString();
+        const newKpi: Omit<Kpi, 'id'> & { id?: string } = {
+            ...kpi,
+            createdAt: now,
+            updatedAt: now,
+        };
+        const entity = toKpiTableEntity(newKpi);
+        await client.createEntity(entity);
+        return fromKpiTableEntity(entity);
+    } catch (error) {
+        console.error("Erro ao criar KPI:", error);
+        throw error;
+    }
+}
+
+export async function updateKpi(id: string, updates: Partial<Kpi>): Promise<Kpi | undefined> {
+    const client = getClient(kpisTableName);
+    try {
+        const existing = await getKpiById(id);
+        if (!existing) {
+            throw new Error(`KPI com ID ${id} não encontrado`);
+        }
+        
+        const updatedKpi: Kpi = {
+            ...existing,
+            ...updates,
+            id: existing.id,
+            updatedAt: new Date().toISOString(),
+        };
+        
+        const entity = toKpiTableEntity(updatedKpi);
+        await client.updateEntity(entity, "Replace");
+        return fromKpiTableEntity(entity);
+    } catch (error) {
+        console.error(`Erro ao atualizar KPI ${id}:`, error);
+        throw error;
+    }
+}
+
+export async function deleteKpi(id: string): Promise<void> {
+    const client = getClient(kpisTableName);
+    try {
+        await client.deleteEntity("KPI", id);
+    } catch (error) {
+        console.error(`Erro ao deletar KPI ${id}:`, error);
+        throw error;
     }
 }
 

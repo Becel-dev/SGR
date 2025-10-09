@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Shield, ArrowRight, Search } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
-import type { Control } from "@/lib/types";
+import type { Control, Kpi } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
@@ -44,28 +44,66 @@ const formatDate = (dateString: string | undefined) => {
 export default function ControlsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [controls, setControls] = useState<Control[]>([]);
+  const [kpis, setKpis] = useState<Kpi[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchControls = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/controls');
-        if (!response.ok) {
+        // Buscar controles
+        const controlsResponse = await fetch('/api/controls');
+        if (!controlsResponse.ok) {
           throw new Error('Failed to fetch controls');
         }
-        const data = await response.json();
-        setControls(data);
+        const controlsData = await controlsResponse.json();
+        setControls(controlsData);
+
+        // Buscar KPIs
+        const kpisResponse = await fetch('/api/kpis');
+        if (kpisResponse.ok) {
+          const kpisData = await kpisResponse.json();
+          setKpis(kpisData);
+        }
       } catch (error) {
-        console.error("Error fetching controls:", error);
-        // Optionally, set an error state to show in the UI
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchControls();
+    fetchData();
   }, []);
+
+  // Função para obter o status do KPI de um controle
+  const getControlKpiStatus = (controlId: string): 'OK' | 'NOK' | 'Sem KPI' => {
+    const controlKpis = kpis.filter(kpi => kpi.controlId === controlId);
+    
+    if (controlKpis.length === 0) {
+      return 'Sem KPI';
+    }
+    
+    // Se algum KPI estiver NOK, o controle está NOK
+    if (controlKpis.some(kpi => kpi.status === 'NOK')) {
+      return 'NOK';
+    }
+    
+    // Se todos estiverem OK, o controle está OK
+    return 'OK';
+  };
+
+  const getKpiStatusVariant = (status: 'OK' | 'NOK' | 'Sem KPI') => {
+    switch (status) {
+      case 'OK':
+        return 'default';
+      case 'NOK':
+        return 'destructive';
+      case 'Sem KPI':
+        return 'outline';
+      default:
+        return 'secondary';
+    }
+  };
   
   const filteredControls = controls.filter((control: Control) => {
     const term = searchTerm.toLowerCase();
@@ -120,7 +158,7 @@ export default function ControlsPage() {
                 <TableHead>Área</TableHead>
                 <TableHead>Dono do Controle</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Próxima Verificação</TableHead>
+                <TableHead>KPI</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -138,26 +176,31 @@ export default function ControlsPage() {
                   </TableRow>
                 ))
               ) : filteredControls.length > 0 ? (
-                filteredControls.map(control => (
-                  <TableRow key={control.id}>
-                    <TableCell className="font-mono">{control.id}</TableCell>
-                    <TableCell>{control.nomeControle}</TableCell>
-                    <TableCell>{control.area}</TableCell>
-                    <TableCell>{control.donoControle}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariantMap[control.status] || 'default'}>{control.status}</Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(control.proximaVerificacao)}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/controls/${control.id}`}>
-                          <ArrowRight className="h-4 w-4" />
-                          <span className="sr-only">Ver Detalhes</span>
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
+                filteredControls.map(control => {
+                  const kpiStatus = getControlKpiStatus(control.id);
+                  return (
+                    <TableRow key={control.id}>
+                      <TableCell className="font-mono">{control.id}</TableCell>
+                      <TableCell>{control.nomeControle}</TableCell>
+                      <TableCell>{control.area}</TableCell>
+                      <TableCell>{control.donoControle}</TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariantMap[control.status] || 'default'}>{control.status}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getKpiStatusVariant(kpiStatus)}>{kpiStatus}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link href={`/controls/${control.id}`}>
+                            <ArrowRight className="h-4 w-4" />
+                            <span className="sr-only">Ver Detalhes</span>
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               ) : (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center p-8 text-muted-foreground">
