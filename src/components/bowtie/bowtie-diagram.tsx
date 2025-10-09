@@ -145,9 +145,11 @@ const ThreatConsequenceEditor = ({ item, onUpdate, trigger }: { item: {id: strin
 };
 
 // --- Node Components ---
-const BarrierNode = ({ barrier, onUpdate, onDelete, controls, readOnly }: { barrier: BowtieBarrierNode; onUpdate: (updatedBarrier: BowtieBarrierNode) => void; onDelete: () => void; controls: Control[]; readOnly?: boolean }) => {
+const BarrierNode = ({ barrier, onUpdate, onDelete, controls, readOnly, kpiStatuses }: { barrier: BowtieBarrierNode; onUpdate: (updatedBarrier: BowtieBarrierNode) => void; onDelete: () => void; controls: Control[]; readOnly?: boolean; kpiStatuses: Map<string, string> }) => {
     // Busca o controle associado para exibir informações completas
     const associatedControl = controls.find(c => c.id === barrier.controlId);
+    const kpiStatus = associatedControl ? kpiStatuses.get(associatedControl.id) : undefined;
+    const isCritico = associatedControl?.criticidade === 'Crítico';
     
     return (
         <div className="relative group/barrier">
@@ -170,6 +172,22 @@ const BarrierNode = ({ barrier, onUpdate, onDelete, controls, readOnly }: { barr
                 <div className="p-1.5 border-b text-center truncate bg-blue-50" title={associatedControl?.categoria || 'Não definida'}>
                     <span className="font-medium text-blue-700">Cat: </span>
                     {associatedControl?.categoria || '-'}
+                </div>
+                
+                {/* Criticidade */}
+                <div className={`p-1.5 border-b text-center font-medium ${isCritico ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700'}`}>
+                    <span className="font-semibold">Crítico: </span>
+                    {isCritico ? 'Sim' : 'Não'}
+                </div>
+                
+                {/* Status KPI */}
+                <div className={`p-1.5 border-b text-center font-medium ${
+                    kpiStatus === 'OK' ? 'bg-green-100 text-green-800' : 
+                    kpiStatus === 'NOK' ? 'bg-red-100 text-red-800' : 
+                    'bg-gray-100 text-gray-700'
+                }`}>
+                    <span className="font-semibold">KPI: </span>
+                    {kpiStatus || 'Sem KPI'}
                 </div>
                 
                 {/* Status */}
@@ -323,6 +341,7 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete, readOnly = false }: { 
     const [localData, setLocalData] = React.useState<BowtieData>(() => JSON.parse(JSON.stringify(data)));
     const [hasChanges, setHasChanges] = React.useState(false);
     const [controls, setControls] = React.useState<Control[]>([]);
+    const [kpiStatuses, setKpiStatuses] = React.useState<Map<string, string>>(new Map());
     const [isExporting, setIsExporting] = React.useState(false);
     const diagramRef = React.useRef<HTMLDivElement>(null);
 
@@ -358,6 +377,53 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete, readOnly = false }: { 
             }
         };
         fetchControls();
+    }, []);
+
+    React.useEffect(() => {
+        const fetchKpiStatuses = async () => {
+            try {
+                const res = await fetch('/api/kpis', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                if (!res.ok) {
+                    console.warn(`Falha ao buscar KPIs: ${res.status} ${res.statusText}`);
+                    return;
+                }
+                
+                const kpis = await res.json();
+                
+                // Agrupa KPIs por controle e calcula status agregado
+                const statusMap = new Map<string, string>();
+                
+                // Agrupa por controlId
+                const kpisByControl = new Map<string, any[]>();
+                kpis.forEach((kpi: any) => {
+                    if (!kpisByControl.has(kpi.controlId)) {
+                        kpisByControl.set(kpi.controlId, []);
+                    }
+                    kpisByControl.get(kpi.controlId)?.push(kpi);
+                });
+                
+                // Calcula status agregado para cada controle
+                kpisByControl.forEach((controlKpis, controlId) => {
+                    if (controlKpis.length === 0) {
+                        statusMap.set(controlId, 'Sem KPI');
+                    } else {
+                        const hasNok = controlKpis.some(kpi => kpi.status === 'NOK');
+                        statusMap.set(controlId, hasNok ? 'NOK' : 'OK');
+                    }
+                });
+                
+                setKpiStatuses(statusMap);
+            } catch (error) {
+                console.error("Erro ao carregar KPIs:", error);
+            }
+        };
+        fetchKpiStatuses();
     }, []);
 
     const handleSave = () => {
@@ -648,6 +714,7 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete, readOnly = false }: { 
                                                     onDelete={() => deleteBarrier(threat.id, barrier.id, 'threat')}
                                                     controls={controls}
                                                     readOnly={readOnly}
+                                                    kpiStatuses={kpiStatuses}
                                                 />
                                             </React.Fragment>
                                         ))}
@@ -692,6 +759,7 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete, readOnly = false }: { 
                                                     onDelete={() => deleteBarrier(consequence.id, barrier.id, 'consequence')}
                                                     controls={controls}
                                                     readOnly={readOnly}
+                                                    kpiStatuses={kpiStatuses}
                                                 />
                                             </React.Fragment>
                                         ))}
