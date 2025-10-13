@@ -39,6 +39,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useAuthUser } from '@/hooks/use-auth';
 import { CategoriaControle } from '@/lib/types';
 
 const CategoriaControleRow = ({ 
@@ -114,6 +115,7 @@ const CategoriaControleForm = ({
 
 export default function CategoriaControlePage() {
   const { toast } = useToast();
+  const authUser = useAuthUser();
   const [categoriasControle, setCategoriasControle] = useState<CategoriaControle[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -151,12 +153,18 @@ export default function CategoriaControlePage() {
   const handleSave = async (formData: Omit<CategoriaControle, 'id' | 'createdBy' | 'createdAt' | 'updatedBy' | 'updatedAt'>) => {
     setSaving(true);
     try {
+      const dataToSave = {
+        ...formData,
+        createdBy: `${authUser.name} (${authUser.email})`,
+        createdAt: new Date().toISOString(),
+      };
+
       const response = await fetch('/api/parameters/categoriacontrole', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSave),
       });
 
       if (response.ok) {
@@ -186,12 +194,19 @@ export default function CategoriaControlePage() {
     
     setSaving(true);
     try {
+      const dataToUpdate = {
+        ...formData,
+        id: editingCategoriaControle.id,
+        updatedBy: `${authUser.name} (${authUser.email})`,
+        updatedAt: new Date().toISOString(),
+      };
+
       const response = await fetch(`/api/parameters/categoriacontrole`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...formData, id: editingCategoriaControle.id }),
+        body: JSON.stringify(dataToUpdate),
       });
 
       if (response.ok) {

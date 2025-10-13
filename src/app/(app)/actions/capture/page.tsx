@@ -22,17 +22,24 @@ import { toast } from '@/hooks/use-toast';
 import { ArrowLeft, FileText, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Slider } from '@/components/ui/slider';
+import { UserAutocomplete } from '@/components/ui/user-autocomplete';
+import { useAuthUser } from '@/hooks/use-auth';
 
 const actionFormSchema = z.object({
   controlId: z.string().min(1, 'ID do controle é obrigatório'),
   controlName: z.string().min(1, 'Nome do controle é obrigatório'),
   responsavel: z.string().min(3, 'Nome do responsável deve ter pelo menos 3 caracteres'),
-  email: z.string().email('Email inválido'),
+  email: z.string().optional(),
   prazo: z.string().min(1, 'Prazo é obrigatório'),
   descricao: z.string().min(10, 'Descrição deve ter pelo menos 10 caracteres'),
   contingencia: z.string().optional(),
   criticidadeAcao: z.number().min(0).max(10),
   valorEstimado: z.number().min(0, 'Valor deve ser maior ou igual a zero'),
+  // Campos de auditoria
+  createdBy: z.string().optional(),
+  createdAt: z.string().optional(),
+  updatedBy: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 
 type ActionFormValues = z.infer<typeof actionFormSchema>;
@@ -41,6 +48,7 @@ function ActionCaptureContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
+  const authUser = useAuthUser();
 
   const controlId = searchParams?.get('controlId') || '';
   const controlName = searchParams?.get('controlName') || '';
@@ -70,12 +78,22 @@ function ActionCaptureContent() {
   const onSubmit = async (data: ActionFormValues) => {
     setSubmitting(true);
     try {
+      // Adiciona auditoria
+      const now = new Date().toISOString();
+      const actionData = {
+        ...data,
+        createdBy: `${authUser.name} (${authUser.email})`,
+        createdAt: now,
+        updatedBy: `${authUser.name} (${authUser.email})`,
+        updatedAt: now,
+      };
+
       const res = await fetch('/api/actions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(actionData),
       });
 
       if (res.ok) {
@@ -175,10 +193,20 @@ function ActionCaptureContent() {
                     <FormItem>
                       <FormLabel>Responsável pela Ação *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nome completo" {...field} />
+                        <UserAutocomplete
+                          value={field.value}
+                          onSelect={(selectedValue) => {
+                            field.onChange(selectedValue);
+                            // Auto-extrai email do formato "Nome (email@dominio.com)"
+                            const match = selectedValue.match(/\(([^)]+)\)$/);
+                            if (match) {
+                              form.setValue('email', match[1].trim());
+                            }
+                          }}
+                        />
                       </FormControl>
                       <FormDescription>
-                        Pessoa responsável por executar a ação
+                        Busque o usuário no Azure AD digitando pelo menos 2 caracteres
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -190,10 +218,19 @@ function ActionCaptureContent() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email do Responsável *</FormLabel>
+                      <FormLabel>Email do Responsável</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="email@exemplo.com" {...field} />
+                        <Input 
+                          type="email" 
+                          placeholder="Preenchido automaticamente" 
+                          {...field} 
+                          disabled
+                          className="bg-muted"
+                        />
                       </FormControl>
+                      <FormDescription>
+                        Preenchido automaticamente ao selecionar o responsável
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

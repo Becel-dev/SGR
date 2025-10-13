@@ -40,6 +40,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TopRisk } from '@/lib/types';
+import { useAuthUser } from '@/hooks/use-auth';
 
 const TopRiskRow = ({ 
   topRisk, 
@@ -114,6 +115,7 @@ const TopRiskForm = ({
 
 export default function TopRiskPage() {
   const { toast } = useToast();
+  const authUser = useAuthUser();
   const [topRisks, setTopRisks] = useState<TopRisk[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -151,12 +153,18 @@ export default function TopRiskPage() {
   const handleSave = async (formData: Omit<TopRisk, 'id' | 'createdBy' | 'createdAt' | 'updatedBy' | 'updatedAt'>) => {
     setSaving(true);
     try {
+      const dataToSave = {
+        ...formData,
+        createdBy: `${authUser.name} (${authUser.email})`,
+        createdAt: new Date().toISOString(),
+      };
+
       const response = await fetch('/api/parameters/toprisk', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSave),
       });
 
       if (response.ok) {
@@ -186,12 +194,19 @@ export default function TopRiskPage() {
     
     setSaving(true);
     try {
+      const dataToUpdate = {
+        ...formData,
+        id: editingTopRisk.id,
+        updatedBy: `${authUser.name} (${authUser.email})`,
+        updatedAt: new Date().toISOString(),
+      };
+
       const response = await fetch(`/api/parameters/toprisk`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...formData, id: editingTopRisk.id }),
+        body: JSON.stringify(dataToUpdate),
       });
 
       if (response.ok) {

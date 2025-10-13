@@ -40,6 +40,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { TemaMaterial } from '@/lib/types';
+import { useAuthUser } from '@/hooks/use-auth';
 
 const TemaMaterialRow = ({ 
   temaMaterial, 
@@ -114,6 +115,7 @@ const TemaMaterialForm = ({
 
 export default function TemaMaterialPage() {
   const { toast } = useToast();
+  const authUser = useAuthUser();
   const [temasMateriais, setTemasMateriais] = useState<TemaMaterial[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -151,12 +153,18 @@ export default function TemaMaterialPage() {
   const handleSave = async (formData: Omit<TemaMaterial, 'id' | 'createdBy' | 'createdAt' | 'updatedBy' | 'updatedAt'>) => {
     setSaving(true);
     try {
+      const dataToSave = {
+        ...formData,
+        createdBy: `${authUser.name} (${authUser.email})`,
+        createdAt: new Date().toISOString(),
+      };
+
       const response = await fetch('/api/parameters/temamaterial', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSave),
       });
 
       if (response.ok) {
@@ -186,12 +194,19 @@ export default function TemaMaterialPage() {
     
     setSaving(true);
     try {
+      const dataToUpdate = {
+        ...formData,
+        id: editingTemaMaterial.id,
+        updatedBy: `${authUser.name} (${authUser.email})`,
+        updatedAt: new Date().toISOString(),
+      };
+
       const response = await fetch(`/api/parameters/temamaterial`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...formData, id: editingTemaMaterial.id }),
+        body: JSON.stringify(dataToUpdate),
       });
 
       if (response.ok) {

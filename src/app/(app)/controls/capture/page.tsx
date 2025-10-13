@@ -44,6 +44,8 @@ import { useToast } from '@/hooks/use-toast';
 // Fallback visual para mensagens
 import { useRef } from 'react';
 import { getCategoriaControleOptions } from '@/lib/form-options';
+import { UserAutocomplete } from '@/components/ui/user-autocomplete';
+import { useAuthUser } from '@/hooks/use-auth';
 
 
 // Add a 'key' property for React's reconciliation process
@@ -68,7 +70,7 @@ const controlSchema = z.object({
     criticidade: z.string().min(1, "A criticidade é obrigatória."),
     onePager: z.any().optional(),
     donoControle: z.string().min(1, "O dono do controle é obrigatório."),
-    emailDono: z.string().email("Formato de e-mail inválido.").min(1, "O e-mail do dono é obrigatório."),
+    emailDono: z.string().optional(),
     area: z.string().min(1, "A área é obrigatória."),
     validacao: z.string().optional(),
     criadoEm: z.date().optional(),
@@ -116,6 +118,7 @@ export default function CaptureControlPage() {
 
     const [formMessage, setFormMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const formRef = useRef<HTMLFormElement>(null);
+    const authUser = useAuthUser();
 
     const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<z.infer<typeof controlSchema>>({
         resolver: zodResolver(controlSchema),
@@ -276,6 +279,13 @@ export default function CaptureControlPage() {
                 onePagerUrl = uploadResult.onePagerUrl;
             }
 
+            // Auto-extrair email do donoControle se estiver no formato "Name (email)"
+            let emailDono = data.emailDono || '';
+            const match = data.donoControle.match(/\(([^)]+)\)$/);
+            if (match) {
+                emailDono = match[1].trim();
+            }
+
             // Constrói o objeto Control explicitamente para evitar incluir tipos incompatíveis (FileList)
             const controlData: Control = {
                 id: controlId || `CTRL-${Date.now()}`,
@@ -285,15 +295,15 @@ export default function CaptureControlPage() {
                 status: data.status,
                 criticidade: data.criticidade,
                 donoControle: data.donoControle,
-                emailDono: data.emailDono,
+                emailDono: emailDono,
                 area: data.area,
                 validacao: data.validacao,
                 preenchimentoKPI: data.preenchimentoKPI,
                 onePager: onePagerUrl || (typeof data.onePager === 'string' ? data.onePager : ''),
-                criadoEm: data.criadoEm || '',
-                criadoPor: data.criadoPor || 'Sistema',
+                criadoEm: data.criadoEm || new Date().toISOString(),
+                criadoPor: data.criadoPor || `${authUser.name} (${authUser.email})`,
                 modificadoEm: new Date().toISOString(),
-                modificadoPor: 'Sistema',
+                modificadoPor: `${authUser.name} (${authUser.email})`,
                 associatedRisks: data.associatedRisks.map(({ riskId, codigoMUE, titulo }) => ({
                     riskId,
                     codigoMUE: codigoMUE || '',
@@ -518,12 +528,28 @@ export default function CaptureControlPage() {
             </Section>
             
             <Section title="Responsabilidade e Prazos">
-                <Field label="Dono do Controle">
-                    <Input {...register("donoControle")} />
+                <Field label="Dono do Controle" className="sm:col-span-2">
+                    <Controller
+                        name="donoControle"
+                        control={control}
+                        render={({ field }) => (
+                            <UserAutocomplete
+                                value={field.value}
+                                onSelect={(selectedValue) => {
+                                    field.onChange(selectedValue);
+                                    // Auto-preencher email extraindo do formato "Name (email)"
+                                    const match = selectedValue.match(/\(([^)]+)\)$/);
+                                    if (match) {
+                                        setValue('emailDono', match[1].trim());
+                                    }
+                                }}
+                            />
+                        )}
+                    />
                     {errors.donoControle && <p className="text-sm text-destructive">{errors.donoControle.message}</p>}
                 </Field>
-                <Field label="E-mail do Dono">
-                    <Input {...register("emailDono")} type="email" />
+                <Field label="E-mail do Dono (preenchido automaticamente)">
+                    <Input {...register("emailDono")} type="email" disabled className="bg-muted" />
                     {errors.emailDono && <p className="text-sm text-destructive">{errors.emailDono.message}</p>}
                 </Field>
                 <Field label="Área">

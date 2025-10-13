@@ -40,6 +40,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { RiskFactor } from '@/lib/types';
+import { UserAutocomplete } from '@/components/ui/user-autocomplete';
+import { useAuthUser } from '@/hooks/use-auth';
 
 const RiskFactorRow = ({ 
   riskFactor, 
@@ -84,6 +86,9 @@ const RiskFactorForm = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.nome.trim() || !formData.donoRisco.trim()) {
+      return; // Validação simples
+    }
     onSave(formData);
   };
 
@@ -102,13 +107,15 @@ const RiskFactorForm = ({
       
       <div className="space-y-2">
         <Label htmlFor="donoRisco">Dono do Risco *</Label>
-        <Input
-          id="donoRisco"
+        <UserAutocomplete
           value={formData.donoRisco}
-          onChange={(e) => setFormData(prev => ({ ...prev, donoRisco: e.target.value }))}
-          placeholder="Nome do responsável pelo risco"
-          required
+          onSelect={(selectedValue) => {
+            setFormData(prev => ({ ...prev, donoRisco: selectedValue }));
+          }}
         />
+        <p className="text-xs text-muted-foreground">
+          Busque o usuário no Azure AD digitando pelo menos 2 caracteres
+        </p>
       </div>
       
       <div className="flex justify-end gap-2">
@@ -116,7 +123,7 @@ const RiskFactorForm = ({
           <X className="mr-2 h-4 w-4" />
           Cancelar
         </Button>
-        <Button type="submit">
+        <Button type="submit" disabled={!formData.nome.trim() || !formData.donoRisco.trim()}>
           <Save className="mr-2 h-4 w-4" />
           {isEdit ? 'Atualizar' : 'Salvar'}
         </Button>
@@ -127,6 +134,7 @@ const RiskFactorForm = ({
 
 export default function RiskFactorPage() {
   const { toast } = useToast();
+  const authUser = useAuthUser();
   const [riskFactors, setRiskFactors] = useState<RiskFactor[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -164,12 +172,18 @@ export default function RiskFactorPage() {
   const handleSave = async (formData: Omit<RiskFactor, 'id' | 'createdBy' | 'createdAt' | 'updatedBy' | 'updatedAt'>) => {
     setSaving(true);
     try {
+      const dataToSave = {
+        ...formData,
+        createdBy: `${authUser.name} (${authUser.email})`,
+        createdAt: new Date().toISOString(),
+      };
+
       const response = await fetch('/api/parameters/riskfactor', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSave),
       });
 
       if (response.ok) {
@@ -199,12 +213,19 @@ export default function RiskFactorPage() {
     
     setSaving(true);
     try {
+      const dataToUpdate = {
+        ...formData,
+        id: editingRiskFactor.id,
+        updatedBy: `${authUser.name} (${authUser.email})`,
+        updatedAt: new Date().toISOString(),
+      };
+
       const response = await fetch(`/api/parameters/riskfactor`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...formData, id: editingRiskFactor.id }),
+        body: JSON.stringify(dataToUpdate),
       });
 
       if (response.ok) {

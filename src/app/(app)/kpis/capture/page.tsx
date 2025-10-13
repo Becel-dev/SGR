@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import type { Control, Kpi, KpiResponsible } from '@/lib/types';
 import { Trash2, Plus } from 'lucide-react';
+import { UserAutocomplete } from '@/components/ui/user-autocomplete';
+import { useAuthUser } from '@/hooks/use-auth';
 
 export default function KpiCapturePage() {
   const router = useRouter();
@@ -88,6 +90,8 @@ export default function KpiCapturePage() {
     }
   };
 
+  const authUser = useAuthUser();
+
   const addResponsible = () => {
     setResponsibles([...responsibles, { name: '', email: '' }]);
   };
@@ -99,6 +103,13 @@ export default function KpiCapturePage() {
   const updateResponsible = (index: number, field: 'name' | 'email', value: string) => {
     const updated = [...responsibles];
     updated[index][field] = value;
+    setResponsibles(updated);
+  };
+
+  const handleUserSelect = (index: number, userName: string, userEmail: string) => {
+    const updated = [...responsibles];
+    updated[index].name = userName;
+    updated[index].email = userEmail;
     setResponsibles(updated);
   };
 
@@ -139,8 +150,10 @@ export default function KpiCapturePage() {
       dataProximaVerificacao,
       frequenciaDias,
       evidenceFiles: [],
-      createdBy: 'Sistema', // TODO: usar usuário logado
-      updatedBy: 'Sistema',
+      createdBy: isEdit ? undefined : `${authUser.name} (${authUser.email})`,
+      createdAt: isEdit ? undefined : new Date().toISOString(),
+      updatedBy: `${authUser.name} (${authUser.email})`,
+      updatedAt: new Date().toISOString(),
     };
 
     try {
@@ -257,20 +270,17 @@ export default function KpiCapturePage() {
             {responsibles.map((resp, index) => (
               <div key={index} className="flex items-end gap-2">
                 <div className="flex-1">
-                  <Label>Nome</Label>
-                  <Input
-                    value={resp.name}
-                    onChange={(e) => updateResponsible(index, 'name', e.target.value)}
-                    placeholder="Nome do responsável"
-                  />
-                </div>
-                <div className="flex-1">
-                  <Label>E-mail</Label>
-                  <Input
-                    type="email"
-                    value={resp.email}
-                    onChange={(e) => updateResponsible(index, 'email', e.target.value)}
-                    placeholder="email@exemplo.com"
+                  <Label>Buscar Responsável no Azure AD</Label>
+                  <UserAutocomplete
+                    value={resp.name && resp.email ? `${resp.name} (${resp.email})` : ''}
+                    onSelect={(selectedValue) => {
+                      // Parse "Name (email@domain.com)"
+                      const match = selectedValue.match(/^(.+?)\s*\((.+?)\)$/);
+                      if (match) {
+                        const [, name, email] = match;
+                        handleUserSelect(index, name.trim(), email.trim());
+                      }
+                    }}
                   />
                 </div>
                 <Button

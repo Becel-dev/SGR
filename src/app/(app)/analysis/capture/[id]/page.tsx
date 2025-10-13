@@ -49,6 +49,7 @@ import {
   getRiskFactorOptions,
   getTemasMaterialOptions,
 } from '@/lib/form-options';
+import { useAuthUser } from '@/hooks/use-auth';
 
 const analysisSchema = z.object({
   riskName: z.string().min(1, "O nome do risco é obrigatório."),
@@ -161,9 +162,9 @@ export default function RiskAnalysisCapturePage() {
         status: 'Analisado',
         analysisId: formData.topRisk.replace(/[^a-zA-Z0-9]/g, '') || "Default",
         createdAt: risk.createdAt || new Date().toISOString(),
-        createdBy: risk.createdBy || 'current.user@example.com',
+        createdBy: risk.createdBy || `${authUser.name} (${authUser.email})`,
         updatedAt: new Date().toISOString(),
-        updatedBy: 'current.user@example.com',
+        updatedBy: `${authUser.name} (${authUser.email})`,
         probableCause: (risk as any).probableCause ?? '',
         expectedConsequence: (risk as any).expectedConsequence ?? '',
         currentControls: (risk as any).currentControls ?? '',
@@ -192,6 +193,7 @@ export default function RiskAnalysisCapturePage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
+  const authUser = useAuthUser();
   const id = params?.id as string;
 
   const [risk, setRisk] = useState<IdentifiedRisk | RiskAnalysis | null>(null);
@@ -441,8 +443,10 @@ export default function RiskAnalysisCapturePage() {
         ier: calculatedIer,
         status: newStatus,
         analysisId: data.topRisk.replace(/[^a-zA-Z0-9]/g, '') || "Default",
+        createdAt: risk.createdAt || new Date().toISOString(),
+        createdBy: risk.createdBy || `${authUser.name} (${authUser.email})`,
         updatedAt: new Date().toISOString(),
-        updatedBy: 'current.user@example.com', // TODO: Substituir pelo usuário logado
+        updatedBy: `${authUser.name} (${authUser.email})`,
       };
 
       await addOrUpdateRiskAnalysis(analysisData);

@@ -296,8 +296,8 @@ export default function CaptureIdentifiedRiskPage() {
                             </Select>
                         )} />
                     </Field>
-                    <Field label="Dono do Risco" className="sm:col-span-2" description="Preenchido automaticamente baseado no Fator de Risco.">
-                        <Input {...register("donoRisco")} disabled readOnly placeholder="Selecione um Fator de Risco" />
+                    <Field label="Dono do Risco" className="sm:col-span-2" description="Preenchido automaticamente dos Parâmetros ao selecionar o Fator de Risco.">
+                        <Input {...register("donoRisco")} disabled readOnly placeholder="Selecione um Fator de Risco" className="bg-muted" />
                     </Field>
                     <Field label="4. Causa Provável" className="sm:col-span-2" description="Descreva a causa que pode originar o risco." error={errors.probableCause?.message}>
                         <Textarea {...register("probableCause")} placeholder="Ex: Alta dependência de fornecedor único..." disabled={isLocked} />

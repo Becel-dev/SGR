@@ -10,8 +10,10 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 import type { Control, EscalationConfig, EscalationLevel } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
+import { Loader2 } from 'lucide-react';
 
 export default function EscalationCapturePage() {
   const router = useRouter();
@@ -23,6 +25,8 @@ export default function EscalationCapturePage() {
   const [loading, setLoading] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isControlLocked, setIsControlLocked] = useState(false);
+  const [loadingHierarchy, setLoadingHierarchy] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   // Estados para configuração de Percentual
   const [percentageEnabled, setPercentageEnabled] = useState(true);
@@ -40,20 +44,57 @@ export default function EscalationCapturePage() {
 
   useEffect(() => {
     const initializePage = async () => {
-      await loadControls();
+      setInitialLoading(true);
       
-      const controlId = searchParams?.get('controlId');
-      const escalationId = searchParams?.get('id');
-      
-      if (controlId) {
-        setSelectedControlId(controlId);
-        setIsControlLocked(true); // Bloqueia o campo quando vem da tabela
-      }
-      
-      if (escalationId) {
-        setIsEdit(true);
-        setIsControlLocked(true); // Bloqueia o campo no modo edição
-        await loadEscalation(escalationId);
+      try {
+        // 1. Primeiro carrega os controles
+        const response = await fetch('/api/controls');
+        if (!response.ok) throw new Error('Falha ao carregar controles');
+        const loadedControls = await response.json();
+        setControls(loadedControls);
+        
+        console.log('✅ Controles carregados:', loadedControls.length);
+        
+        const controlId = searchParams?.get('controlId');
+        const escalationId = searchParams?.get('id');
+        
+        if (controlId) {
+          setSelectedControlId(controlId);
+          setIsControlLocked(true);
+        }
+        
+        if (escalationId) {
+          setIsEdit(true);
+          setIsControlLocked(true);
+          await loadEscalation(escalationId);
+        } else if (controlId) {
+          // Auto-preenche hierarquia se for novo escalonamento
+          console.log('🔄 Iniciando auto-preenchimento de hierarquia...');
+          
+          // Busca o controle dos dados já carregados
+          const control = loadedControls.find((c: Control) => c.id === controlId);
+          
+          if (!control) {
+            console.error('❌ Controle não encontrado:', controlId);
+            return;
+          }
+          
+          if (!control.emailDono) {
+            console.warn('⚠️ Controle sem email do dono configurado');
+            return;
+          }
+          
+          await autoFillHierarchyWithControl(control);
+        }
+      } catch (error) {
+        console.error('❌ Erro ao inicializar página:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os dados.",
+          variant: "destructive",
+        });
+      } finally {
+        setInitialLoading(false);
       }
     };
     
@@ -103,6 +144,120 @@ export default function EscalationCapturePage() {
         description: "Não foi possível carregar o escalonamento.",
         variant: "destructive",
       });
+    }
+  };
+
+  const autoFillHierarchyWithControl = async (control: Control) => {
+    console.log('🔍 autoFillHierarchyWithControl iniciado');
+    console.log('📋 Controle:', control);
+    console.log('📧 Email do dono (bruto):', control.emailDono);
+    
+    if (!control || !control.emailDono) {
+      console.error('❌ Controle sem email do dono configurado');
+      toast({
+        title: "Aviso",
+        description: "O controle selecionado não possui email do dono configurado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoadingHierarchy(true);
+
+    try {
+      // Extrai o email do formato "Nome (email@dominio.com)"
+      const emailMatch = control.emailDono.match(/\(([^)]+)\)$/);
+      const ownerEmail = emailMatch ? emailMatch[1].trim() : control.emailDono;
+
+      console.log('📧 Email extraído para busca:', ownerEmail);
+      console.log('🌐 Fazendo requisição para /api/users/manager...');
+
+      // Busca N1 - Superior imediato do dono do controle
+      const n1Response = await fetch(`/api/users/manager?email=${encodeURIComponent(ownerEmail)}`);
+      
+      console.log('📥 Resposta N1 status:', n1Response.status);
+      
+      if (!n1Response.ok) {
+        const errorText = await n1Response.text();
+        console.error('❌ Erro ao buscar N1:', errorText);
+        toast({
+          title: "Aviso",
+          description: "Não foi possível buscar o superior imediato no Azure AD.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const n1Data = await n1Response.json();
+      console.log('📊 Dados N1 recebidos:', n1Data);
+      
+      if (!n1Data || !n1Data.email) {
+        console.warn('⚠️ Dono do controle não possui superior imediato configurado no Azure AD');
+        toast({
+          title: "Aviso",
+          description: "O dono do controle não possui superior imediato configurado no Azure AD.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Preenche N1
+      const n1Name = `${n1Data.name} (${n1Data.email})`;
+      console.log('✏️ Preenchendo N1 com:', n1Name);
+      setPctLevel1(prev => {
+        const newValue = { ...prev, supervisor: n1Name, supervisorEmail: n1Data.email };
+        console.log('✅ pctLevel1 atualizado:', newValue);
+        return newValue;
+      });
+      setDaysLevel1(prev => {
+        const newValue = { ...prev, supervisor: n1Name, supervisorEmail: n1Data.email };
+        console.log('✅ daysLevel1 atualizado:', newValue);
+        return newValue;
+      });
+
+      // Busca N2 - Superior do N1
+      const n2Response = await fetch(`/api/users/manager?email=${encodeURIComponent(n1Data.email)}`);
+      
+      if (n2Response.ok) {
+        const n2Data = await n2Response.json();
+        
+        if (n2Data && n2Data.email) {
+          const n2Name = `${n2Data.name} (${n2Data.email})`;
+          setPctLevel2(prev => ({ ...prev, supervisor: n2Name, supervisorEmail: n2Data.email }));
+          setDaysLevel2(prev => ({ ...prev, supervisor: n2Name, supervisorEmail: n2Data.email }));
+          console.log('✅ N2 preenchido:', n2Name);
+
+          // Busca N3 - Superior do N2
+          const n3Response = await fetch(`/api/users/manager?email=${encodeURIComponent(n2Data.email)}`);
+          
+          if (n3Response.ok) {
+            const n3Data = await n3Response.json();
+            
+            if (n3Data && n3Data.email) {
+              const n3Name = `${n3Data.name} (${n3Data.email})`;
+              setPctLevel3(prev => ({ ...prev, supervisor: n3Name, supervisorEmail: n3Data.email }));
+              setDaysLevel3(prev => ({ ...prev, supervisor: n3Name, supervisorEmail: n3Data.email }));
+              console.log('✅ N3 preenchido:', n3Name);
+            }
+          }
+        }
+      }
+
+      console.log('✅ Hierarquia de supervisores preenchida automaticamente');
+      toast({
+        title: "Sucesso",
+        description: "Hierarquia de supervisores carregada do Azure AD.",
+      });
+    } catch (error: any) {
+      console.error('❌ Erro ao buscar hierarquia:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao buscar hierarquia de supervisores.",
+        variant: "destructive",
+      });
+    } finally {
+      console.log('🏁 Finalizando auto-preenchimento');
+      setLoadingHierarchy(false);
     }
   };
 
@@ -175,6 +330,38 @@ export default function EscalationCapturePage() {
     }
   };
 
+  // Tela de loading inicial
+  if (initialLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Carregando Configuração de Escalonamento</CardTitle>
+          <CardDescription>
+            Buscando dados do controle e hierarquia de supervisores...
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-12 space-y-6">
+            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+            <div className="text-center space-y-2">
+              <p className="text-lg font-medium">Preparando escalonamento</p>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                {loadingHierarchy ? (
+                  <>
+                    <p>✅ Controle carregado</p>
+                    <p className="text-primary font-medium">🔄 Buscando hierarquia no Azure AD...</p>
+                  </>
+                ) : (
+                  <p>🔄 Carregando dados do controle...</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit}>
       <Card>
@@ -208,6 +395,11 @@ export default function EscalationCapturePage() {
               <p className="text-xs text-muted-foreground">
                 O controle não pode ser alterado após a seleção inicial.
               </p>
+            )}
+            {selectedControlId && pctLevel1.supervisor && (
+              <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
+                <span className="font-medium">✅ Hierarquia de supervisores carregada automaticamente do Azure AD</span>
+              </div>
             )}
           </div>
 
@@ -246,7 +438,14 @@ export default function EscalationCapturePage() {
               <div className="space-y-4 pl-4 border-l-2">
                 {/* Nível 1 */}
                 <div className="space-y-2">
-                  <Label className="text-base font-semibold">Nível 1</Label>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-base font-semibold">Nível 1</Label>
+                    {pctLevel1.supervisor && (
+                      <Badge variant="secondary" className="text-xs">
+                        Superior imediato do dono
+                      </Badge>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label>% Abaixo da Meta</Label>
@@ -263,6 +462,7 @@ export default function EscalationCapturePage() {
                         value={pctLevel1.supervisor}
                         onChange={e => setPctLevel1({...pctLevel1, supervisor: e.target.value})}
                         placeholder="Nome do superior"
+                        className={pctLevel1.supervisor ? "bg-green-50 dark:bg-green-950/20" : ""}
                       />
                     </div>
                     <div>
@@ -272,6 +472,7 @@ export default function EscalationCapturePage() {
                         value={pctLevel1.supervisorEmail}
                         onChange={e => setPctLevel1({...pctLevel1, supervisorEmail: e.target.value})}
                         placeholder="email@exemplo.com"
+                        className={pctLevel1.supervisorEmail ? "bg-green-50 dark:bg-green-950/20" : ""}
                       />
                     </div>
                   </div>
@@ -279,7 +480,14 @@ export default function EscalationCapturePage() {
 
                 {/* Nível 2 */}
                 <div className="space-y-2">
-                  <Label className="text-base font-semibold">Nível 2</Label>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-base font-semibold">Nível 2</Label>
+                    {pctLevel2.supervisor && (
+                      <Badge variant="secondary" className="text-xs">
+                        Superior do N1
+                      </Badge>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label>% Abaixo da Meta</Label>
@@ -296,6 +504,7 @@ export default function EscalationCapturePage() {
                         value={pctLevel2.supervisor}
                         onChange={e => setPctLevel2({...pctLevel2, supervisor: e.target.value})}
                         placeholder="Nome do superior"
+                        className={pctLevel2.supervisor ? "bg-green-50 dark:bg-green-950/20" : ""}
                       />
                     </div>
                     <div>
@@ -305,6 +514,7 @@ export default function EscalationCapturePage() {
                         value={pctLevel2.supervisorEmail}
                         onChange={e => setPctLevel2({...pctLevel2, supervisorEmail: e.target.value})}
                         placeholder="email@exemplo.com"
+                        className={pctLevel2.supervisorEmail ? "bg-green-50 dark:bg-green-950/20" : ""}
                       />
                     </div>
                   </div>
@@ -312,7 +522,14 @@ export default function EscalationCapturePage() {
 
                 {/* Nível 3 */}
                 <div className="space-y-2">
-                  <Label className="text-base font-semibold">Nível 3</Label>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-base font-semibold">Nível 3</Label>
+                    {pctLevel3.supervisor && (
+                      <Badge variant="secondary" className="text-xs">
+                        Superior do N2
+                      </Badge>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label>% Abaixo da Meta</Label>
@@ -329,6 +546,7 @@ export default function EscalationCapturePage() {
                         value={pctLevel3.supervisor}
                         onChange={e => setPctLevel3({...pctLevel3, supervisor: e.target.value})}
                         placeholder="Nome do superior"
+                        className={pctLevel3.supervisor ? "bg-green-50 dark:bg-green-950/20" : ""}
                       />
                     </div>
                     <div>
@@ -338,6 +556,7 @@ export default function EscalationCapturePage() {
                         value={pctLevel3.supervisorEmail}
                         onChange={e => setPctLevel3({...pctLevel3, supervisorEmail: e.target.value})}
                         placeholder="email@exemplo.com"
+                        className={pctLevel3.supervisorEmail ? "bg-green-50 dark:bg-green-950/20" : ""}
                       />
                     </div>
                   </div>
@@ -367,7 +586,14 @@ export default function EscalationCapturePage() {
               <div className="space-y-4 pl-4 border-l-2">
                 {/* Nível 1 */}
                 <div className="space-y-2">
-                  <Label className="text-base font-semibold">Nível 1</Label>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-base font-semibold">Nível 1</Label>
+                    {daysLevel1.supervisor && (
+                      <Badge variant="secondary" className="text-xs">
+                        Superior imediato do dono
+                      </Badge>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label>Vencido há mais de (dias)</Label>
@@ -384,6 +610,7 @@ export default function EscalationCapturePage() {
                         value={daysLevel1.supervisor}
                         onChange={e => setDaysLevel1({...daysLevel1, supervisor: e.target.value})}
                         placeholder="Nome do superior"
+                        className={daysLevel1.supervisor ? "bg-green-50 dark:bg-green-950/20" : ""}
                       />
                     </div>
                     <div>
@@ -393,6 +620,7 @@ export default function EscalationCapturePage() {
                         value={daysLevel1.supervisorEmail}
                         onChange={e => setDaysLevel1({...daysLevel1, supervisorEmail: e.target.value})}
                         placeholder="email@exemplo.com"
+                        className={daysLevel1.supervisorEmail ? "bg-green-50 dark:bg-green-950/20" : ""}
                       />
                     </div>
                   </div>
@@ -400,7 +628,14 @@ export default function EscalationCapturePage() {
 
                 {/* Nível 2 */}
                 <div className="space-y-2">
-                  <Label className="text-base font-semibold">Nível 2</Label>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-base font-semibold">Nível 2</Label>
+                    {daysLevel2.supervisor && (
+                      <Badge variant="secondary" className="text-xs">
+                        Superior do N1
+                      </Badge>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label>Vencido há mais de (dias)</Label>
@@ -417,6 +652,7 @@ export default function EscalationCapturePage() {
                         value={daysLevel2.supervisor}
                         onChange={e => setDaysLevel2({...daysLevel2, supervisor: e.target.value})}
                         placeholder="Nome do superior"
+                        className={daysLevel2.supervisor ? "bg-green-50 dark:bg-green-950/20" : ""}
                       />
                     </div>
                     <div>
@@ -426,6 +662,7 @@ export default function EscalationCapturePage() {
                         value={daysLevel2.supervisorEmail}
                         onChange={e => setDaysLevel2({...daysLevel2, supervisorEmail: e.target.value})}
                         placeholder="email@exemplo.com"
+                        className={daysLevel2.supervisorEmail ? "bg-green-50 dark:bg-green-950/20" : ""}
                       />
                     </div>
                   </div>
@@ -433,7 +670,14 @@ export default function EscalationCapturePage() {
 
                 {/* Nível 3 */}
                 <div className="space-y-2">
-                  <Label className="text-base font-semibold">Nível 3</Label>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-base font-semibold">Nível 3</Label>
+                    {daysLevel3.supervisor && (
+                      <Badge variant="secondary" className="text-xs">
+                        Superior do N2
+                      </Badge>
+                    )}
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label>Vencido há mais de (dias)</Label>
@@ -450,6 +694,7 @@ export default function EscalationCapturePage() {
                         value={daysLevel3.supervisor}
                         onChange={e => setDaysLevel3({...daysLevel3, supervisor: e.target.value})}
                         placeholder="Nome do superior"
+                        className={daysLevel3.supervisor ? "bg-green-50 dark:bg-green-950/20" : ""}
                       />
                     </div>
                     <div>
@@ -459,6 +704,7 @@ export default function EscalationCapturePage() {
                         value={daysLevel3.supervisorEmail}
                         onChange={e => setDaysLevel3({...daysLevel3, supervisorEmail: e.target.value})}
                         placeholder="email@exemplo.com"
+                        className={daysLevel3.supervisorEmail ? "bg-green-50 dark:bg-green-950/20" : ""}
                       />
                     </div>
                   </div>
