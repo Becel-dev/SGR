@@ -38,6 +38,7 @@ import type { IdentifiedRisk } from '@/lib/types';
 import { getIdentifiedRiskById, addOrUpdateIdentifiedRisk, getRiskAnalysisStatus } from '@/lib/azure-table-storage';
 import { topRiskOptions, riskFactorOptions, businessObjectivesOptions, getTopRiskOptions, getRiskFactorOptions } from '@/lib/form-options';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthUser } from '@/hooks/use-auth';
 
 const Section = ({ title, children, icon: Icon, defaultOpen = false, disabled = false }: { title: string, children: React.ReactNode, icon?: React.ElementType, defaultOpen?: boolean, disabled?: boolean }) => (
     <Accordion type="single" collapsible defaultValue={defaultOpen ? "item-1" : ""} disabled={disabled}>
@@ -114,6 +115,7 @@ export default function CaptureIdentifiedRiskPage() {
     const riskId = searchParams ? searchParams.get('id') : null;
     const isEditing = !!riskId;
     const { toast } = useToast();
+    const authUser = useAuthUser(); // Hook para obter usuário autenticado
     const [loading, setLoading] = React.useState(isEditing);
     const [isLocked, setIsLocked] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -195,7 +197,22 @@ export default function CaptureIdentifiedRiskPage() {
     const onSubmit = async (data: z.infer<typeof identifiedRiskSchema>) => {
         setError(null);
         try {
-            const savedRisk = await addOrUpdateIdentifiedRisk(data as IdentifiedRisk);
+            const now = new Date().toISOString();
+            const userName = `${authUser.name} (${authUser.email})`;
+            
+            // Adiciona informações de auditoria com usuário real
+            const riskData = {
+                ...data,
+                updatedBy: userName,
+                updatedAt: now,
+                // Se for novo registro, adiciona createdBy e createdAt
+                ...(!isEditing && {
+                    createdBy: userName,
+                    createdAt: now,
+                }),
+            };
+
+            const savedRisk = await addOrUpdateIdentifiedRisk(riskData as IdentifiedRisk);
             toast({
                 title: "Sucesso!",
                 description: `Risco ${isEditing ? 'atualizado' : 'cadastrado'} com sucesso.`,

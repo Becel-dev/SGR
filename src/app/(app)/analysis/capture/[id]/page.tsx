@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { UserAutocomplete } from '@/components/ui/user-autocomplete';
 import {
   getRiskAnalysisById,
   getIdentifiedRiskById,
@@ -686,7 +687,20 @@ export default function RiskAnalysisCapturePage() {
                 <h3 className="font-semibold text-lg text-primary">Gestão e Prazos</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center">
                     <div><Label>Status do Risco</Label><Badge variant={risk && 'status' in risk && risk.status === 'Em Análise' ? 'secondary' : 'destructive'}>{risk && 'status' in risk ? risk.status : 'Novo'}</Badge></div>
-                    <Controller name="responsavelBowtie" control={control} render={({ field }) => (<div><Label>Responsável pelo Bowtie</Label><Input {...field} /></div>)} />
+                    <Controller 
+                      name="responsavelBowtie" 
+                      control={control} 
+                      render={({ field }) => (
+                        <div>
+                          <Label>Responsável pelo Bowtie</Label>
+                          <UserAutocomplete 
+                            value={field.value} 
+                            onSelect={field.onChange}
+                            placeholder="Buscar usuário..."
+                          />
+                        </div>
+                      )} 
+                    />
                     <Controller name="horizonteTempo" control={control} render={({ field }) => (
                         <div><Label>Horizonte Tempo</Label>
                         <Select onValueChange={field.onChange} value={field.value}>
