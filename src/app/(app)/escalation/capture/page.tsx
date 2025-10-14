@@ -14,8 +14,25 @@ import { Badge } from '@/components/ui/badge';
 import type { Control, EscalationConfig, EscalationLevel } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
 import { Loader2 } from 'lucide-react';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 
 export default function EscalationCapturePage() {
+  const searchParams = useSearchParams();
+  const controlId = searchParams?.get('controlId');
+  const escalationId = searchParams?.get('id');
+  const isEditing = !!(controlId || escalationId);
+  
+  return (
+    <ProtectedRoute 
+      module="escalation" 
+      action={isEditing ? 'edit' : 'create'}
+    >
+      <EscalationCaptureContent />
+    </ProtectedRoute>
+  );
+}
+
+function EscalationCaptureContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();

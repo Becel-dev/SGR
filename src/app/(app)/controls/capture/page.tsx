@@ -46,6 +46,7 @@ import { useRef } from 'react';
 import { getCategoriaControleOptions } from '@/lib/form-options';
 import { UserAutocomplete } from '@/components/ui/user-autocomplete';
 import { useAuthUser } from '@/hooks/use-auth';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 
 
 // Add a 'key' property for React's reconciliation process
@@ -104,6 +105,21 @@ const Field = ({ label, children, className }: {label: string, children: React.R
 
 
 export default function CaptureControlPage() {
+    const searchParams = useSearchParams();
+    const controlId = searchParams ? searchParams.get('id') : null;
+    const isEditing = !!controlId;
+    
+    return (
+        <ProtectedRoute 
+            module="controles" 
+            action={isEditing ? 'edit' : 'create'}
+        >
+            <CaptureControlContent />
+        </ProtectedRoute>
+    );
+}
+
+function CaptureControlContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const controlId = searchParams ? searchParams.get('id') : null;

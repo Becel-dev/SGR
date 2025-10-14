@@ -25,8 +25,20 @@ import {
 import { useAuthUser } from '@/hooks/use-auth';
 import type { UserAccessControl, AccessProfile, EntraIdUser } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 
 export default function AccessControlCapturePage() {
+  const searchParams = useSearchParams();
+  const controlId = searchParams?.get('id') || null;
+  
+  return (
+    <ProtectedRoute module="controle-acesso" action={controlId ? 'edit' : 'create'}>
+      <AccessControlCaptureContent />
+    </ProtectedRoute>
+  );
+}
+
+function AccessControlCaptureContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const controlId = searchParams?.get('id') || null;

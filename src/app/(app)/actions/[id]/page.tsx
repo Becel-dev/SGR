@@ -24,11 +24,23 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import type { Action } from '@/lib/types';
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { PermissionButton } from '@/components/auth/permission-button';
+import { usePermission } from '@/hooks/use-permission';
 
 export default function ActionDetailPage() {
+  return (
+    <ProtectedRoute module="acoes" action="view">
+      <ActionDetailContent />
+    </ProtectedRoute>
+  );
+}
+
+function ActionDetailContent() {
   const params = useParams();
   const router = useRouter();
   const actionId = params?.id as string;
+  const canEditActions = usePermission('acoes', 'edit');
 
   const [action, setAction] = useState<Action | null>(null);
   const [loading, setLoading] = useState(true);
@@ -289,7 +301,12 @@ export default function ActionDetailPage() {
             <CardContent className="space-y-4">
               {/* Upload de evidência */}
               {currentStatus !== 'Concluída' && (
-                <div>
+                <div className={!canEditActions.allowed ? 'opacity-50 pointer-events-none' : ''}>
+                  {!canEditActions.allowed && (
+                    <p className="text-sm text-red-500 mb-2">
+                      Você não tem permissão para anexar evidências
+                    </p>
+                  )}
                   <Label htmlFor="evidence-upload" className="cursor-pointer">
                     <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-primary transition-colors">
                       {uploading ? (
@@ -310,7 +327,7 @@ export default function ActionDetailPage() {
                       type="file"
                       className="hidden"
                       onChange={handleFileUpload}
-                      disabled={uploading}
+                      disabled={uploading || !canEditActions.allowed}
                     />
                   </Label>
                 </div>
@@ -335,11 +352,17 @@ export default function ActionDetailPage() {
                             </p>
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm" asChild>
+                        <PermissionButton 
+                          module="acoes" 
+                          action="view" 
+                          variant="ghost" 
+                          size="sm" 
+                          asChild
+                        >
                           <a href={evidence.fileUrl} target="_blank" rel="noopener noreferrer">
                             <Download className="h-4 w-4" />
                           </a>
-                        </Button>
+                        </PermissionButton>
                       </div>
                     ))}
                   </div>

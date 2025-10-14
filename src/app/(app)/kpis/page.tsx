@@ -23,8 +23,18 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { PermissionButton } from '@/components/auth/permission-button';
 
 export default function KpisPage() {
+  return (
+    <ProtectedRoute module="kpis" action="view">
+      <KpisContent />
+    </ProtectedRoute>
+  );
+}
+
+function KpisContent() {
   const { toast } = useToast();
   const [kpis, setKpis] = useState<Kpi[]>([]);
   const [filteredKpis, setFilteredKpis] = useState<Kpi[]>([]);
@@ -249,10 +259,15 @@ export default function KpisPage() {
                             {/* Atalho para anexar evidência */}
                             <Dialog>
                               <DialogTrigger asChild>
-                                <Button variant="outline" size="sm">
+                                <PermissionButton 
+                                  module="kpis" 
+                                  action="edit" 
+                                  variant="outline" 
+                                  size="sm"
+                                >
                                   <Upload className="h-4 w-4 mr-1" />
                                   Anexar
-                                </Button>
+                                </PermissionButton>
                               </DialogTrigger>
                               <DialogContent>
                                 <DialogHeader>
@@ -289,23 +304,31 @@ export default function KpisPage() {
                             </Dialog>
 
                             {/* Ver detalhes */}
-                            <Button variant="outline" size="sm" asChild>
+                            <PermissionButton 
+                              module="kpis" 
+                              action="view" 
+                              variant="outline" 
+                              size="sm" 
+                              asChild
+                            >
                               <Link href={`/kpis/${kpi.id}`}>
                                 <Eye className="h-4 w-4 mr-1" />
                                 Ver
                               </Link>
-                            </Button>
+                            </PermissionButton>
 
                             {/* Excluir KPI */}
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button 
+                                <PermissionButton 
+                                  module="kpis" 
+                                  action="delete" 
                                   variant="ghost" 
                                   size="sm" 
                                   disabled={deletingKpiId === kpi.id}
                                 >
                                   <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
+                                </PermissionButton>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>

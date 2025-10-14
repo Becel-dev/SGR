@@ -12,8 +12,20 @@ import type { Control, Kpi, KpiResponsible } from '@/lib/types';
 import { Trash2, Plus } from 'lucide-react';
 import { UserAutocomplete } from '@/components/ui/user-autocomplete';
 import { useAuthUser } from '@/hooks/use-auth';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 
 export default function KpiCapturePage() {
+  const searchParams = useSearchParams();
+  const kpiId = searchParams?.get('id');
+  
+  return (
+    <ProtectedRoute module="kpis" action={kpiId ? 'edit' : 'create'}>
+      <KpiCaptureContent />
+    </ProtectedRoute>
+  );
+}
+
+function KpiCaptureContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();

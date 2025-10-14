@@ -14,6 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { getAccessProfileById, addOrUpdateAccessProfile } from '@/lib/azure-table-storage';
 import { useAuthUser } from '@/hooks/use-auth';
 import type { AccessProfile, ModulePermission } from '@/lib/types';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 
 // Definição de todos os módulos do sistema
 const SYSTEM_MODULES = [
@@ -30,6 +31,17 @@ const SYSTEM_MODULES = [
 ];
 
 export default function AccessProfileCapturePage() {
+  const searchParams = useSearchParams();
+  const profileId = searchParams?.get('id') || null;
+  
+  return (
+    <ProtectedRoute module="perfis-acesso" action={profileId ? 'edit' : 'create'}>
+      <AccessProfileCaptureContent />
+    </ProtectedRoute>
+  );
+}
+
+function AccessProfileCaptureContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const profileId = searchParams?.get('id') || null;

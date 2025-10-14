@@ -22,6 +22,7 @@ import {
   Save, 
   X 
 } from 'lucide-react';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 import {
   Dialog,
   DialogContent,
@@ -114,6 +115,14 @@ const TopRiskForm = ({
 };
 
 export default function TopRiskPage() {
+  return (
+    <ProtectedRoute module="parametros" action="view">
+      <TopRiskContent />
+    </ProtectedRoute>
+  );
+}
+
+function TopRiskContent() {
   const { toast } = useToast();
   const authUser = useAuthUser();
   const [topRisks, setTopRisks] = useState<TopRisk[]>([]);

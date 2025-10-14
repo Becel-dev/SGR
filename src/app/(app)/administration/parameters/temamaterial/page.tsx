@@ -22,6 +22,7 @@ import {
   Save, 
   X 
 } from 'lucide-react';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 import {
   Dialog,
   DialogContent,
@@ -114,6 +115,14 @@ const TemaMaterialForm = ({
 };
 
 export default function TemaMaterialPage() {
+  return (
+    <ProtectedRoute module="parametros" action="view">
+      <TemaMaterialContent />
+    </ProtectedRoute>
+  );
+}
+
+function TemaMaterialContent() {
   const { toast } = useToast();
   const authUser = useAuthUser();
   const [temasMateriais, setTemasMateriais] = useState<TemaMaterial[]>([]);

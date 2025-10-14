@@ -324,10 +324,10 @@ function BowtieContent() {
                 </div>
                  <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button>
+                        <PermissionButton module="bowtie" action="create">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Criar Novo Diagrama
-                        </Button>
+                        </PermissionButton>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
@@ -400,11 +400,19 @@ function BowtieContent() {
                                     <TableCell>v{diagram.version}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-1">
-                                            <Button variant="ghost" size="icon" onClick={() => setSelectedDiagram(diagram)}>
+                                            <PermissionButton 
+                                                module="bowtie" 
+                                                action="view" 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                onClick={() => setSelectedDiagram(diagram)}
+                                            >
                                                 <Eye className="h-4 w-4" />
                                                 <span className="sr-only">Visualizar</span>
-                                            </Button>
-                                            <Button 
+                                            </PermissionButton>
+                                            <PermissionButton 
+                                                module="bowtie" 
+                                                action="edit" 
                                                 variant="ghost" 
                                                 size="icon" 
                                                 onClick={() => handleApprove(diagram.id)}
@@ -412,7 +420,7 @@ function BowtieContent() {
                                             >
                                                 <CheckCircle className={cn("h-4 w-4", diagram.approvalStatus === 'Aprovado' ? 'text-green-500' : '')} />
                                                 <span className="sr-only">Aprovar</span>
-                                            </Button>
+                                            </PermissionButton>
                                             <BowtieVersionHistory 
                                                 riskId={diagram.riskId}
                                                 onSelectVersion={setSelectedDiagram}

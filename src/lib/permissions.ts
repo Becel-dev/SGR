@@ -12,6 +12,8 @@ export type SystemModule =
   | 'identificacao'
   | 'analise'
   | 'controles'
+  | 'kpis'
+  | 'acoes'
   | 'bowtie'
   | 'escalation'
   | 'melhoria'

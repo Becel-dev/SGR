@@ -22,6 +22,7 @@ import {
   ArrowRight,
   Target 
 } from 'lucide-react';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 
 // Definindo o tipo para uma única regra de IER
 type IerRule = {
@@ -74,6 +75,14 @@ const RuleRow = ({ rule, onChange, onRemove }: { rule: IerRule, onChange: (field
 );
 
 export default function ParametersPage() {
+  return (
+    <ProtectedRoute module="parametros" action="view">
+      <ParametersContent />
+    </ProtectedRoute>
+  );
+}
+
+function ParametersContent() {
   const { toast } = useToast();
   const [ierRules, setIerRules] = useState<IerRule[]>([]);
   const [loading, setLoading] = useState(true);

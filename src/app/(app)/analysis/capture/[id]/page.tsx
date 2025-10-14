@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
+import { PermissionButton } from '@/components/auth/permission-button';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -507,10 +508,16 @@ export default function RiskAnalysisCapturePage() {
                 {risk && 'status' in risk && risk.status === 'Em Análise' && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button type="button" variant="destructive" disabled={isSaving || isDeleting || isMarkingAsAnalyzed}>
+                      <PermissionButton 
+                        module="analise" 
+                        action="delete" 
+                        type="button" 
+                        variant="destructive" 
+                        disabled={isSaving || isDeleting || isMarkingAsAnalyzed}
+                      >
                         {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
                         Excluir Análise
-                      </Button>
+                      </PermissionButton>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
@@ -528,7 +535,9 @@ export default function RiskAnalysisCapturePage() {
                 )}
 
                 {risk && 'status' in risk && risk.status === 'Em Análise' && (
-                  <Button 
+                  <PermissionButton 
+                    module="analise" 
+                    action="edit" 
                     type="button" 
                     className="bg-green-600 hover:bg-green-700 text-white"
                     onClick={handleMarkAsAnalyzed} 
@@ -536,13 +545,18 @@ export default function RiskAnalysisCapturePage() {
                   >
                     {isMarkingAsAnalyzed ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
                     Marcar como Analisado
-                  </Button>
+                  </PermissionButton>
                 )}
 
-                <Button type="submit" disabled={isSaving || isDeleting || isMarkingAsAnalyzed}>
+                <PermissionButton 
+                  module="analise" 
+                  action="edit" 
+                  type="submit" 
+                  disabled={isSaving || isDeleting || isMarkingAsAnalyzed}
+                >
                     {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                     Salvar Análise
-                </Button>
+                </PermissionButton>
             </div>
           </div>
         </CardHeader>
@@ -757,10 +771,16 @@ export default function RiskAnalysisCapturePage() {
           {risk && 'status' in risk && risk.status !== 'Novo' && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button type="button" variant="destructive" disabled={isSaving || isDeleting || isMarkingAsAnalyzed}>
+                <PermissionButton 
+                  module="analise" 
+                  action="delete" 
+                  type="button" 
+                  variant="destructive" 
+                  disabled={isSaving || isDeleting || isMarkingAsAnalyzed}
+                >
                   {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
                   Excluir Análise
-                </Button>
+                </PermissionButton>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -778,7 +798,9 @@ export default function RiskAnalysisCapturePage() {
           )}
           {/* Botão Marcar como Analisado também no rodapé */}
           {risk && 'status' in risk && risk.status === 'Em Análise' && (
-            <Button
+            <PermissionButton
+              module="analise" 
+              action="edit"
               type="button"
               className="bg-green-600 hover:bg-green-700 text-white"
               onClick={handleMarkAsAnalyzed}
@@ -786,12 +808,17 @@ export default function RiskAnalysisCapturePage() {
             >
               {isMarkingAsAnalyzed ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
               Marcar como Analisado
-            </Button>
+            </PermissionButton>
           )}
-          <Button type="submit" disabled={isSaving || isDeleting || isMarkingAsAnalyzed}>
+          <PermissionButton 
+            module="analise" 
+            action="edit" 
+            type="submit" 
+            disabled={isSaving || isDeleting || isMarkingAsAnalyzed}
+          >
             {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
             Salvar Análise
-          </Button>
+          </PermissionButton>
         </CardFooter>
       </Card>
     </form>

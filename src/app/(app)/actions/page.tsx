@@ -16,8 +16,18 @@ import { Input } from '@/components/ui/input';
 import { AlertCircle, Search, Eye, FileText, Clock, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import type { Action } from '@/lib/types';
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { PermissionButton } from '@/components/auth/permission-button';
 
 export default function ActionsPage() {
+  return (
+    <ProtectedRoute module="acoes" action="view">
+      <ActionsContent />
+    </ProtectedRoute>
+  );
+}
+
+function ActionsContent() {
   const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -208,12 +218,18 @@ export default function ActionsPage() {
                           }).format(action.valorEstimado)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" asChild>
+                          <PermissionButton 
+                            module="acoes" 
+                            action="view" 
+                            variant="ghost" 
+                            size="sm" 
+                            asChild
+                          >
                             <Link href={`/actions/${action.id}`}>
                               <Eye className="h-4 w-4 mr-1" />
                               Ver
                             </Link>
-                          </Button>
+                          </PermissionButton>
                         </TableCell>
                       </TableRow>
                     );

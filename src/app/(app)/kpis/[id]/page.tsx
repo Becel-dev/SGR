@@ -23,12 +23,24 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { PermissionButton } from '@/components/auth/permission-button';
+import { usePermission } from '@/hooks/use-permission';
 
 export default function KpiDetailPage() {
+  return (
+    <ProtectedRoute module="kpis" action="view">
+      <KpiDetailContent />
+    </ProtectedRoute>
+  );
+}
+
+function KpiDetailContent() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
   const id = params?.id as string;
+  const canEditKpis = usePermission('kpis', 'edit');
 
   const [kpi, setKpi] = useState<Kpi | null>(null);
   const [loading, setLoading] = useState(true);
@@ -234,14 +246,19 @@ export default function KpiDetailPage() {
             <div className="flex gap-2">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="destructive" disabled={deleting}>
+                  <PermissionButton 
+                    module="kpis" 
+                    action="delete" 
+                    variant="destructive" 
+                    disabled={deleting}
+                  >
                     {deleting ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                       <Trash2 className="mr-2 h-4 w-4" />
                     )}
                     {deleting ? "Excluindo..." : "Excluir"}
-                  </Button>
+                  </PermissionButton>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -313,14 +330,16 @@ export default function KpiDetailPage() {
                 Responsáveis Adicionais ({kpi.responsibles?.length || 0})
               </Label>
               {!addingResponsible && (
-                <Button
+                <PermissionButton
+                  module="kpis"
+                  action="edit"
                   variant="outline"
                   size="sm"
                   onClick={() => setAddingResponsible(true)}
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   Adicionar Responsável
-                </Button>
+                </PermissionButton>
               )}
             </div>
 
@@ -386,13 +405,15 @@ export default function KpiDetailPage() {
                         {resp.name} <span className="text-muted-foreground">({resp.email})</span>
                       </span>
                     </div>
-                    <Button
+                    <PermissionButton
+                      module="kpis"
+                      action="edit"
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveResponsible(idx)}
                     >
                       <X className="h-4 w-4" />
-                    </Button>
+                    </PermissionButton>
                   </li>
                 ))}
               </ul>
@@ -408,12 +429,17 @@ export default function KpiDetailPage() {
       </Card>
 
       {/* Upload de Nova Evidência */}
-      <Card>
+      <Card className={!canEditKpis.allowed ? 'opacity-50 pointer-events-none' : ''}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
             Anexar Nova Evidência
           </CardTitle>
+          {!canEditKpis.allowed && (
+            <CardDescription className="text-red-500">
+              Você não tem permissão para anexar evidências
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -428,7 +454,7 @@ export default function KpiDetailPage() {
                   handleUploadEvidence(file);
                 }
               }}
-              disabled={uploading}
+              disabled={uploading || !canEditKpis.allowed}
             />
             {uploading && (
               <p className="text-sm text-muted-foreground">Enviando arquivo...</p>

@@ -39,6 +39,7 @@ import {
 
 import { getTopRiskOptions, getRiskFactorOptions, getTemasMaterialOptions } from '@/lib/form-options';
 import { getRisksForAnalysis } from '@/lib/azure-table-storage';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 
 // TopRisks dinâmicos serão carregados do Azure Storage
 // RiskFactors dinâmicos serão carregados do Azure Storage - removido array estático
@@ -110,6 +111,21 @@ const Field = ({ label, children, className }: {label: string, children: React.R
 )
 
 export default function CaptureRiskPage() {
+    const searchParams = useSearchParams();
+    const riskId = searchParams ? searchParams.get('id') : null;
+    const isEditing = !!riskId;
+    
+    return (
+        <ProtectedRoute 
+            module="analise" 
+            action={isEditing ? 'edit' : 'create'}
+        >
+            <CaptureRiskContent />
+        </ProtectedRoute>
+    );
+}
+
+function CaptureRiskContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const riskId = searchParams ? searchParams.get('id') : null;

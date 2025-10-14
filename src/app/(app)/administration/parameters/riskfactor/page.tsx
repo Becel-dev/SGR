@@ -22,6 +22,8 @@ import {
   Save, 
   X 
 } from 'lucide-react';
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { PermissionButton } from '@/components/auth/permission-button';
 import {
   Dialog,
   DialogContent,
@@ -133,6 +135,14 @@ const RiskFactorForm = ({
 };
 
 export default function RiskFactorPage() {
+  return (
+    <ProtectedRoute module="parametros" action="view">
+      <RiskFactorContent />
+    </ProtectedRoute>
+  );
+}
+
+function RiskFactorContent() {
   const { toast } = useToast();
   const authUser = useAuthUser();
   const [riskFactors, setRiskFactors] = useState<RiskFactor[]>([]);

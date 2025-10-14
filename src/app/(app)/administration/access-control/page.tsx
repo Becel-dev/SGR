@@ -28,8 +28,18 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { getAllUserAccessControls, deleteUserAccessControl } from '@/lib/azure-table-storage';
 import type { UserAccessControl } from '@/lib/types';
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { PermissionButton } from '@/components/auth/permission-button';
 
 export default function AccessControlPage() {
+  return (
+    <ProtectedRoute module="controle-acesso" action="view">
+      <AccessControlContent />
+    </ProtectedRoute>
+  );
+}
+
+function AccessControlContent() {
   const router = useRouter();
   const [controls, setControls] = useState<UserAccessControl[]>([]);
   const [filteredControls, setFilteredControls] = useState<UserAccessControl[]>([]);
@@ -130,10 +140,14 @@ export default function AccessControlPage() {
                 Gerencie o vínculo de usuários do EntraID aos perfis de acesso
               </CardDescription>
             </div>
-            <Button onClick={() => router.push('/administration/access-control/capture')}>
+            <PermissionButton 
+              module="controle-acesso" 
+              action="create" 
+              onClick={() => router.push('/administration/access-control/capture')}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Vincular Usuário
-            </Button>
+            </PermissionButton>
           </div>
         </CardHeader>
         <CardContent>
@@ -161,10 +175,14 @@ export default function AccessControlPage() {
                 {searchTerm ? 'Nenhum controle encontrado com esse critério' : 'Nenhum controle de acesso cadastrado'}
               </p>
               {!searchTerm && (
-                <Button onClick={() => router.push('/administration/access-control/capture')}>
+                <PermissionButton 
+                  module="controle-acesso" 
+                  action="create" 
+                  onClick={() => router.push('/administration/access-control/capture')}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Vincular primeiro usuário
-                </Button>
+                </PermissionButton>
               )}
             </div>
           ) : (
@@ -210,20 +228,24 @@ export default function AccessControlPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button
+                          <PermissionButton
+                            module="controle-acesso"
+                            action="edit"
                             variant="ghost"
                             size="icon"
                             onClick={() => router.push(`/administration/access-control/capture?id=${control.id}`)}
                           >
                             <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
+                          </PermissionButton>
+                          <PermissionButton
+                            module="controle-acesso"
+                            action="delete"
                             variant="ghost"
                             size="icon"
                             onClick={() => openDeleteDialog(control)}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
+                          </PermissionButton>
                         </div>
                       </TableCell>
                     </TableRow>

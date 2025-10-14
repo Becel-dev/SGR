@@ -30,6 +30,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { PermissionButton } from '@/components/auth/permission-button';
 
 
 const DetailItem = ({ label, value, className }: { label: string, value: React.ReactNode, className?: string }) => {
@@ -69,6 +71,14 @@ const formatDate = (value: unknown) => {
 
 
 export default function ControlDetailPage() {
+    return (
+        <ProtectedRoute module="controles" action="view">
+            <ControlDetailContent />
+        </ProtectedRoute>
+    );
+}
+
+function ControlDetailContent() {
     const params = useParams();
     const router = useRouter();
     const { toast } = useToast();
@@ -317,24 +327,24 @@ export default function ControlDetailPage() {
       </CardContent>
        <CardFooter className="flex justify-between">
             <div className="flex gap-2">
-                <Button asChild>
+                <PermissionButton module="kpis" action="create" asChild>
                     <Link href={`/kpis/capture?controlId=${control.id}`}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Adicionar KPI
                     </Link>
-                </Button>
+                </PermissionButton>
             </div>
             <div className="flex gap-2">
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <Button variant="destructive" disabled={deleting}>
+                        <PermissionButton module="controles" action="delete" variant="destructive" disabled={deleting}>
                             {deleting ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             ) : (
                                 <Trash2 className="mr-2 h-4 w-4" />
                             )}
                             {deleting ? "Excluindo..." : "Excluir Controle"}
-                        </Button>
+                        </PermissionButton>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
@@ -352,12 +362,12 @@ export default function ControlDetailPage() {
                     </AlertDialogContent>
                 </AlertDialog>
                 
-                <Button asChild disabled={deleting}>
+                <PermissionButton module="controles" action="edit" asChild disabled={deleting}>
                     <Link href={`/controls/capture?id=${control.id}`}>
                         <Edit className="mr-2 h-4 w-4" />
                         Editar Controle
                     </Link>
-                </Button>
+                </PermissionButton>
             </div>
        </CardFooter>
     </Card>

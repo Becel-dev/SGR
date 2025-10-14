@@ -35,6 +35,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { Download } from 'lucide-react';
 // import { controlsData } from '@/lib/mock-data';
+import { PermissionButton } from '@/components/auth/permission-button';
 
 
 const statusColors: Record<BowtieBarrierNode['status'], string> = {
@@ -675,9 +676,14 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete, readOnly = false }: { 
                     </Button>
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="outline" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+                            <PermissionButton 
+                              module="bowtie" 
+                              action="delete" 
+                              variant="outline" 
+                              className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                            >
                                 <Trash2 className="mr-2 h-4 w-4" /> Excluir Diagrama
-                            </Button>
+                            </PermissionButton>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>

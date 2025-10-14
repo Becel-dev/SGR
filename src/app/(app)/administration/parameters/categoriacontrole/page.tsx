@@ -22,6 +22,7 @@ import {
   Save, 
   X 
 } from 'lucide-react';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 import {
   Dialog,
   DialogContent,
@@ -114,6 +115,14 @@ const CategoriaControleForm = ({
 };
 
 export default function CategoriaControlePage() {
+  return (
+    <ProtectedRoute module="parametros" action="view">
+      <CategoriaControleContent />
+    </ProtectedRoute>
+  );
+}
+
+function CategoriaControleContent() {
   const { toast } = useToast();
   const authUser = useAuthUser();
   const [categoriasControle, setCategoriasControle] = useState<CategoriaControle[]>([]);
