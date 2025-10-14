@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Eye, CheckCircle, GitFork } from "lucide-react";
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
+import { usePermission } from '@/hooks/use-permission';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,6 +57,11 @@ export default function BowtiePage() {
 }
 
 function BowtieContent() {
+  // ⚡ OTIMIZAÇÃO: Carregar permissões UMA VEZ no componente pai
+  const canViewBowtie = usePermission('bowtie', 'view');
+  const canCreateBowtie = usePermission('bowtie', 'create');
+  const canEditBowtie = usePermission('bowtie', 'edit');
+  
   const [bowtieDiagrams, setBowtieDiagrams] = useState<BowtieData[]>([]);
   const [risksData, setRisksData] = useState<Risk[]>([]);
   const [selectedDiagram, setSelectedDiagram] = useState<BowtieData | null>(null);
@@ -324,10 +330,10 @@ function BowtieContent() {
                 </div>
                  <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <PermissionButton module="bowtie" action="create">
+                        <Button disabled={!canCreateBowtie.allowed}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Criar Novo Diagrama
-                        </PermissionButton>
+                        </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
@@ -400,27 +406,24 @@ function BowtieContent() {
                                     <TableCell>v{diagram.version}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-1">
-                                            <PermissionButton 
-                                                module="bowtie" 
-                                                action="view" 
+                                            <Button 
                                                 variant="ghost" 
                                                 size="icon" 
                                                 onClick={() => setSelectedDiagram(diagram)}
+                                                disabled={!canViewBowtie.allowed}
                                             >
                                                 <Eye className="h-4 w-4" />
                                                 <span className="sr-only">Visualizar</span>
-                                            </PermissionButton>
-                                            <PermissionButton 
-                                                module="bowtie" 
-                                                action="edit" 
+                                            </Button>
+                                            <Button 
                                                 variant="ghost" 
                                                 size="icon" 
                                                 onClick={() => handleApprove(diagram.id)}
-                                                disabled={diagram.approvalStatus === 'Aprovado'}
+                                                disabled={diagram.approvalStatus === 'Aprovado' || !canEditBowtie.allowed}
                                             >
                                                 <CheckCircle className={cn("h-4 w-4", diagram.approvalStatus === 'Aprovado' ? 'text-green-500' : '')} />
                                                 <span className="sr-only">Aprovar</span>
-                                            </PermissionButton>
+                                            </Button>
                                             <BowtieVersionHistory 
                                                 riskId={diagram.riskId}
                                                 onSelectVersion={setSelectedDiagram}

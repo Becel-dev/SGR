@@ -18,6 +18,7 @@ import Link from 'next/link';
 import type { Action } from '@/lib/types';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
+import { usePermission } from '@/hooks/use-permission';
 
 export default function ActionsPage() {
   return (
@@ -28,6 +29,9 @@ export default function ActionsPage() {
 }
 
 function ActionsContent() {
+  // ⚡ OTIMIZAÇÃO: Carregar permissões UMA VEZ no componente pai
+  const canViewActions = usePermission('acoes', 'view');
+  
   const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -218,18 +222,17 @@ function ActionsContent() {
                           }).format(action.valorEstimado)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <PermissionButton 
-                            module="acoes" 
-                            action="view" 
+                          <Button 
                             variant="ghost" 
                             size="sm" 
                             asChild
+                            disabled={!canViewActions.allowed}
                           >
                             <Link href={`/actions/${action.id}`}>
                               <Eye className="h-4 w-4 mr-1" />
                               Ver
                             </Link>
-                          </PermissionButton>
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
