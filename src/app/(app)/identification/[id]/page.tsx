@@ -31,6 +31,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { PermissionButton } from '@/components/auth/permission-button';
 
 
 const DetailItem = ({ label, value, className }: { label: string, value: React.ReactNode, className?: string }) => {
@@ -67,6 +69,15 @@ const RatingItem = ({ label, value }: {label:string, value: number}) => (
 
 
 export default function IdentifiedRiskDetailPage() {
+    // Proteger a página de detalhes - requer permissão de visualização
+    return (
+        <ProtectedRoute module="identificacao" action="view">
+            <IdentifiedRiskDetailContent />
+        </ProtectedRoute>
+    );
+}
+
+function IdentifiedRiskDetailContent() {
     const params = useParams();
     const router = useRouter();
     const { toast } = useToast();
@@ -228,7 +239,14 @@ export default function IdentifiedRiskDetailPage() {
        <CardFooter className="flex justify-between">
             <AlertDialog>
                 <AlertDialogTrigger asChild>
-                    <Button variant="destructive" disabled={deleting}><Trash2 className="mr-2 h-4 w-4" /> {deleting ? "Excluindo..." : "Excluir Risco"}</Button>
+                    <PermissionButton 
+                        module="identificacao" 
+                        action="delete"
+                        variant="destructive" 
+                        disabled={deleting}
+                    >
+                        <Trash2 className="mr-2 h-4 w-4" /> {deleting ? "Excluindo..." : "Excluir Risco"}
+                    </PermissionButton>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -243,9 +261,14 @@ export default function IdentifiedRiskDetailPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            <Button asChild disabled={deleting}>
+            <PermissionButton 
+                module="identificacao" 
+                action="edit"
+                disabled={deleting}
+                asChild
+            >
                 <Link href={`/identification/capture?id=${risk.id}`}>Editar Ficha</Link>
-            </Button>
+            </PermissionButton>
        </CardFooter>
     </Card>
   );

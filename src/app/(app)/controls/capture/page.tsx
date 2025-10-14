@@ -118,7 +118,7 @@ export default function CaptureControlPage() {
 
     const [formMessage, setFormMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const formRef = useRef<HTMLFormElement>(null);
-    const authUser = useAuthUser();
+    const authUser = useAuthUser(); // ✅ Hook deve ser chamado no topo do componente
 
     const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<z.infer<typeof controlSchema>>({
         resolver: zodResolver(controlSchema),
@@ -245,8 +245,12 @@ export default function CaptureControlPage() {
     };
 
     const onSubmit = async (data: z.infer<typeof controlSchema>) => {
-        console.log("=== DEBUG: onSubmit INICIADO ===");
-        console.log("Data recebida:", data);
+        // Verificar se a sessão ainda está carregando
+        if (authUser.isLoading) {
+            setFormMessage({ type: 'error', text: 'Aguardando autenticação carregar. Tente novamente em alguns segundos.' });
+            return;
+        }
+        
         setIsSubmitting(true);
         setFormMessage(null);
 
@@ -286,6 +290,8 @@ export default function CaptureControlPage() {
                 emailDono = match[1].trim();
             }
 
+            const userForAudit = `${authUser.name} (${authUser.email})`;
+
             // Constrói o objeto Control explicitamente para evitar incluir tipos incompatíveis (FileList)
             const controlData: Control = {
                 id: controlId || `CTRL-${Date.now()}`,
@@ -301,9 +307,9 @@ export default function CaptureControlPage() {
                 preenchimentoKPI: data.preenchimentoKPI,
                 onePager: onePagerUrl || (typeof data.onePager === 'string' ? data.onePager : ''),
                 criadoEm: data.criadoEm || new Date().toISOString(),
-                criadoPor: data.criadoPor || `${authUser.name} (${authUser.email})`,
+                criadoPor: data.criadoPor || userForAudit,
                 modificadoEm: new Date().toISOString(),
-                modificadoPor: `${authUser.name} (${authUser.email})`,
+                modificadoPor: userForAudit,
                 associatedRisks: data.associatedRisks.map(({ riskId, codigoMUE, titulo }) => ({
                     riskId,
                     codigoMUE: codigoMUE || '',
@@ -317,19 +323,9 @@ export default function CaptureControlPage() {
                 criadoEm: controlData.criadoEm instanceof Date ? controlData.criadoEm.toISOString() : (controlData.criadoEm || new Date().toISOString()),
             };
 
-            console.log("=== DEBUG: Dados do controle antes de salvar ===");
-            console.log("controlId:", controlId);
-            console.log("isEditing:", isEditing);
-            console.log("controlData:", controlData);
-            console.log("categoria:", controlData.categoria);
-
             // Usa a API REST ao invés de chamada direta
             const apiUrl = isEditing ? `/api/controls/${controlId}` : '/api/controls';
             const apiMethod = isEditing ? 'PUT' : 'POST';
-            
-            console.log("=== DEBUG: Chamando API ===");
-            console.log("URL:", apiUrl);
-            console.log("Method:", apiMethod);
             
             const saveResponse = await fetch(apiUrl, {
                 method: apiMethod,
@@ -339,18 +335,12 @@ export default function CaptureControlPage() {
                 body: JSON.stringify(controlDataToSend),
             });
 
-            console.log("=== DEBUG: Resposta da API ===");
-            console.log("Status:", saveResponse.status);
-            console.log("OK:", saveResponse.ok);
-
             if (!saveResponse.ok) {
                 const errorData = await saveResponse.json();
-                console.error("=== DEBUG: Erro da API ===", errorData);
                 throw new Error(errorData.message || 'Falha ao salvar o controle.');
             }
 
             const responseData = await saveResponse.json();
-            console.log("=== DEBUG: Sucesso! ===", responseData);
 
             clearTimeout(timeoutId);
             toast({
@@ -359,14 +349,10 @@ export default function CaptureControlPage() {
             });
             setFormMessage({ type: 'success', text: isEditing ? 'O controle foi atualizado com sucesso.' : 'O novo controle foi salvo com sucesso.' });
             
-            console.log("=== DEBUG: Redirecionando para /controls ===");
             router.push('/controls');
 
         } catch (error) {
-            console.error("=== DEBUG: ERRO CAPTURADO ===");
             console.error("Erro ao salvar o controle:", error);
-            console.error("Tipo do erro:", typeof error);
-            console.error("Stack trace:", error instanceof Error ? error.stack : 'N/A');
             
             const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
             
@@ -379,7 +365,6 @@ export default function CaptureControlPage() {
             setFormMessage({ type: 'error', text: errorMessage });
         } finally {
             clearTimeout(timeoutId);
-            console.log("=== DEBUG: Finally - setIsSubmitting(false) ===");
             setIsSubmitting(false);
         }
     };

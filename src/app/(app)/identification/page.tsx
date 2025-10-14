@@ -12,8 +12,19 @@ import { getIdentifiedRisks } from "@/lib/azure-table-storage";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import type { IdentifiedRisk } from "@/lib/types";
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { PermissionButton } from '@/components/auth/permission-button';
+import { useCanCreate } from '@/hooks/use-permission';
 
 export default function IdentificationPage() {
+  return (
+    <ProtectedRoute module="identificacao" action="view">
+      <IdentificationContent />
+    </ProtectedRoute>
+  );
+}
+
+function IdentificationContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [risks, setRisks] = useState<IdentifiedRisk[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,14 +85,21 @@ export default function IdentificationPage() {
                         disabled={loading}
                     />
                 </div>
-                <Button size="sm" className="h-9 gap-1" asChild disabled={loading}>
+                <PermissionButton 
+                  module="identificacao" 
+                  action="create"
+                  size="sm" 
+                  className="h-9 gap-1"
+                  asChild
+                  disabled={loading}
+                >
                   <Link href="/identification/capture">
                     <PlusCircle className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                     Identificar Novo Risco
                     </span>
                   </Link>
-                </Button>
+                </PermissionButton>
                 <Button size="sm" variant="outline" className="h-9" onClick={fetchRisks} disabled={loading}>
                   Atualizar
                 </Button>

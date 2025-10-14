@@ -39,6 +39,7 @@ import { getIdentifiedRiskById, addOrUpdateIdentifiedRisk, getRiskAnalysisStatus
 import { topRiskOptions, riskFactorOptions, businessObjectivesOptions, getTopRiskOptions, getRiskFactorOptions } from '@/lib/form-options';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthUser } from '@/hooks/use-auth';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 
 const Section = ({ title, children, icon: Icon, defaultOpen = false, disabled = false }: { title: string, children: React.ReactNode, icon?: React.ElementType, defaultOpen?: boolean, disabled?: boolean }) => (
     <Accordion type="single" collapsible defaultValue={defaultOpen ? "item-1" : ""} disabled={disabled}>
@@ -110,12 +111,30 @@ const RatingSlider = ({ label, helpText, field, disabled }: { label: string, hel
 );
 
 export default function CaptureIdentifiedRiskPage() {
+    const searchParams = useSearchParams();
+    const riskId = searchParams ? searchParams.get('id') : null;
+    const isEditing = !!riskId;
+    
+    // Proteger a página com ACL
+    // Se está editando, precisa de permissão de 'edit'
+    // Se está criando, precisa de permissão de 'create'
+    return (
+        <ProtectedRoute 
+            module="identificacao" 
+            action={isEditing ? 'edit' : 'create'}
+        >
+            <CaptureIdentifiedRiskContent />
+        </ProtectedRoute>
+    );
+}
+
+function CaptureIdentifiedRiskContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const riskId = searchParams ? searchParams.get('id') : null;
     const isEditing = !!riskId;
     const { toast } = useToast();
-    const authUser = useAuthUser(); // Hook para obter usuário autenticado
+    const authUser = useAuthUser(); // ✅ Hook deve ser chamado no topo do componente
     const [loading, setLoading] = React.useState(isEditing);
     const [isLocked, setIsLocked] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -196,6 +215,17 @@ export default function CaptureIdentifiedRiskPage() {
 
     const onSubmit = async (data: z.infer<typeof identifiedRiskSchema>) => {
         setError(null);
+        
+        // ✅ Verificar se a sessão ainda está carregando
+        if (authUser.isLoading) {
+            toast({
+                variant: 'destructive',
+                title: 'Aguarde',
+                description: 'Aguardando autenticação carregar. Tente novamente em alguns segundos.',
+            });
+            return;
+        }
+        
         try {
             const now = new Date().toISOString();
             const userName = `${authUser.name} (${authUser.email})`;

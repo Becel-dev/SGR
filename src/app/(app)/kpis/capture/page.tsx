@@ -90,7 +90,7 @@ export default function KpiCapturePage() {
     }
   };
 
-  const authUser = useAuthUser();
+  const authUser = useAuthUser(); // ✅ Hook deve ser chamado no topo do componente
 
   const addResponsible = () => {
     setResponsibles([...responsibles, { name: '', email: '' }]);
@@ -134,10 +134,22 @@ export default function KpiCapturePage() {
       return;
     }
 
+    // Verificar se a sessão ainda está carregando
+    if (authUser.isLoading) {
+      toast({
+        title: 'Aguarde',
+        description: 'Aguardando autenticação carregar. Tente novamente em alguns segundos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     // No momento da criação, dataInicioVerificacao = dataProximaVerificacao
     const dataInicio = dataProximaVerificacao;
+
+    const userForAudit = `${authUser.name} (${authUser.email})`;
 
     const kpiData = {
       controlId: selectedControl.id,
@@ -150,9 +162,9 @@ export default function KpiCapturePage() {
       dataProximaVerificacao,
       frequenciaDias,
       evidenceFiles: [],
-      createdBy: isEdit ? undefined : `${authUser.name} (${authUser.email})`,
+      createdBy: isEdit ? undefined : userForAudit,
       createdAt: isEdit ? undefined : new Date().toISOString(),
-      updatedBy: `${authUser.name} (${authUser.email})`,
+      updatedBy: userForAudit,
       updatedAt: new Date().toISOString(),
     };
 

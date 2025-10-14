@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { getRisksForAnalysis } from "@/lib/azure-table-storage";
 import { getIerRules, getIerClassification } from "@/lib/ier-utils";
 import type { RiskAnalysis, IerRule } from "@/lib/types";
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { PermissionButton } from '@/components/auth/permission-button';
 
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
     'Novo': 'destructive',
@@ -40,6 +42,14 @@ const getBadgeVariant = (status: string): "default" | "secondary" | "destructive
 };
 
 export default function RiskAnalysisPage() {
+  return (
+    <ProtectedRoute module="analise" action="view">
+      <RiskAnalysisContent />
+    </ProtectedRoute>
+  );
+}
+
+function RiskAnalysisContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [risks, setRisks] = useState<RiskAnalysis[]>([]);
   const [ierRules, setIerRules] = useState<IerRule[]>([]);

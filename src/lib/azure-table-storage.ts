@@ -4,7 +4,7 @@
 
 import { TableClient, TableEntity, AzureNamedKeyCredential } from "@azure/data-tables";
 // Removido mockData: integração 100% Azure
-import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk, BowtieData, TopRisk, RiskFactor, TemaMaterial, CategoriaControle, EscalationConfig, Action } from './types';
+import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk, BowtieData, TopRisk, RiskFactor, TemaMaterial, CategoriaControle, EscalationConfig, Action, AccessProfile, UserAccessControl } from './types';
 
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const identifiedRisksTableName = "identifiedrisks";
@@ -508,12 +508,22 @@ export async function addOrUpdateIdentifiedRisk(riskData: IdentifiedRisk): Promi
         await client.createTable();
         const now = new Date().toISOString();
         let risk = { ...riskData };
+        
+        // Mantém os valores de auditoria enviados pelo frontend
+        // Só preenche com valores padrão se não foram fornecidos
         if (!risk.createdAt) {
             risk.createdAt = now;
-            risk.createdBy = "Sistema";
         }
-        risk.updatedAt = now;
-        risk.updatedBy = "Sistema";
+        if (!risk.createdBy) {
+            risk.createdBy = "Sistema (sistema@sgr.com)";
+        }
+        if (!risk.updatedAt) {
+            risk.updatedAt = now;
+        }
+        if (!risk.updatedBy) {
+            risk.updatedBy = "Sistema (sistema@sgr.com)";
+        }
+        
         const entity = toIdentifiedRiskTableEntity(risk);
         await client.upsertEntity(entity, "Merge");
         return fromIdentifiedRiskTableEntity(entity);
@@ -820,12 +830,19 @@ export async function addOrUpdateBowtie(bowtieData: BowtieData): Promise<BowtieD
             }
         }
         
+        // Mantém os valores de auditoria enviados pelo frontend
         if (!bowtieToSave.createdAt) {
             bowtieToSave.createdAt = now;
-            bowtieToSave.createdBy = "Sistema"; // Substituir pelo usuário logado
         }
-        bowtieToSave.updatedAt = now;
-        bowtieToSave.updatedBy = "Sistema"; // Substituir pelo usuário logado
+        if (!bowtieToSave.createdBy) {
+            bowtieToSave.createdBy = "Sistema (sistema@sgr.com)";
+        }
+        if (!bowtieToSave.updatedAt) {
+            bowtieToSave.updatedAt = now;
+        }
+        if (!bowtieToSave.updatedBy) {
+            bowtieToSave.updatedBy = "Sistema (sistema@sgr.com)";
+        }
 
         const entity = toBowtieTableEntity(bowtieToSave);
         await client.upsertEntity(entity, "Merge");
@@ -1684,12 +1701,20 @@ export async function addOrUpdateEscalation(escalation: EscalationConfig): Promi
         const now = new Date().toISOString();
         
         let escalationToSave = { ...escalation };
+        
+        // Mantém os valores de auditoria enviados pelo frontend
         if (!escalationToSave.createdAt) {
             escalationToSave.createdAt = now;
-            escalationToSave.createdBy = "Sistema"; // Substituir pelo usuário logado
         }
-        escalationToSave.updatedAt = now;
-        escalationToSave.updatedBy = "Sistema"; // Substituir pelo usuário logado
+        if (!escalationToSave.createdBy) {
+            escalationToSave.createdBy = "Sistema (sistema@sgr.com)";
+        }
+        if (!escalationToSave.updatedAt) {
+            escalationToSave.updatedAt = now;
+        }
+        if (!escalationToSave.updatedBy) {
+            escalationToSave.updatedBy = "Sistema (sistema@sgr.com)";
+        }
 
         const entity = toEscalationTableEntity(escalationToSave);
         await client.upsertEntity(entity, "Merge");
@@ -1827,12 +1852,20 @@ export async function addOrUpdateAction(action: Action): Promise<Action> {
         const now = new Date().toISOString();
         
         let actionToSave = { ...action };
+        
+        // Mantém os valores de auditoria enviados pelo frontend
         if (!actionToSave.createdAt) {
             actionToSave.createdAt = now;
-            actionToSave.createdBy = "Sistema"; // Substituir pelo usuário logado
         }
-        actionToSave.updatedAt = now;
-        actionToSave.updatedBy = "Sistema"; // Substituir pelo usuário logado
+        if (!actionToSave.createdBy) {
+            actionToSave.createdBy = "Sistema (sistema@sgr.com)";
+        }
+        if (!actionToSave.updatedAt) {
+            actionToSave.updatedAt = now;
+        }
+        if (!actionToSave.updatedBy) {
+            actionToSave.updatedBy = "Sistema (sistema@sgr.com)";
+        }
 
         const entity = toActionTableEntity(actionToSave);
         await client.upsertEntity(entity, "Merge");
@@ -1855,5 +1888,235 @@ export async function deleteAction(id: string): Promise<void> {
         }
         console.error("Erro ao excluir a Action:", error);
         throw new Error("Falha ao excluir a Action no Azure Table Storage.");
+    }
+}
+
+// ---- Funções CRUD para Access Profiles ----
+
+const accessProfilesTableName = "accessprofiles";
+
+const toAccessProfileTableEntity = (profile: AccessProfile): TableEntity<any> => {
+    const { id, ...rest } = profile;
+    return {
+        partitionKey: "global",
+        rowKey: id,
+        ...rest,
+        permissions: JSON.stringify(rest.permissions), // Serializar array
+    };
+};
+
+const fromAccessProfileTableEntity = (entity: TableEntity<any>): AccessProfile => {
+    const profile: any = {};
+    for (const key in entity) {
+        if (key !== 'partitionKey' && key !== 'rowKey' && key !== 'etag' && key !== 'timestamp' && !key.endsWith('@odata.type')) {
+            profile[key] = entity[key];
+        }
+    }
+    profile.id = entity.rowKey;
+    
+    // Deserializar permissions
+    if (profile.permissions && typeof profile.permissions === 'string') {
+        try {
+            profile.permissions = JSON.parse(profile.permissions);
+        } catch (e) {
+            profile.permissions = [];
+        }
+    }
+    
+    return profile as AccessProfile;
+};
+
+export async function getAllAccessProfiles(): Promise<AccessProfile[]> {
+    const client = getClient(accessProfilesTableName);
+    try {
+        await client.createTable();
+        const entities = client.listEntities<TableEntity<any>>();
+        const profiles: AccessProfile[] = [];
+        for await (const entity of entities) {
+            profiles.push(fromAccessProfileTableEntity(entity));
+        }
+        return profiles;
+    } catch (error) {
+        console.error("Erro ao buscar perfis de acesso:", error);
+        return [];
+    }
+}
+
+export async function getAccessProfileById(id: string): Promise<AccessProfile | undefined> {
+    const client = getClient(accessProfilesTableName);
+    try {
+        const entity = await client.getEntity<TableEntity<any>>("global", id);
+        return fromAccessProfileTableEntity(entity);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            return undefined;
+        }
+        console.error(`Erro ao buscar perfil de acesso com ID ${id}:`, error);
+        return undefined;
+    }
+}
+
+export async function addOrUpdateAccessProfile(profile: AccessProfile): Promise<AccessProfile> {
+    const client = getClient(accessProfilesTableName);
+    try {
+        await client.createTable();
+        const now = new Date().toISOString();
+        
+        let profileToSave = { ...profile };
+        
+        // Mantém os valores de auditoria enviados pelo frontend
+        if (!profileToSave.createdAt) {
+            profileToSave.createdAt = now;
+        }
+        if (!profileToSave.createdBy) {
+            profileToSave.createdBy = "Sistema (sistema@sgr.com)";
+        }
+        if (!profileToSave.updatedAt) {
+            profileToSave.updatedAt = now;
+        }
+        if (!profileToSave.updatedBy) {
+            profileToSave.updatedBy = "Sistema (sistema@sgr.com)";
+        }
+
+        const entity = toAccessProfileTableEntity(profileToSave);
+        await client.upsertEntity(entity, "Merge");
+        return fromAccessProfileTableEntity(entity);
+    } catch (error) {
+        console.error("Erro ao salvar o perfil de acesso:", error);
+        throw new Error("Falha ao salvar o perfil de acesso no Azure Table Storage.");
+    }
+}
+
+export async function deleteAccessProfile(id: string): Promise<void> {
+    const client = getClient(accessProfilesTableName);
+    try {
+        await client.deleteEntity("global", id);
+        console.log(`Perfil de acesso com ID ${id} excluído com sucesso.`);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            console.warn(`Tentativa de excluir perfil de acesso não encontrado (ID: ${id}).`);
+            return;
+        }
+        console.error("Erro ao excluir o perfil de acesso:", error);
+        throw new Error("Falha ao excluir o perfil de acesso no Azure Table Storage.");
+    }
+}
+
+// ---- Funções CRUD para User Access Control ----
+
+const userAccessControlTableName = "useraccesscontrol";
+
+const toUserAccessControlTableEntity = (control: UserAccessControl): TableEntity<any> => {
+    const { id, ...rest } = control;
+    return {
+        partitionKey: "global",
+        rowKey: id,
+        ...rest,
+    };
+};
+
+const fromUserAccessControlTableEntity = (entity: TableEntity<any>): UserAccessControl => {
+    const control: any = {};
+    for (const key in entity) {
+        if (key !== 'partitionKey' && key !== 'rowKey' && key !== 'etag' && key !== 'timestamp' && !key.endsWith('@odata.type')) {
+            control[key] = entity[key];
+        }
+    }
+    control.id = entity.rowKey;
+    return control as UserAccessControl;
+};
+
+export async function getAllUserAccessControls(): Promise<UserAccessControl[]> {
+    const client = getClient(userAccessControlTableName);
+    try {
+        await client.createTable();
+        const entities = client.listEntities<TableEntity<any>>();
+        const controls: UserAccessControl[] = [];
+        for await (const entity of entities) {
+            controls.push(fromUserAccessControlTableEntity(entity));
+        }
+        return controls;
+    } catch (error) {
+        console.error("Erro ao buscar controles de acesso de usuários:", error);
+        return [];
+    }
+}
+
+export async function getUserAccessControlById(id: string): Promise<UserAccessControl | undefined> {
+    const client = getClient(userAccessControlTableName);
+    try {
+        const entity = await client.getEntity<TableEntity<any>>("global", id);
+        return fromUserAccessControlTableEntity(entity);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            return undefined;
+        }
+        console.error(`Erro ao buscar controle de acesso com ID ${id}:`, error);
+        return undefined;
+    }
+}
+
+export async function getUserAccessControlByUserId(userId: string): Promise<UserAccessControl | undefined> {
+    const client = getClient(userAccessControlTableName);
+    try {
+        await client.createTable();
+        const filter = `userId eq '${userId}'`;
+        const entities = client.listEntities<TableEntity<any>>({
+            queryOptions: { filter }
+        });
+        
+        for await (const entity of entities) {
+            return fromUserAccessControlTableEntity(entity);
+        }
+        return undefined;
+    } catch (error) {
+        console.error(`Erro ao buscar controle de acesso para usuário ${userId}:`, error);
+        return undefined;
+    }
+}
+
+export async function addOrUpdateUserAccessControl(control: UserAccessControl): Promise<UserAccessControl> {
+    const client = getClient(userAccessControlTableName);
+    try {
+        await client.createTable();
+        const now = new Date().toISOString();
+        
+        let controlToSave = { ...control };
+        
+        // Mantém os valores de auditoria enviados pelo frontend
+        if (!controlToSave.createdAt) {
+            controlToSave.createdAt = now;
+        }
+        if (!controlToSave.createdBy) {
+            controlToSave.createdBy = "Sistema (sistema@sgr.com)";
+        }
+        if (!controlToSave.updatedAt) {
+            controlToSave.updatedAt = now;
+        }
+        if (!controlToSave.updatedBy) {
+            controlToSave.updatedBy = "Sistema (sistema@sgr.com)";
+        }
+
+        const entity = toUserAccessControlTableEntity(controlToSave);
+        await client.upsertEntity(entity, "Merge");
+        return fromUserAccessControlTableEntity(entity);
+    } catch (error) {
+        console.error("Erro ao salvar o controle de acesso de usuário:", error);
+        throw new Error("Falha ao salvar o controle de acesso no Azure Table Storage.");
+    }
+}
+
+export async function deleteUserAccessControl(id: string): Promise<void> {
+    const client = getClient(userAccessControlTableName);
+    try {
+        await client.deleteEntity("global", id);
+        console.log(`Controle de acesso com ID ${id} excluído com sucesso.`);
+    } catch (error: any) {
+        if (error.statusCode === 404) {
+            console.warn(`Tentativa de excluir controle de acesso não encontrado (ID: ${id}).`);
+            return;
+        }
+        console.error("Erro ao excluir o controle de acesso:", error);
+        throw new Error("Falha ao excluir o controle de acesso no Azure Table Storage.");
     }
 }

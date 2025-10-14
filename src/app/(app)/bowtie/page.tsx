@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Eye, CheckCircle, GitFork } from "lucide-react";
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { PermissionButton } from '@/components/auth/permission-button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +48,14 @@ const formatDate = (dateString: string | undefined) => {
 
 
 export default function BowtiePage() {
+  return (
+    <ProtectedRoute module="bowtie" action="view">
+      <BowtieContent />
+    </ProtectedRoute>
+  );
+}
+
+function BowtieContent() {
   const [bowtieDiagrams, setBowtieDiagrams] = useState<BowtieData[]>([]);
   const [risksData, setRisksData] = useState<Risk[]>([]);
   const [selectedDiagram, setSelectedDiagram] = useState<BowtieData | null>(null);

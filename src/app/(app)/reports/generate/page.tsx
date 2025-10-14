@@ -1,9 +1,12 @@
+'use client';
+
 import { ReportGenerator } from "@/components/report/report-generator";
+import { ProtectedRoute } from '@/components/auth/protected-route';
 
 export default function GenerateReportPage() {
     return (
-        <div>
+        <ProtectedRoute module="relatorios" action="view">
             <ReportGenerator />
-        </div>
+        </ProtectedRoute>
     );
 }

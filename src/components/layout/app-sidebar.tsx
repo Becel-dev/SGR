@@ -48,6 +48,9 @@ const administrationItem = {
   roles: ['admin'],
   subItems: [
     { href: '/administration/parameters', icon: Settings, label: 'Parâmetros' },
+    { href: '/administration/access-profiles', icon: Shield, label: 'Perfil de Acesso' },
+    { href: '/administration/access-control', icon: Users, label: 'Controle de Acesso' },
+    { href: '/debug-permissions', icon: Sparkles, label: '🔍 Debug Permissões' },
   ]
 };
 

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useState, ReactNode } from 'react';
+import React, { createContext, useEffect, useState, ReactNode } from 'react';
+import { useSession } from 'next-auth/react';
 import type { User, Role } from '@/lib/types';
 
 export type UserContextType = {
@@ -12,16 +13,23 @@ export type UserContextType = {
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
 
-// Mock user data
-const mockUser: User = {
-  name: 'Admin Rumo',
-  email: 'admin.rumo@example.com',
-  avatarUrl: 'https://picsum.photos/seed/123/40/40',
-  role: 'admin',
-};
-
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(mockUser);
+  const { data: session, status } = useSession();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Atualizar user quando a sessão NextAuth mudar
+    if (status === 'authenticated' && session?.user) {
+      setUser({
+        name: session.user.name || 'Usuário',
+        email: session.user.email || '',
+        avatarUrl: session.user.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(session.user.name || 'U')}&background=0D8ABC&color=fff`,
+        role: 'admin', // Pode ser extraído do token se configurado no Azure AD
+      });
+    } else if (status === 'unauthenticated') {
+      setUser(null);
+    }
+  }, [session, status]);
 
   const login = (userData: User) => {
     setUser(userData);

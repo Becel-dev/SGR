@@ -76,7 +76,7 @@ export function UserMenu() {
           <span>Configurações</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => authUser ? signOut({ callbackUrl: '/auth/signin' }) : legacyLogout()}>
+        <DropdownMenuItem onClick={() => authUser ? signOut({ callbackUrl: '/' }) : legacyLogout()}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Sair</span>
         </DropdownMenuItem>

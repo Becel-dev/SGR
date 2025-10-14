@@ -14,17 +14,28 @@ export function useAuth() {
 }
 
 export function useAuthUser() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  
+  // Durante loading, retornar dados vazios temporários
+  if (status === 'loading') {
+    return {
+      name: '',
+      email: '',
+      isLoading: true,
+    };
+  }
   
   if (!session?.user) {
     return {
       name: 'Sistema',
       email: 'sistema@sgr.com',
+      isLoading: false,
     };
   }
 
   return {
     name: session.user.name || 'Usuário',
     email: session.user.email || 'usuario@email.com',
+    isLoading: false,
   };
 }

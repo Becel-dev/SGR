@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { PermissionButton } from '@/components/auth/permission-button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +30,14 @@ type ControlWithEscalation = Control & {
 };
 
 export default function EscalationPage() {
+  return (
+    <ProtectedRoute module="escalation" action="view">
+      <EscalationContent />
+    </ProtectedRoute>
+  );
+}
+
+function EscalationContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [controls, setControls] = useState<ControlWithEscalation[]>([]);
   const [loading, setLoading] = useState(true);

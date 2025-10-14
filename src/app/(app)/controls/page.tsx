@@ -10,6 +10,8 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import type { Control, Kpi, Action } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProtectedRoute } from '@/components/auth/protected-route';
+import { PermissionButton } from '@/components/auth/permission-button';
 
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
     'Implementado': 'default',
@@ -42,6 +44,14 @@ const formatDate = (dateString: string | undefined) => {
 }
 
 export default function ControlsPage() {
+  return (
+    <ProtectedRoute module="controles" action="view">
+      <ControlsContent />
+    </ProtectedRoute>
+  );
+}
+
+function ControlsContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [controls, setControls] = useState<Control[]>([]);
   const [kpis, setKpis] = useState<Kpi[]>([]);
@@ -182,14 +192,20 @@ export default function ControlsPage() {
                     />
                 </div>
                 
-                <Button size="sm" className="h-9 gap-1" asChild>
+                <PermissionButton 
+                  module="controles" 
+                  action="create"
+                  size="sm" 
+                  className="h-9 gap-1" 
+                  asChild
+                >
                   <Link href="/controls/capture">
                     <PlusCircle className="h-3.5 w-3.5" />
                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                     Novo Controle
                     </span>
                   </Link>
-                </Button>
+                </PermissionButton>
             </div>
         </div>
       </CardHeader>

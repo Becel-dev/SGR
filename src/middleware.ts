@@ -1,10 +1,29 @@
+import { auth } from '@/lib/auth';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Este middleware permite acesso sem login
-// A autenticação é opcional e controlada pelo Azure AD externamente
-export function middleware(request: NextRequest) {
-  // Permite acesso a todas as rotas sem verificação de autenticação
+// Rotas públicas que não exigem autenticação
+const publicRoutes = ['/auth/signin', '/auth/error', '/api/auth'];
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Permitir acesso a rotas públicas
+  if (publicRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.next();
+  }
+
+  // Verificar autenticação
+  const session = await auth();
+
+  // Se não estiver autenticado, redirecionar para login
+  if (!session?.user) {
+    const signInUrl = new URL('/auth/signin', request.url);
+    signInUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  // Usuário autenticado, permitir acesso
   return NextResponse.next();
 }
 

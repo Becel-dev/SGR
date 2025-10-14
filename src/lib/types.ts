@@ -398,3 +398,54 @@ export type Action = {
   createdBy: string;
   updatedBy: string;
 };
+
+// Access Profile Module Types
+export type ModulePermission = {
+  module: string; // Nome do módulo (ex: "Identificação de Risco")
+  actions: {
+    view: boolean; // Visualizar
+    create: boolean; // Criar
+    edit: boolean; // Editar
+    delete: boolean; // Excluir
+    export: boolean; // Exportar
+  };
+};
+
+export type AccessProfile = {
+  id: string;
+  name: string; // Nome do perfil (ex: "Gestor de Riscos")
+  description?: string; // Descrição opcional do perfil
+  permissions: ModulePermission[]; // Permissões por módulo
+  isActive: boolean; // Perfil ativo ou inativo
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+};
+
+// Access Control Module Types (Vínculo Usuário-Perfil)
+export type UserAccessControl = {
+  id: string;
+  userId: string; // ID do usuário no EntraID
+  userName: string; // Nome do usuário
+  userEmail: string; // Email do usuário
+  profileId: string; // ID do perfil de acesso vinculado
+  profileName: string; // Nome do perfil (denormalizado para exibição)
+  isActive: boolean; // Vínculo ativo ou inativo
+  startDate?: string; // Data de início do acesso (opcional)
+  endDate?: string; // Data de término do acesso (opcional)
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+};
+
+// EntraID User (Simplified)
+export type EntraIdUser = {
+  id: string;
+  displayName: string;
+  mail: string;
+  userPrincipalName: string;
+  jobTitle?: string;
+  department?: string;
+};

@@ -48,7 +48,7 @@ function ActionCaptureContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [submitting, setSubmitting] = useState(false);
-  const authUser = useAuthUser();
+  const authUser = useAuthUser(); // ✅ Hook deve ser chamado no topo do componente
 
   const controlId = searchParams?.get('controlId') || '';
   const controlName = searchParams?.get('controlName') || '';
@@ -76,15 +76,27 @@ function ActionCaptureContent() {
   }, [controlId, controlName, form]);
 
   const onSubmit = async (data: ActionFormValues) => {
+    // Verificar se a sessão ainda está carregando
+    if (authUser.isLoading) {
+      toast({
+        title: 'Aguarde',
+        description: 'Aguardando autenticação carregar. Tente novamente em alguns segundos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     setSubmitting(true);
     try {
       // Adiciona auditoria
       const now = new Date().toISOString();
+      const userForAudit = `${authUser.name} (${authUser.email})`;
+      
       const actionData = {
         ...data,
-        createdBy: `${authUser.name} (${authUser.email})`,
+        createdBy: userForAudit,
         createdAt: now,
-        updatedBy: `${authUser.name} (${authUser.email})`,
+        updatedBy: userForAudit,
         updatedAt: now,
       };
 
