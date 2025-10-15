@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTemasMateriais, addOrUpdateTemaMaterial, deleteTemaMaterial, initializeDefaultTemasMateriais } from '@/lib/azure-table-storage';
 import { TemaMaterial } from '@/lib/types';
+import { validateApiPermission } from '@/lib/api-permissions';
 
 export async function GET() {
   try {
@@ -20,6 +21,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Validar permissão
+    const permissionError = await validateApiPermission(request, 'parametros', 'create');
+    if (permissionError) {
+      return permissionError;
+    }
+
     const body = await request.json();
     
     // Validação básica
@@ -54,6 +61,12 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    // Validar permissão
+    const permissionError = await validateApiPermission(request, 'parametros', 'edit');
+    if (permissionError) {
+      return permissionError;
+    }
+
     const body = await request.json();
     
     // Validação básica
@@ -83,6 +96,12 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    // Validar permissão
+    const permissionError = await validateApiPermission(request, 'parametros', 'delete');
+    if (permissionError) {
+      return permissionError;
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     

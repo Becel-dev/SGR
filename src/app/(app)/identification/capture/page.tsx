@@ -51,7 +51,7 @@ const Section = ({ title, children, icon: Icon, defaultOpen = false, disabled = 
                 </h3>
             </AccordionTrigger>
             <AccordionContent className="p-6 pt-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {children}
                 </div>
             </AccordionContent>
@@ -300,10 +300,10 @@ function CaptureIdentifiedRiskContent() {
                     </div>
                 )}
                 <Section title="Mapeamento e Identificação" icon={Info} defaultOpen disabled={isLocked}>
-                    <Field label="1. Nome do Risco" className="sm:col-span-4" description="Descreva o risco em uma frase curta e objetiva." error={errors.riskName?.message}>
+                    <Field label="1. Nome do Risco" className="md:col-span-2" description="Descreva o risco em uma frase curta e objetiva." error={errors.riskName?.message}>
                         <Input {...register("riskName")} placeholder="Ex: Interrupção no fornecimento de peças..." disabled={isLocked} />
                     </Field>
-                    <Field label="2. Top Risk Corporativo" className="sm:col-span-2" description="Selecione o Top Risk relacionado." error={errors.topRisk?.message}>
+                    <Field label="2. Top Risk Corporativo" description="Selecione o Top Risk relacionado." error={errors.topRisk?.message}>
                         <Controller name="topRisk" control={control} render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value} disabled={isLocked}>
                                 <SelectTrigger><SelectValue placeholder="Selecione..."/></SelectTrigger>
@@ -311,7 +311,7 @@ function CaptureIdentifiedRiskContent() {
                             </Select>
                         )} />
                     </Field>
-                    <Field label="3. Fator de Risco" className="sm:col-span-2" description="Assinale o item do mapa de riscos." error={errors.riskFactor?.message}>
+                    <Field label="3. Fator de Risco" description="Assinale o item do mapa de riscos." error={errors.riskFactor?.message}>
                         <Controller name="riskFactor" control={control} render={({ field }) => (
                             <Select onValueChange={(value) => {
                                 field.onChange(value);
@@ -326,19 +326,19 @@ function CaptureIdentifiedRiskContent() {
                             </Select>
                         )} />
                     </Field>
-                    <Field label="Dono do Risco" className="sm:col-span-2" description="Preenchido automaticamente dos Parâmetros ao selecionar o Fator de Risco.">
+                    <Field label="Dono do Risco" description="Preenchido automaticamente dos Parâmetros ao selecionar o Fator de Risco.">
                         <Input {...register("donoRisco")} disabled readOnly placeholder="Selecione um Fator de Risco" className="bg-muted" />
                     </Field>
-                    <Field label="4. Causa Provável" className="sm:col-span-2" description="Descreva a causa que pode originar o risco." error={errors.probableCause?.message}>
+                    <Field label="4. Causa Provável" description="Descreva a causa que pode originar o risco." error={errors.probableCause?.message}>
                         <Textarea {...register("probableCause")} placeholder="Ex: Alta dependência de fornecedor único..." disabled={isLocked} />
                     </Field>
-                    <Field label="5. Cenário de Risco" className="sm:col-span-2" description="Descreva uma situação prática." error={errors.riskScenario?.message}>
+                    <Field label="5. Cenário de Risco" description="Descreva uma situação prática." error={errors.riskScenario?.message}>
                         <Textarea {...register("riskScenario")} placeholder="Ex: Crise geopolítica impede o envio..." disabled={isLocked} />
                     </Field>
-                    <Field label="6. Consequência Esperada" className="sm:col-span-2" description="Descreva os principais impactos esperados." error={errors.expectedConsequence?.message}>
+                    <Field label="6. Consequência Esperada" description="Descreva os principais impactos esperados." error={errors.expectedConsequence?.message}>
                         <Textarea {...register("expectedConsequence")} placeholder="Ex: Locomotivas paradas, queda na capacidade..." disabled={isLocked} />
                     </Field>
-                    <Field label="7. Controles Atuais" className="sm:col-span-2" description="Indique os controles existentes." error={errors.currentControls?.message}>
+                    <Field label="7. Controles Atuais" description="Indique os controles existentes." error={errors.currentControls?.message}>
                         <Textarea {...register("currentControls")} placeholder="Ex: Estoque de peças críticas, Contratos..." disabled={isLocked} />
                     </Field>
                 </Section>
@@ -368,7 +368,7 @@ function CaptureIdentifiedRiskContent() {
                             </Select>
                         )}/>
                     </Field>
-                    <Field label="10. Objetivos de Negócio Afetados" className="sm:col-span-2" description="Você pode escolher até 3." error={errors.businessObjectives?.message}>
+                    <Field label="10. Objetivos de Negócio Afetados" className="md:col-span-2" description="Você pode escolher até 3." error={errors.businessObjectives?.message}>
                         <Controller name="businessObjectives" control={control} render={({ field }) => (
                             <div className="p-4 border rounded-md space-y-2">
                                 {businessObjectivesOptions.map(obj => (
@@ -410,7 +410,7 @@ function CaptureIdentifiedRiskContent() {
                         <RatingSlider label="16. Facilidade Técnica/Prática de Ocorrência" helpText="Mede a viabilidade de o risco se concretizar." field={field} disabled={isLocked} />
                     )}/>
                     
-                    <Field label="17. Observações" className="sm:col-span-3 lg:col-span-4" description="Observações adicionais sobre o risco identificado.">
+                    <Field label="17. Observações" className="md:col-span-2" description="Observações adicionais sobre o risco identificado.">
                         <Textarea {...register("observacao")} placeholder="Digite observações relevantes sobre este risco..." disabled={isLocked} />
                     </Field>
                 </Section>

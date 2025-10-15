@@ -30,6 +30,7 @@ import { getAllUserAccessControls, deleteUserAccessControl } from '@/lib/azure-t
 import type { UserAccessControl } from '@/lib/types';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
+import { useModulePermissions } from '@/hooks/use-permissions';
 
 export default function AccessControlPage() {
   return (
@@ -47,6 +48,9 @@ function AccessControlContent() {
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [controlToDelete, setControlToDelete] = useState<UserAccessControl | null>(null);
+  
+  // OTIMIZAÇÃO: Verificar todas as permissões de uma vez
+  const permissions = useModulePermissions('controle-acesso');
 
   useEffect(() => {
     loadControls();
@@ -140,14 +144,13 @@ function AccessControlContent() {
                 Gerencie o vínculo de usuários do EntraID aos perfis de acesso
               </CardDescription>
             </div>
-            <PermissionButton 
-              module="controle-acesso" 
-              action="create" 
+            <Button 
+              disabled={!permissions.create?.allowed || permissions.loading}
               onClick={() => router.push('/administration/access-control/capture')}
             >
               <Plus className="h-4 w-4 mr-2" />
               Vincular Usuário
-            </PermissionButton>
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -175,14 +178,13 @@ function AccessControlContent() {
                 {searchTerm ? 'Nenhum controle encontrado com esse critério' : 'Nenhum controle de acesso cadastrado'}
               </p>
               {!searchTerm && (
-                <PermissionButton 
-                  module="controle-acesso" 
-                  action="create" 
+                <Button 
+                  disabled={!permissions.create?.allowed || permissions.loading}
                   onClick={() => router.push('/administration/access-control/capture')}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Vincular primeiro usuário
-                </PermissionButton>
+                </Button>
               )}
             </div>
           ) : (
@@ -228,24 +230,22 @@ function AccessControlContent() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <PermissionButton
-                            module="controle-acesso"
-                            action="edit"
+                          <Button
                             variant="ghost"
                             size="icon"
+                            disabled={!permissions.edit?.allowed || permissions.loading}
                             onClick={() => router.push(`/administration/access-control/capture?id=${control.id}`)}
                           >
                             <Pencil className="h-4 w-4" />
-                          </PermissionButton>
-                          <PermissionButton
-                            module="controle-acesso"
-                            action="delete"
+                          </Button>
+                          <Button
                             variant="ghost"
                             size="icon"
+                            disabled={!permissions.delete?.allowed || permissions.loading}
                             onClick={() => openDeleteDialog(control)}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
-                          </PermissionButton>
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>

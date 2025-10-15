@@ -23,6 +23,7 @@ import {
   Target 
 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
+import { usePermission } from '@/hooks/use-permission';
 
 // Definindo o tipo para uma única regra de IER
 type IerRule = {
@@ -45,30 +46,30 @@ const defaultIerRules: IerRule[] = [
   { min: 800, max: 1000, label: 'CRÍTICO', color: '#ef4444' }, // red
 ];
 
-const RuleRow = ({ rule, onChange, onRemove }: { rule: IerRule, onChange: (field: keyof IerRule, value: any) => void, onRemove: () => void }) => (
+const RuleRow = ({ rule, onChange, onRemove, canEdit, canDelete }: { rule: IerRule, onChange: (field: keyof IerRule, value: any) => void, onRemove: () => void, canEdit: boolean, canDelete: boolean }) => (
   <div className="flex items-center gap-4 p-4 border rounded-lg">
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1">
       <div className="space-y-2">
         <Label>Mínimo</Label>
-        <Input type="number" value={rule.min} onChange={(e) => onChange('min', parseInt(e.target.value, 10))} />
+        <Input type="number" value={rule.min} onChange={(e) => onChange('min', parseInt(e.target.value, 10))} disabled={!canEdit} />
       </div>
       <div className="space-y-2">
         <Label>Máximo</Label>
-        <Input type="number" value={rule.max} onChange={(e) => onChange('max', parseInt(e.target.value, 10))} />
+        <Input type="number" value={rule.max} onChange={(e) => onChange('max', parseInt(e.target.value, 10))} disabled={!canEdit} />
       </div>
       <div className="space-y-2">
         <Label>Rótulo</Label>
-        <Input value={rule.label} onChange={(e) => onChange('label', e.target.value)} />
+        <Input value={rule.label} onChange={(e) => onChange('label', e.target.value)} disabled={!canEdit} />
       </div>
       <div className="space-y-2">
         <Label>Cor (Hex)</Label>
         <div className="flex items-center gap-2">
-          <Input value={rule.color} onChange={(e) => onChange('color', e.target.value)} />
+          <Input value={rule.color} onChange={(e) => onChange('color', e.target.value)} disabled={!canEdit} />
           <div className="h-8 w-8 rounded" style={{ backgroundColor: rule.color }} />
         </div>
       </div>
     </div>
-    <Button variant="ghost" size="icon" onClick={onRemove}>
+    <Button variant="ghost" size="icon" onClick={onRemove} disabled={!canDelete}>
       <Trash2 className="h-4 w-4 text-destructive" />
     </Button>
   </div>
@@ -87,6 +88,11 @@ function ParametersContent() {
   const [ierRules, setIerRules] = useState<IerRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // Permission checks
+  const canCreateParam = usePermission('parametros', 'create');
+  const canEditParam = usePermission('parametros', 'edit');
+  const canDeleteParam = usePermission('parametros', 'delete');
 
   // Efeito para carregar as regras (simulado por enquanto)
   useEffect(() => {
@@ -270,9 +276,11 @@ function ParametersContent() {
                   rule={rule}
                   onChange={(field, value) => handleRuleChange(index, field, value)}
                   onRemove={() => handleRemoveRule(index)}
+                  canEdit={canEditParam.allowed}
+                  canDelete={canDeleteParam.allowed}
                 />
               ))}
-              <Button variant="outline" onClick={handleAddRule}>
+              <Button variant="outline" onClick={handleAddRule} disabled={!canCreateParam.allowed}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Adicionar Nova Regra
               </Button>
@@ -280,7 +288,7 @@ function ParametersContent() {
           )}
         </CardContent>
         <CardFooter>
-          <Button onClick={handleSave} disabled={loading || saving}>
+          <Button onClick={handleSave} disabled={loading || saving || !canEditParam.allowed}>
             {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             {saving ? 'Salvando...' : 'Salvar Alterações'}
           </Button>

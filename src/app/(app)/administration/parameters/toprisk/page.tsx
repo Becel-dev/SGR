@@ -23,6 +23,7 @@ import {
   X 
 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
+import { usePermission } from '@/hooks/use-permission';
 import {
   Dialog,
   DialogContent,
@@ -46,20 +47,24 @@ import { useAuthUser } from '@/hooks/use-auth';
 const TopRiskRow = ({ 
   topRisk, 
   onEdit, 
-  onDelete 
+  onDelete,
+  canEdit,
+  canDelete
 }: { 
   topRisk: TopRisk;
   onEdit: () => void;
   onDelete: () => void;
+  canEdit: boolean;
+  canDelete: boolean;
 }) => (
   <TableRow>
     <TableCell className="font-medium">{topRisk.nome}</TableCell>
     <TableCell>
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={onEdit}>
+        <Button variant="ghost" size="sm" onClick={onEdit} disabled={!canEdit}>
           <Edit className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="sm" onClick={onDelete}>
+        <Button variant="ghost" size="sm" onClick={onDelete} disabled={!canDelete}>
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </div>
@@ -123,6 +128,11 @@ export default function TopRiskPage() {
 }
 
 function TopRiskContent() {
+  // ⚡ OTIMIZAÇÃO: Carregar permissões UMA VEZ
+  const canCreateParam = usePermission('parametros', 'create');
+  const canEditParam = usePermission('parametros', 'edit');
+  const canDeleteParam = usePermission('parametros', 'delete');
+  
   const { toast } = useToast();
   const authUser = useAuthUser();
   const [topRisks, setTopRisks] = useState<TopRisk[]>([]);
@@ -286,7 +296,7 @@ function TopRiskContent() {
           <h3 className="text-lg font-semibold">Lista de Top Risks</h3>
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled={!canCreateParam.allowed}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Adicionar Top Risk
               </Button>
@@ -336,6 +346,8 @@ function TopRiskContent() {
                         setShowEditDialog(true);
                       }}
                       onDelete={() => handleDelete(topRisk)}
+                      canEdit={canEditParam.allowed}
+                      canDelete={canDeleteParam.allowed}
                     />
                   ))
                 )}

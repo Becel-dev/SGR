@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
+import { usePermission } from '@/hooks/use-permission';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +39,11 @@ export default function EscalationPage() {
 }
 
 function EscalationContent() {
+  // ⚡ OTIMIZAÇÃO: Carregar permissões UMA VEZ
+  const canCreateEscalation = usePermission('escalation', 'create');
+  const canEditEscalation = usePermission('escalation', 'edit');
+  const canDeleteEscalation = usePermission('escalation', 'delete');
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [controls, setControls] = useState<ControlWithEscalation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,7 +169,10 @@ function EscalationContent() {
                 onChange={e => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button onClick={() => router.push('/escalation/capture')}>
+            <Button 
+              onClick={() => router.push('/escalation/capture')}
+              disabled={!canCreateEscalation.allowed}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Novo Escalonamento
             </Button>
@@ -209,6 +218,7 @@ function EscalationContent() {
                             <Switch
                               checked={control.escalation.enabled}
                               onCheckedChange={() => handleToggleEnabled(control.escalation!)}
+                              disabled={!canEditEscalation.allowed}
                             />
                           </div>
                         ) : (
@@ -223,6 +233,7 @@ function EscalationContent() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => router.push(`/escalation/${control.escalation!.id}`)}
+                                disabled={false}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
@@ -230,12 +241,17 @@ function EscalationContent() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => router.push(`/escalation/capture?id=${control.escalation!.id}`)}
+                                disabled={!canEditEscalation.allowed}
                               >
                                 <Settings className="h-4 w-4" />
                               </Button>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    disabled={!canDeleteEscalation.allowed}
+                                  >
                                     <Trash2 className="h-4 w-4 text-destructive" />
                                   </Button>
                                 </AlertDialogTrigger>
@@ -263,6 +279,7 @@ function EscalationContent() {
                               variant="outline"
                               size="sm"
                               onClick={() => router.push(`/escalation/capture?controlId=${control.id}&controlName=${encodeURIComponent(control.nomeControle)}`)}
+                              disabled={!canCreateEscalation.allowed}
                             >
                               <Plus className="mr-2 h-4 w-4" />
                               Configurar

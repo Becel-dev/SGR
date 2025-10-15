@@ -29,6 +29,7 @@ import { getAllAccessProfiles, deleteAccessProfile } from '@/lib/azure-table-sto
 import type { AccessProfile } from '@/lib/types';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
+import { useModulePermissions } from '@/hooks/use-permissions';
 
 export default function AccessProfilesPage() {
   return (
@@ -44,6 +45,9 @@ function AccessProfilesContent() {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [profileToDelete, setProfileToDelete] = useState<AccessProfile | null>(null);
+  
+  // OTIMIZAÇÃO: Verificar todas as permissões de uma vez
+  const permissions = useModulePermissions('perfis-acesso');
 
   useEffect(() => {
     loadProfiles();
@@ -118,14 +122,13 @@ function AccessProfilesContent() {
                 Gerencie os perfis de acesso e permissões do sistema
               </CardDescription>
             </div>
-            <PermissionButton 
-              module="perfis-acesso" 
-              action="create" 
+            <Button 
+              disabled={!permissions.create?.allowed || permissions.loading}
               onClick={() => router.push('/administration/access-profiles/capture')}
             >
               <Plus className="h-4 w-4 mr-2" />
               Novo Perfil
-            </PermissionButton>
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -139,14 +142,13 @@ function AccessProfilesContent() {
               <p className="text-muted-foreground mb-4">
                 Nenhum perfil de acesso cadastrado
               </p>
-              <PermissionButton 
-                module="perfis-acesso" 
-                action="create" 
+              <Button 
+                disabled={!permissions.create?.allowed || permissions.loading}
                 onClick={() => router.push('/administration/access-profiles/capture')}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Criar primeiro perfil
-              </PermissionButton>
+              </Button>
             </div>
           ) : (
             <Table>
@@ -189,24 +191,22 @@ function AccessProfilesContent() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <PermissionButton
-                          module="perfis-acesso"
-                          action="edit"
+                        <Button
                           variant="ghost"
                           size="icon"
+                          disabled={!permissions.edit?.allowed || permissions.loading}
                           onClick={() => router.push(`/administration/access-profiles/capture?id=${profile.id}`)}
                         >
                           <Pencil className="h-4 w-4" />
-                        </PermissionButton>
-                        <PermissionButton
-                          module="perfis-acesso"
-                          action="delete"
+                        </Button>
+                        <Button
                           variant="ghost"
                           size="icon"
+                          disabled={!permissions.delete?.allowed || permissions.loading}
                           onClick={() => openDeleteDialog(profile)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
-                        </PermissionButton>
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

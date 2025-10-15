@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
+import { usePermission } from '@/hooks/use-permission';
 import {
   Dialog,
   DialogContent,
@@ -48,21 +49,25 @@ import { useAuthUser } from '@/hooks/use-auth';
 const RiskFactorRow = ({ 
   riskFactor, 
   onEdit, 
-  onDelete 
+  onDelete,
+  canEdit,
+  canDelete
 }: { 
   riskFactor: RiskFactor;
   onEdit: () => void;
   onDelete: () => void;
+  canEdit: boolean;
+  canDelete: boolean;
 }) => (
   <TableRow>
     <TableCell className="font-medium">{riskFactor.nome}</TableCell>
     <TableCell>{riskFactor.donoRisco || '-'}</TableCell>
     <TableCell>
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={onEdit}>
+        <Button variant="ghost" size="sm" onClick={onEdit} disabled={!canEdit}>
           <Edit className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="sm" onClick={onDelete}>
+        <Button variant="ghost" size="sm" onClick={onDelete} disabled={!canDelete}>
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </div>
@@ -143,6 +148,11 @@ export default function RiskFactorPage() {
 }
 
 function RiskFactorContent() {
+  // ⚡ OTIMIZAÇÃO: Carregar permissões UMA VEZ
+  const canCreateParam = usePermission('parametros', 'create');
+  const canEditParam = usePermission('parametros', 'edit');
+  const canDeleteParam = usePermission('parametros', 'delete');
+  
   const { toast } = useToast();
   const authUser = useAuthUser();
   const [riskFactors, setRiskFactors] = useState<RiskFactor[]>([]);
@@ -306,7 +316,7 @@ function RiskFactorContent() {
           <h3 className="text-lg font-semibold">Lista de Fatores de Risco</h3>
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled={!canCreateParam.allowed}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Adicionar Fator de Risco
               </Button>
@@ -357,6 +367,8 @@ function RiskFactorContent() {
                         setShowEditDialog(true);
                       }}
                       onDelete={() => handleDelete(riskFactor)}
+                      canEdit={canEditParam.allowed}
+                      canDelete={canDeleteParam.allowed}
                     />
                   ))
                 )}
