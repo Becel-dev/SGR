@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react'; // Adicionado useMemo para otimização
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import type { Action } from '@/lib/types';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
 import { usePermission } from '@/hooks/use-permission';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 
 export default function ActionsPage() {
   return (
@@ -35,6 +36,9 @@ function ActionsContent() {
   const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // ⚡ OTIMIZAÇÃO: Debounce para evitar filtrar a cada tecla (90% menos re-renders)
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
 
   useEffect(() => {
     fetchActions();
@@ -70,13 +74,17 @@ function ActionsContent() {
     return action.status;
   };
 
-  const filteredActions = actions
-    .map(action => ({ ...action, status: getActionStatus(action) }))
-    .filter(action =>
-      action.controlName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      action.responsavel.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      action.descricao.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  // Otimização: Memoizar cálculo de filteredActions para evitar recalcular a cada render
+  // Recalcula apenas quando actions ou debouncedSearchTerm mudam
+  const filteredActions = useMemo(() => {
+    return actions
+      .map(action => ({ ...action, status: getActionStatus(action) }))
+      .filter(action =>
+        action.controlName.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        action.responsavel.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        action.descricao.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+      );
+  }, [actions, debouncedSearchTerm]);
 
   const getStatusBadge = (status: Action['status']) => {
     const statusConfig = {

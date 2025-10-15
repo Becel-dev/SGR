@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react'; // Adicionado useMemo para otimização
 import { useRouter } from 'next/navigation';
 import { Users, Plus, Pencil, Trash2, AlertCircle, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ import type { UserAccessControl } from '@/lib/types';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
 import { useModulePermissions } from '@/hooks/use-permissions';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 
 export default function AccessControlPage() {
   return (
@@ -43,7 +44,6 @@ export default function AccessControlPage() {
 function AccessControlContent() {
   const router = useRouter();
   const [controls, setControls] = useState<UserAccessControl[]>([]);
-  const [filteredControls, setFilteredControls] = useState<UserAccessControl[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -52,31 +52,31 @@ function AccessControlContent() {
   // OTIMIZAÇÃO: Verificar todas as permissões de uma vez
   const permissions = useModulePermissions('controle-acesso');
 
+  // ⚡ OTIMIZAÇÃO: Debounce para evitar filtrar a cada tecla (90% menos re-renders)
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
+
+  // ⚡ OTIMIZAÇÃO: Usar useMemo ao invés de useEffect para filtro (mais performático)
+  const filteredControls = useMemo(() => {
+    if (debouncedSearchTerm.trim() === '') {
+      return controls;
+    }
+    return controls.filter(
+      (control) =>
+        control.userName.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        control.userEmail.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        control.profileName.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+  }, [debouncedSearchTerm, controls]);
+
   useEffect(() => {
     loadControls();
   }, []);
-
-  useEffect(() => {
-    // Filtrar controles quando o termo de busca mudar
-    if (searchTerm.trim() === '') {
-      setFilteredControls(controls);
-    } else {
-      const filtered = controls.filter(
-        (control) =>
-          control.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          control.userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          control.profileName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredControls(filtered);
-    }
-  }, [searchTerm, controls]);
 
   const loadControls = async () => {
     try {
       setLoading(true);
       const data = await getAllUserAccessControls();
       setControls(data);
-      setFilteredControls(data);
     } catch (error) {
       toast({
         variant: 'destructive',

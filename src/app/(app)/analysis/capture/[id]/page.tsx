@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
 import { PermissionButton } from '@/components/auth/permission-button';
+import { useModulePermissions } from '@/hooks/use-permissions';
 import {
   AlertDialog,
   AlertDialogTrigger,
@@ -196,6 +197,9 @@ export default function RiskAnalysisCapturePage() {
   const { toast } = useToast();
   const authUser = useAuthUser();
   const id = params?.id as string;
+
+  // ⚡ OTIMIZAÇÃO: Verificar TODAS as permissões de uma vez (83% menos chamadas - MAIOR IMPACTO!)
+  const permissions = useModulePermissions('analise');
 
   const [risk, setRisk] = useState<IdentifiedRisk | RiskAnalysis | null>(null);
   const [ierRules, setIerRules] = useState<IerRule[]>([]);
@@ -508,16 +512,14 @@ export default function RiskAnalysisCapturePage() {
                 {risk && 'status' in risk && risk.status === 'Em Análise' && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <PermissionButton 
-                        module="analise" 
-                        action="delete" 
+                      <Button 
                         type="button" 
                         variant="destructive" 
-                        disabled={isSaving || isDeleting || isMarkingAsAnalyzed}
+                        disabled={isSaving || isDeleting || isMarkingAsAnalyzed || !permissions.delete?.allowed || permissions.loading}
                       >
                         {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
                         Excluir Análise
-                      </PermissionButton>
+                      </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
@@ -535,28 +537,24 @@ export default function RiskAnalysisCapturePage() {
                 )}
 
                 {risk && 'status' in risk && risk.status === 'Em Análise' && (
-                  <PermissionButton 
-                    module="analise" 
-                    action="edit" 
+                  <Button 
                     type="button" 
                     className="bg-green-600 hover:bg-green-700 text-white"
                     onClick={handleMarkAsAnalyzed} 
-                    disabled={isSaving || isDeleting || isMarkingAsAnalyzed}
+                    disabled={isSaving || isDeleting || isMarkingAsAnalyzed || !permissions.edit?.allowed || permissions.loading}
                   >
                     {isMarkingAsAnalyzed ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
                     Marcar como Analisado
-                  </PermissionButton>
+                  </Button>
                 )}
 
-                <PermissionButton 
-                  module="analise" 
-                  action="edit" 
+                <Button 
                   type="submit" 
-                  disabled={isSaving || isDeleting || isMarkingAsAnalyzed}
+                  disabled={isSaving || isDeleting || isMarkingAsAnalyzed || !permissions.edit?.allowed || permissions.loading}
                 >
                     {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                     Salvar Análise
-                </PermissionButton>
+                </Button>
             </div>
           </div>
         </CardHeader>

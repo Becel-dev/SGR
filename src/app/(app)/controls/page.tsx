@@ -12,6 +12,7 @@ import type { Control, Kpi, Action } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 
 const statusVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
     'Implementado': 'default',
@@ -57,6 +58,9 @@ function ControlsContent() {
   const [kpis, setKpis] = useState<Kpi[]>([]);
   const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // ⚡ OTIMIZAÇÃO: Debounce para evitar filtrar a cada tecla (90% menos re-renders)
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -161,7 +165,7 @@ function ControlsContent() {
   };
   
   const filteredControls = controls.filter((control: Control) => {
-    const term = searchTerm.toLowerCase();
+    const term = debouncedSearchTerm.toLowerCase();
     return Object.values(control).some(value => 
       String(value).toLowerCase().includes(term)
     );

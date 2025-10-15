@@ -32,6 +32,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
+import { usePermissions } from '@/hooks/use-permissions'; // Otimização: múltiplos módulos em uma chamada
+import { formatDateCached } from '@/lib/date-utils'; // Otimização: cache de formatação de datas
 
 
 const DetailItem = ({ label, value, className }: { label: string, value: React.ReactNode, className?: string }) => {
@@ -61,12 +63,10 @@ const kpiStatusVariantMap: { [key: string]: "default" | "secondary" | "destructi
     'NOK': 'destructive',
 };
 
+// Função local mantida por compatibilidade, mas agora usa formatDateCached internamente
 const formatDate = (value: unknown) => {
-    if (!value || typeof value !== 'string' || value.trim() === '') return '-';
-    const date = new Date(value);
-    if (isNaN(date.getTime())) return '-';
-    const utcDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 12);
-    return utcDate.toLocaleDateString('pt-BR');
+    if (!value) return '-';
+    return formatDateCached(value as string);
 }
 
 
@@ -82,6 +82,13 @@ function ControlDetailContent() {
     const params = useParams();
     const router = useRouter();
     const { toast } = useToast();
+    
+    // Otimização: Verificar permissões de múltiplos módulos de uma vez (3 PermissionButtons → 1 hook)
+    const permissions = usePermissions([
+        { module: 'kpis', action: 'create', key: 'kpisCreate' },
+        { module: 'controles', action: 'delete', key: 'controlesDelete' },
+        { module: 'controles', action: 'edit', key: 'controlesEdit' }
+    ]);
     const id = params && typeof params.id === 'string' ? params.id : '';
     const [control, setControl] = useState<Control | null>(null);
     const [relatedKpis, setRelatedKpis] = useState<Kpi[]>([]);
@@ -327,24 +334,30 @@ function ControlDetailContent() {
       </CardContent>
        <CardFooter className="flex justify-between">
             <div className="flex gap-2">
-                <PermissionButton module="kpis" action="create" asChild>
+                <Button 
+                    asChild 
+                    disabled={!(permissions.kpisCreate as any)?.allowed || permissions.loading}
+                >
                     <Link href={`/kpis/capture?controlId=${control.id}`}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Adicionar KPI
                     </Link>
-                </PermissionButton>
+                </Button>
             </div>
             <div className="flex gap-2">
                 <AlertDialog>
                     <AlertDialogTrigger asChild>
-                        <PermissionButton module="controles" action="delete" variant="destructive" disabled={deleting}>
+                        <Button 
+                            variant="destructive" 
+                            disabled={deleting || !(permissions.controlesDelete as any)?.allowed || permissions.loading}
+                        >
                             {deleting ? (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                             ) : (
                                 <Trash2 className="mr-2 h-4 w-4" />
                             )}
                             {deleting ? "Excluindo..." : "Excluir Controle"}
-                        </PermissionButton>
+                        </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                         <AlertDialogHeader>
@@ -362,12 +375,15 @@ function ControlDetailContent() {
                     </AlertDialogContent>
                 </AlertDialog>
                 
-                <PermissionButton module="controles" action="edit" asChild disabled={deleting}>
+                <Button 
+                    asChild 
+                    disabled={deleting || !(permissions.controlesEdit as any)?.allowed || permissions.loading}
+                >
                     <Link href={`/controls/capture?id=${control.id}`}>
                         <Edit className="mr-2 h-4 w-4" />
                         Editar Controle
                     </Link>
-                </PermissionButton>
+                </Button>
             </div>
        </CardFooter>
     </Card>

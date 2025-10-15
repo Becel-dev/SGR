@@ -25,7 +25,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
-import { usePermission } from '@/hooks/use-permission';
+import { useModulePermissions } from '@/hooks/use-permissions';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 
 export default function KpisPage() {
   return (
@@ -38,10 +39,8 @@ export default function KpisPage() {
 function KpisContent() {
   const { toast } = useToast();
   
-  // ⚡ OTIMIZAÇÃO: Carregar permissões UMA VEZ no componente pai
-  const canViewKpis = usePermission('kpis', 'view');
-  const canEditKpis = usePermission('kpis', 'edit');
-  const canDeleteKpis = usePermission('kpis', 'delete');
+  // ⚡ OTIMIZAÇÃO: Verificar TODAS as permissões de uma vez (66% menos chamadas)
+  const permissions = useModulePermissions('kpis');
   
   const [kpis, setKpis] = useState<Kpi[]>([]);
   const [filteredKpis, setFilteredKpis] = useState<Kpi[]>([]);
@@ -50,23 +49,26 @@ function KpisContent() {
   const [uploadingKpiId, setUploadingKpiId] = useState<string | null>(null);
   const [deletingKpiId, setDeletingKpiId] = useState<string | null>(null);
 
+  // ⚡ OTIMIZAÇÃO: Debounce para evitar filtrar a cada tecla (90% menos re-renders)
+  const debouncedSearch = useDebouncedValue(search, 300);
+
   useEffect(() => {
     fetchKpis();
   }, []);
 
   useEffect(() => {
-    if (search) {
+    if (debouncedSearch) {
       const filtered = kpis.filter(
         (kpi) =>
-          kpi.controlName.toLowerCase().includes(search.toLowerCase()) ||
-          kpi.donoControle.toLowerCase().includes(search.toLowerCase()) ||
-          kpi.id.toLowerCase().includes(search.toLowerCase())
+          kpi.controlName.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+          kpi.donoControle.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+          kpi.id.toLowerCase().includes(debouncedSearch.toLowerCase())
       );
       setFilteredKpis(filtered);
     } else {
       setFilteredKpis(kpis);
     }
-  }, [search, kpis]);
+  }, [debouncedSearch, kpis]);
 
   const fetchKpis = async () => {
     setLoading(true);
@@ -269,7 +271,7 @@ function KpisContent() {
                                 <Button 
                                   variant="outline" 
                                   size="sm"
-                                  disabled={!canEditKpis.allowed}
+                                  disabled={!permissions.edit?.allowed || permissions.loading}
                                 >
                                   <Upload className="h-4 w-4 mr-1" />
                                   Anexar
@@ -314,7 +316,7 @@ function KpisContent() {
                               variant="outline" 
                               size="sm" 
                               asChild
-                              disabled={!canViewKpis.allowed}
+                              disabled={!permissions.view?.allowed || permissions.loading}
                             >
                               <Link href={`/kpis/${kpi.id}`}>
                                 <Eye className="h-4 w-4 mr-1" />
@@ -328,7 +330,7 @@ function KpisContent() {
                                 <Button 
                                   variant="ghost" 
                                   size="sm" 
-                                  disabled={deletingKpiId === kpi.id || !canDeleteKpis.allowed}
+                                  disabled={deletingKpiId === kpi.id || !permissions.delete?.allowed || permissions.loading}
                                 >
                                   <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>

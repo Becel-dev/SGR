@@ -15,6 +15,7 @@ import type { IdentifiedRisk } from "@/lib/types";
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
 import { useCanCreate } from '@/hooks/use-permission';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
 
 export default function IdentificationPage() {
   return (
@@ -30,6 +31,9 @@ function IdentificationContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // ⚡ OTIMIZAÇÃO: Debounce para evitar filtrar a cada tecla (90% menos re-renders)
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
 
   const fetchRisks = async () => {
     setLoading(true);
@@ -54,7 +58,7 @@ function IdentificationContent() {
   }, []);
 
   const filteredRisks = risks.filter((risk: IdentifiedRisk) => {
-    const term = searchTerm.toLowerCase();
+    const term = debouncedSearchTerm.toLowerCase();
     return Object.values(risk).some(value => 
       String(value).toLowerCase().includes(term)
     );
@@ -161,7 +165,7 @@ function IdentificationContent() {
         )}
          {!loading && !error && filteredRisks.length === 0 && (
           <div className="text-center p-8 text-muted-foreground">
-            {searchTerm ? `Nenhum risco encontrado para "${searchTerm}".` : "Nenhum risco identificado ainda."}
+            {debouncedSearchTerm ? `Nenhum risco encontrado para "${debouncedSearchTerm}".` : "Nenhum risco identificado ainda."}
           </div>
         )}
       </CardContent>

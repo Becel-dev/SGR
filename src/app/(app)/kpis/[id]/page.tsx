@@ -26,6 +26,8 @@ import {
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
 import { usePermission } from '@/hooks/use-permission';
+import { useModulePermissions } from '@/hooks/use-permissions'; // Otimização: batch permission checks
+import { formatDateCached, formatDateTimeCached } from '@/lib/date-utils'; // Otimização: cache de formatação de datas
 
 export default function KpiDetailPage() {
   return (
@@ -40,7 +42,10 @@ function KpiDetailContent() {
   const router = useRouter();
   const { toast } = useToast();
   const id = params?.id as string;
-  const canEditKpis = usePermission('kpis', 'edit');
+  
+  // Otimização: Verificar todas as permissões de uma vez (3 hooks → 1)
+  const permissions = useModulePermissions('kpis');
+  const canEditKpis = usePermission('kpis', 'edit'); // Mantido para compatibilidade com código existente
 
   const [kpi, setKpi] = useState<Kpi | null>(null);
   const [loading, setLoading] = useState(true);
@@ -246,11 +251,9 @@ function KpiDetailContent() {
             <div className="flex gap-2">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <PermissionButton 
-                    module="kpis" 
-                    action="delete" 
+                  <Button 
                     variant="destructive" 
-                    disabled={deleting}
+                    disabled={deleting || !permissions.delete?.allowed || permissions.loading}
                   >
                     {deleting ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -258,7 +261,7 @@ function KpiDetailContent() {
                       <Trash2 className="mr-2 h-4 w-4" />
                     )}
                     {deleting ? "Excluindo..." : "Excluir"}
-                  </PermissionButton>
+                  </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -298,7 +301,7 @@ function KpiDetailContent() {
             <div>
               <Label className="text-sm text-muted-foreground">Data de Início da Verificação</Label>
               <p className="mt-1">
-                {new Date(kpi.dataInicioVerificacao).toLocaleDateString('pt-BR')}
+                {formatDateCached(kpi.dataInicioVerificacao)}
               </p>
             </div>
             <div>
@@ -308,7 +311,7 @@ function KpiDetailContent() {
                   isOverdue(kpi.dataProximaVerificacao) ? 'text-red-600 font-semibold' : ''
                 }`}
               >
-                {new Date(kpi.dataProximaVerificacao).toLocaleDateString('pt-BR')}
+                {formatDateCached(kpi.dataProximaVerificacao)}
                 {isOverdue(kpi.dataProximaVerificacao) && ' (Vencida)'}
               </p>
             </div>
@@ -330,16 +333,15 @@ function KpiDetailContent() {
                 Responsáveis Adicionais ({kpi.responsibles?.length || 0})
               </Label>
               {!addingResponsible && (
-                <PermissionButton
-                  module="kpis"
-                  action="edit"
+                <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setAddingResponsible(true)}
+                  disabled={!permissions.edit?.allowed || permissions.loading}
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   Adicionar Responsável
-                </PermissionButton>
+                </Button>
               )}
             </div>
 
@@ -405,15 +407,14 @@ function KpiDetailContent() {
                         {resp.name} <span className="text-muted-foreground">({resp.email})</span>
                       </span>
                     </div>
-                    <PermissionButton
-                      module="kpis"
-                      action="edit"
+                    <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemoveResponsible(idx)}
+                      disabled={!permissions.edit?.allowed || permissions.loading}
                     >
                       <X className="h-4 w-4" />
-                    </PermissionButton>
+                    </Button>
                   </li>
                 ))}
               </ul>
@@ -506,7 +507,7 @@ function KpiDetailContent() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4" />
-                          {new Date(evidence.uploadedAt).toLocaleString('pt-BR')}
+                          {formatDateTimeCached(evidence.uploadedAt)}
                         </div>
                       </TableCell>
                       <TableCell>{evidence.uploadedBy}</TableCell>
