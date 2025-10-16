@@ -231,14 +231,15 @@ function CaptureIdentifiedRiskContent() {
             const userName = `${authUser.name} (${authUser.email})`;
             
             // Adiciona informações de auditoria com usuário real
+            // Se for novo registro, não envia id (deixa backend gerar R-n)
             const riskData = {
                 ...data,
                 updatedBy: userName,
                 updatedAt: now,
-                // Se for novo registro, adiciona createdBy e createdAt
                 ...(!isEditing && {
                     createdBy: userName,
                     createdAt: now,
+                    id: undefined,
                 }),
             };
 

@@ -291,6 +291,8 @@ export type RiskAnalysis = IdentifiedRisk & {
   bowtieRealizado?: string; // 'Realizado' | 'Não Realizado' | 'Em Andamento';
   possuiCC?: string;
   urlDoCC?: string; // URL
+  // Campo auxiliar para exibição/associação
+  topRiskAssociado?: string;
   
   // --- Residual Risk (Example) ---
   residualRiskProbability?: "Raro" | "Improvável" | "Possível" | "Provável" | "Quase Certo";

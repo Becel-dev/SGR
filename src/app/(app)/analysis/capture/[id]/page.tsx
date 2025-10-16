@@ -89,6 +89,7 @@ const analysisSchema = z.object({
 
 
 export default function RiskAnalysisCapturePage() {
+  // NOTE: previous temporary overflow manipulation was removed to avoid global side-effects
   // Função para deletar análise
   const handleDelete = async () => {
     if (!risk) return;
@@ -494,9 +495,8 @@ export default function RiskAnalysisCapturePage() {
           variant: "destructive",
         });
       })}
-      style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
     >
-      <Card className="flex-1 flex flex-col">
+  <Card className="w-full">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -558,7 +558,7 @@ export default function RiskAnalysisCapturePage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-8 mt-6">
+  <CardContent className="space-y-8 mt-6 pb-8 w-full">
             {/* --- Section: Identificação e Contexto --- */}
             <section className="space-y-4 p-4 border rounded-md">
                 <h3 className="font-semibold text-lg text-primary">Identificação e Contexto</h3>
@@ -761,7 +761,7 @@ export default function RiskAnalysisCapturePage() {
                 </div>
             </section>
         </CardContent>
-        <CardFooter className="flex flex-wrap justify-end gap-2">
+  <CardFooter className="flex flex-wrap justify-end gap-2">
           <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSaving || isDeleting || isMarkingAsAnalyzed}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar

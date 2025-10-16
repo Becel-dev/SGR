@@ -53,8 +53,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    // O params.id é o riskId
-    // Buscamos o bowtie mais recente para obter id e version
+    // O params.id é o Bowtie id (partitionKey)
+    // Buscamos o bowtie mais recente para obter riskId, id e version
     const bowtie = await getBowtieById(params.id);
     if (!bowtie) {
       return NextResponse.json({ error: 'Bowtie not found' }, { status: 404 });

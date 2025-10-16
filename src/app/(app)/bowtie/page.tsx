@@ -228,7 +228,17 @@ function BowtieContent() {
             method: 'DELETE',
         });
 
-        if (!response.ok) throw new Error('Falha ao excluir o Bowtie');
+        if (!response.ok) {
+            let errorMsg = 'Falha ao excluir o Bowtie';
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData?.error || errorMsg;
+                console.error('API error:', errorData);
+            } catch (e) {
+                console.error('API error (non-JSON):', await response.text());
+            }
+            throw new Error(errorMsg);
+        }
 
         toast({
             title: "Sucesso",
@@ -239,7 +249,7 @@ function BowtieContent() {
         console.error(error);
         toast({
             title: "Erro de Exclusão",
-            description: "Não foi possível excluir o diagrama. Revertendo.",
+            description: `Não foi possível excluir o diagrama. Revertendo.\n${error instanceof Error ? error.message : ''}`,
             variant: "destructive",
         });
         setBowtieDiagrams(originalDiagrams);

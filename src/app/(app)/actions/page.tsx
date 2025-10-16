@@ -13,12 +13,24 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { AlertCircle, Search, Eye, FileText, Clock, CheckCircle } from 'lucide-react';
+import { AlertCircle, Search, Eye, Trash2, Clock, CheckCircle, FileText } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction
+} from '@/components/ui/alert-dialog';
 import Link from 'next/link';
 import type { Action } from '@/lib/types';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { PermissionButton } from '@/components/auth/permission-button';
 import { usePermission } from '@/hooks/use-permission';
+import { useModulePermissions } from '@/hooks/use-permissions';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 
 export default function ActionsPage() {
@@ -31,11 +43,13 @@ export default function ActionsPage() {
 
 function ActionsContent() {
   // ⚡ OTIMIZAÇÃO: Carregar permissões UMA VEZ no componente pai
-  const canViewActions = usePermission('acoes', 'view');
-  
+  const permissions = useModulePermissions('acoes');
   const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deletingActionId, setDeletingActionId] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [actionToDelete, setActionToDelete] = useState<Action | null>(null);
 
   // ⚡ OTIMIZAÇÃO: Debounce para evitar filtrar a cada tecla (90% menos re-renders)
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
@@ -58,7 +72,23 @@ function ActionsContent() {
     }
   };
 
-  // Atualizar status baseado no prazo
+  const handleDeleteAction = async (id: string) => {
+    setDeletingActionId(id);
+    try {
+      const response = await fetch(`/api/actions/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Falha ao excluir ação');
+      await fetchActions();
+      setShowDeleteDialog(false);
+      setActionToDelete(null);
+    } catch (error) {
+      console.error('Erro ao excluir ação:', error);
+      // TODO: toast de erro
+    } finally {
+      setDeletingActionId(null);
+    }
+  };
   const getActionStatus = (action: Action): Action['status'] => {
     if (action.status === 'Concluída') return 'Concluída';
     
@@ -229,18 +259,49 @@ function ActionsContent() {
                             currency: 'BRL',
                           }).format(action.valorEstimado)}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right flex gap-2 justify-end">
                           <Button 
                             variant="ghost" 
                             size="sm" 
                             asChild
-                            disabled={!canViewActions.allowed}
+                            disabled={!permissions.view?.allowed || permissions.loading}
                           >
                             <Link href={`/actions/${action.id}`}>
                               <Eye className="h-4 w-4 mr-1" />
                               Ver
                             </Link>
                           </Button>
+                          {/* Excluir ação */}
+                          <AlertDialog open={showDeleteDialog && actionToDelete?.id === action.id} onOpenChange={(open) => { setShowDeleteDialog(open); if (!open) setActionToDelete(null); }}>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={deletingActionId === action.id || !permissions.delete?.allowed || permissions.loading}
+                                onClick={() => { setShowDeleteDialog(true); setActionToDelete(action); }}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir ação?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir a ação "{action.id}" do controle "{action.controlName}"?
+                                  Esta ação não pode ser desfeita e todo o histórico será perdido.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel disabled={deletingActionId === action.id}>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteAction(action.id)}
+                                  disabled={deletingActionId === action.id}
+                                >
+                                  Sim, excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </TableCell>
                       </TableRow>
                     );

@@ -19,14 +19,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    
-    if (!body.id) {
-      return new NextResponse(JSON.stringify({ message: 'Control ID is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
+    // Permite que o backend gere o ID sequencial se não for informado
     const result = await addOrUpdateControl(body);
     return NextResponse.json(result, { status: 201 });
   } catch (error) {

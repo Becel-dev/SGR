@@ -55,6 +55,9 @@ function RiskAnalysisContent() {
   const [ierRules, setIerRules] = useState<IerRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Ordenação
+  const [sortColumn, setSortColumn] = useState<string>('createdAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     async function fetchData() {
@@ -80,22 +83,44 @@ function RiskAnalysisContent() {
   const filteredRisks = risks
     .filter((risk: RiskAnalysis) => {
         const term = searchTerm.toLowerCase();
-        // Adaptar para os novos nomes de campo
         return (
             risk.riskName?.toLowerCase().includes(term) ||
             risk.id?.toLowerCase().includes(term) ||
             risk.topRisk?.toLowerCase().includes(term) ||
             risk.status?.toLowerCase().includes(term)
         );
-    })
-    .sort((a, b) => {
-        const statusA = statusOrder[a.status] || 99;
-        const statusB = statusOrder[b.status] || 99;
-        if (statusA !== statusB) {
-            return statusA - statusB;
-        }
-        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
+
+  // Ordenação dinâmica
+  const sortedRisks = [...filteredRisks].sort((a, b) => {
+    if (sortColumn === 'createdAt') {
+      const aValue = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bValue = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+    // Default: status, depois updatedAt
+    const statusA = statusOrder[a.status] || 99;
+    const statusB = statusOrder[b.status] || 99;
+    if (statusA !== statusB) {
+      return statusA - statusB;
+    }
+    return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+  });
+
+  // Renderiza ícone de ordenação
+  function renderSortIcon(col: string) {
+    if (sortColumn !== col) return null;
+    return sortDirection === 'asc' ? '▲' : '▼';
+  }
+
+  function handleSort(col: string) {
+    if (sortColumn === col) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(col);
+      setSortDirection('desc');
+    }
+  }
 
   return (
     <Card>
@@ -134,6 +159,13 @@ function RiskAnalysisContent() {
                 <TableHead>Nome do Risco</TableHead>
                 <TableHead>Top Risk Corporativo</TableHead>
                 <TableHead>IER (Calculado)</TableHead>
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort('createdAt')}
+                  title="Ordenar por data de criação"
+                >
+                  Data de Criação {renderSortIcon('createdAt')}
+                </TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -151,8 +183,8 @@ function RiskAnalysisContent() {
                     {error}
                   </TableCell>
                 </TableRow>
-              ) : filteredRisks.length > 0 ? (
-                filteredRisks.map((risk, index) => {
+              ) : sortedRisks.length > 0 ? (
+                sortedRisks.map((risk, index) => {
                   const ierClassification = getIerClassification(risk.ier || 0, ierRules);
                   return (
                   <TableRow 
@@ -180,9 +212,11 @@ function RiskAnalysisContent() {
                           {risk.status === 'Novo' ? 'N/A' : Math.round(risk.ier || 0)}
                         </span>
                     </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {risk.createdAt ? new Date(risk.createdAt).toLocaleDateString() : '-'}
+                    </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="icon" asChild>
-                        {/* O link agora aponta para a página de captura de análise */}
                         <Link href={`/analysis/capture/${risk.id}`}>
                           <ArrowRight className="h-4 w-4" />
                           <span className="sr-only">Analisar Risco</span>

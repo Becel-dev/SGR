@@ -310,7 +310,7 @@ function CaptureControlContent() {
 
             // Constrói o objeto Control explicitamente para evitar incluir tipos incompatíveis (FileList)
             const controlData: Control = {
-                id: controlId || `CTRL-${Date.now()}`,
+                id: controlId || '',
                 nomeControle: data.nomeControle,
                 categoria: data.categoria,
                 classificacao: data.classificacao,
@@ -454,11 +454,11 @@ function CaptureControlContent() {
                                         </SelectContent>
                                     </Select>
                                 </Field>
-                                {selectedRiskData && (
+                                                                {selectedRiskData && (
                                    <>
-                                     <Field label="Nome do Risco"><Input value={selectedRiskData.risco} disabled /></Field>
-                                     <Field label="TopRisk Associado"><Input value={selectedRiskData.topRiskAssociado} disabled /></Field>
-                                     <Field label="Gerência do Risco"><Input value={selectedRiskData.gerencia} disabled /></Field>
+                                                                         <Field label="Nome do Risco"><Input value={selectedRiskData.risco} disabled /></Field>
+                                                                         <Field label="TopRisk Associado"><Input value={selectedRiskData.topRiskAssociado || ''} disabled /></Field>
+                                                                         <Field label="Gerência do Risco"><Input value={selectedRiskData.gerencia || ''} disabled /></Field>
                                    </>
                                 )}
                                 <Field label="Código do MUE"><Input value={assocRisk.codigoMUE} onChange={(e) => handleRiskChange(assocRisk.key, 'codigoMUE', e.target.value)} placeholder="Ex: RUMO 01" /></Field>

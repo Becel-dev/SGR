@@ -100,6 +100,10 @@ const fromRiskAnalysisTableEntity = (entity: TableEntity<any>): RiskAnalysis => 
         analysis.risco = entity.riskName;
     }
 
+    // Mapeia TopRisk para o campo usado em outras telas (topRiskAssociado)
+    analysis.topRisk = entity.topRisk || '';
+    analysis.topRiskAssociado = entity.topRisk || entity.topRiskAssociado || '';
+
     return analysis as RiskAnalysis;
 };
 
@@ -288,6 +292,22 @@ export async function addOrUpdateControl(controlData: Control): Promise<Control>
         await client.createTable();
         const now = new Date().toISOString();
         let control = { ...controlData };
+
+        // Se for novo registro (sem id), gerar id sequencial no formato CTRL-<n>
+        if (!control.id || control.id.trim() === '') {
+            // Lista entidades existentes e encontra o maior número de CTRL-n
+            const entities = client.listEntities<TableEntity<any>>();
+            let maxNum = 0;
+            for await (const entity of entities) {
+                const existingId = entity.rowKey || '';
+                const match = existingId.match(/^CTRL-(\d+)$/i);
+                if (match) {
+                    const num = parseInt(match[1], 10);
+                    if (!isNaN(num) && num > maxNum) maxNum = num;
+                }
+            }
+            control.id = `CTRL-${maxNum + 1}`;
+        }
         if (!control.criadoEm) {
             control.criadoEm = now;
             control.criadoPor = "Sistema"; // Substituir pelo usuário logado
@@ -397,8 +417,22 @@ export async function createKpi(kpi: Omit<Kpi, 'id' | 'createdAt' | 'updatedAt'>
     try {
         await client.createTable();
         const now = new Date().toISOString();
+        // Busca KPIs existentes para o controle
+        const existingKpis = await getKpisByControlId(kpi.controlId);
+        let maxNum = 0;
+        for (const existing of existingKpis) {
+            const match = existing.id?.match(/^CTRL-\d+-KPI-(\d+)$/);
+            if (match) {
+                const num = parseInt(match[1], 10);
+                if (!isNaN(num) && num > maxNum) maxNum = num;
+            }
+        }
+        const nextNum = maxNum + 1;
+        const controlId = kpi.controlId;
+        const kpiId = `${controlId}-KPI-${nextNum}`;
         const newKpi: Omit<Kpi, 'id'> & { id?: string } = {
             ...kpi,
+            id: kpiId,
             createdAt: now,
             updatedAt: now,
         };
@@ -508,7 +542,24 @@ export async function addOrUpdateIdentifiedRisk(riskData: IdentifiedRisk): Promi
         await client.createTable();
         const now = new Date().toISOString();
         let risk = { ...riskData };
-        
+
+        // Se for novo registro (sem id ou id vazio), gera ID sequencial no formato R-n
+        if (!risk.id || risk.id.trim() === "") {
+            // Busca todos os riscos existentes
+            const entities = client.listEntities<TableEntity<any>>();
+            let maxNum = 0;
+            for await (const entity of entities) {
+                const existingId = entity.rowKey || "";
+                // Verifica se o ID está no formato R-n
+                const match = existingId.match(/^R-(\d+)$/);
+                if (match) {
+                    const num = parseInt(match[1], 10);
+                    if (num > maxNum) maxNum = num;
+                }
+            }
+            risk.id = `R-${maxNum + 1}`;
+        }
+
         // Mantém os valores de auditoria enviados pelo frontend
         // Só preenche com valores padrão se não foram fornecidos
         if (!risk.createdAt) {
@@ -523,7 +574,7 @@ export async function addOrUpdateIdentifiedRisk(riskData: IdentifiedRisk): Promi
         if (!risk.updatedBy) {
             risk.updatedBy = "Sistema (sistema@sgr.com)";
         }
-        
+
         const entity = toIdentifiedRiskTableEntity(risk);
         await client.upsertEntity(entity, "Merge");
         return fromIdentifiedRiskTableEntity(entity);
@@ -784,13 +835,24 @@ export async function getBowtieVersions(riskId: string): Promise<BowtieData[]> {
     }
 }
 
-export async function getBowtieById(riskId: string): Promise<BowtieData | undefined> {
+export async function getBowtieById(id: string): Promise<BowtieData | undefined> {
+    const client = getClient(bowtieTableName);
     try {
-        const versions = await getBowtieVersions(riskId);
-        // Retorna a versão mais recente
-        return versions.length > 0 ? versions[0] : undefined;
+        // Busca por partitionKey OU rowKey que contenha o id
+        let latest: BowtieData | undefined = undefined;
+        const entities = client.listEntities<TableEntity<any>>();
+        for await (const entity of entities) {
+            // Match partitionKey or rowKey pattern
+            if (entity.partitionKey === id || (entity.rowKey && entity.rowKey.startsWith(id + '_v'))) {
+                const bowtie = fromBowtieTableEntity(entity);
+                if (!latest || bowtie.version > latest.version) {
+                    latest = bowtie;
+                }
+            }
+        }
+        return latest;
     } catch (error) {
-        console.error(`Erro ao buscar Bowtie com riskId ${riskId}:`, error);
+        console.error(`Erro ao buscar Bowtie com id ${id}:`, error);
         return undefined;
     }
 }
@@ -1850,9 +1912,26 @@ export async function addOrUpdateAction(action: Action): Promise<Action> {
     try {
         await client.createTable();
         const now = new Date().toISOString();
-        
+
         let actionToSave = { ...action };
-        
+
+        // Se for novo registro (sem id), gerar id sequencial no formato CTRL-n-A-x
+        if (!actionToSave.id || actionToSave.id.trim() === '') {
+            // Busca ações existentes para o controle
+            const existingActions = await getActionsByControlId(actionToSave.controlId);
+            let maxNum = 0;
+            for (const existing of existingActions) {
+                const match = existing.id?.match(/^CTRL-\d+-A-(\d+)$/);
+                if (match) {
+                    const num = parseInt(match[1], 10);
+                    if (!isNaN(num) && num > maxNum) maxNum = num;
+                }
+            }
+            const nextNum = maxNum + 1;
+            const controlId = actionToSave.controlId;
+            actionToSave.id = `${controlId}-A-${nextNum}`;
+        }
+
         // Mantém os valores de auditoria enviados pelo frontend
         if (!actionToSave.createdAt) {
             actionToSave.createdAt = now;
