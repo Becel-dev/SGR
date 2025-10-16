@@ -26,11 +26,16 @@ export default function IdentificationPage() {
 }
 
 function IdentificationContent() {
+
   const [searchTerm, setSearchTerm] = useState("");
   const [risks, setRisks] = useState<IdentifiedRisk[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Estado para ordenação
+  const [sortColumn, setSortColumn] = useState<string>('createdAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // ⚡ OTIMIZAÇÃO: Debounce para evitar filtrar a cada tecla (90% menos re-renders)
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
@@ -57,7 +62,31 @@ function IdentificationContent() {
     fetchRisks();
   }, []);
 
-  const filteredRisks = risks.filter((risk: IdentifiedRisk) => {
+
+  // Ordenação dos riscos
+  const sortedRisks = [...risks].sort((a, b) => {
+    const col = sortColumn as keyof IdentifiedRisk;
+    let aValue = a[col];
+    let bValue = b[col];
+    // Datas: converter para timestamp
+    if (col === 'createdAt' || col === 'updatedAt') {
+      aValue = aValue ? new Date(aValue as string).getTime() : 0;
+      bValue = bValue ? new Date(bValue as string).getTime() : 0;
+    }
+    // Strings: comparar case-insensitive
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      aValue = aValue.toLowerCase();
+      bValue = bValue.toLowerCase();
+    }
+    if (aValue === undefined || aValue === null) return 1;
+    if (bValue === undefined || bValue === null) return -1;
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Filtro após ordenação
+  const filteredRisks = sortedRisks.filter((risk: IdentifiedRisk) => {
     const term = debouncedSearchTerm.toLowerCase();
     return Object.values(risk).some(value => 
       String(value).toLowerCase().includes(term)
@@ -125,14 +154,30 @@ function IdentificationContent() {
                 <Table>
           <TableHeader>
           <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>Nome do Risco</TableHead>
-            <TableHead>Top Risk Corporativo</TableHead>
-            <TableHead>Tipo do Apontamento</TableHead>
-            <TableHead>Criado por</TableHead>
-            <TableHead>Data de criação</TableHead>
-            <TableHead>Última alteração por</TableHead>
-            <TableHead>Data da última alteração</TableHead>
+            <TableHead onClick={() => handleSort('id')} className="cursor-pointer select-none">
+              ID {renderSortIcon('id')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('riskName')} className="cursor-pointer select-none">
+              Nome do Risco {renderSortIcon('riskName')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('topRisk')} className="cursor-pointer select-none">
+              Top Risk Corporativo {renderSortIcon('topRisk')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('pointingType')} className="cursor-pointer select-none">
+              Tipo do Apontamento {renderSortIcon('pointingType')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('createdBy')} className="cursor-pointer select-none">
+              Criado por {renderSortIcon('createdBy')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('createdAt')} className="cursor-pointer select-none">
+              Data de criação {renderSortIcon('createdAt')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('updatedBy')} className="cursor-pointer select-none">
+              Última alteração por {renderSortIcon('updatedBy')}
+            </TableHead>
+            <TableHead onClick={() => handleSort('updatedAt')} className="cursor-pointer select-none">
+              Data da última alteração {renderSortIcon('updatedAt')}
+            </TableHead>
             <TableHead>Ações</TableHead>
           </TableRow>
           </TableHeader>
@@ -171,4 +216,23 @@ function IdentificationContent() {
       </CardContent>
     </Card>
   );
+  // Função para alternar ordenação
+  function handleSort(col: string) {
+    if (sortColumn === col) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(col);
+      setSortDirection('asc');
+    }
+  }
+
+  // Renderiza ícone de ordenação
+  function renderSortIcon(col: string) {
+    if (sortColumn !== col) return null;
+    return sortDirection === 'asc' ? (
+      <span style={{marginLeft: 2}}>▲</span>
+    ) : (
+      <span style={{marginLeft: 2}}>▼</span>
+    );
+  }
 }
