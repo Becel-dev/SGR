@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useHideDocumentScrollbar } from '@/hooks/use-hide-document-scrollbar';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import { Loader2 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 
 export default function EscalationCapturePage() {
+  useHideDocumentScrollbar();
   const searchParams = useSearchParams();
   const controlId = searchParams?.get('controlId');
   const escalationId = searchParams?.get('id');

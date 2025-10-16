@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useHideDocumentScrollbar } from '@/hooks/use-hide-document-scrollbar';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import { useAuthUser } from '@/hooks/use-auth';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 
 export default function KpiCapturePage() {
+  useHideDocumentScrollbar();
   const searchParams = useSearchParams();
   const kpiId = searchParams?.get('id');
   

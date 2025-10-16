@@ -31,6 +31,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import * as React from 'react';
+import { useHideDocumentScrollbar } from '@/hooks/use-hide-document-scrollbar';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -111,6 +112,7 @@ const RatingSlider = ({ label, helpText, field, disabled }: { label: string, hel
 );
 
 export default function CaptureIdentifiedRiskPage() {
+    useHideDocumentScrollbar();
     const searchParams = useSearchParams();
     const riskId = searchParams ? searchParams.get('id') : null;
     const isEditing = !!riskId;

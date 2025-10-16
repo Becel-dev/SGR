@@ -927,6 +927,50 @@ export async function deleteBowtie(riskId: string, id: string, version: number):
     }
 }
 
+// Exclui todas as versões de um Bowtie (versão atual e anteriores) para um determinado riskId e id
+export async function deleteBowtieAllVersions(riskId: string, id: string): Promise<number> {
+    const client = getClient(bowtieTableName);
+    try {
+        let deleted = 0;
+        const entities = client.listEntities<TableEntity<any>>({
+            queryOptions: { filter: `PartitionKey eq '${riskId}'` }
+        });
+        const prefixes = new Set<string>([`${id}_v`, `${riskId}_v`]); // cobre dados legados que usavam riskId no RowKey
+        for await (const entity of entities) {
+            const rk = (entity.rowKey as string) || '';
+            if ([...prefixes].some((p) => rk.startsWith(p))) {
+                await client.deleteEntity(riskId, rk);
+                deleted++;
+            }
+        }
+        console.log(`Bowtie id ${id} (riskId ${riskId}): ${deleted} versão(ões) excluídas.`);
+        return deleted;
+    } catch (error) {
+        console.error("Erro ao excluir todas as versões do Bowtie:", error);
+        throw new Error("Falha ao excluir todas as versões do Bowtie no Azure Table Storage.");
+    }
+}
+
+// Exclui TODOS os Bowties associados a um riskId (todas as versões e quaisquer IDs)
+export async function deleteBowtieAllForRisk(riskId: string): Promise<number> {
+    const client = getClient(bowtieTableName);
+    try {
+        let deleted = 0;
+        const entities = client.listEntities<TableEntity<any>>({
+            queryOptions: { filter: `PartitionKey eq '${riskId}'` }
+        });
+        for await (const entity of entities) {
+            await client.deleteEntity(riskId, entity.rowKey as string);
+            deleted++;
+        }
+        console.log(`Bowtie riskId ${riskId}: ${deleted} entidade(s) excluída(s).`);
+        return deleted;
+    } catch (error) {
+        console.error("Erro ao excluir todos os Bowties do riskId:", error);
+        throw new Error("Falha ao excluir todos os Bowties do riskId no Azure Table Storage.");
+    }
+}
+
 // ---- Funções CRUD para TopRisk ----
 
 const toTopRiskTableEntity = (topRisk: TopRisk): TableEntity<any> => {

@@ -689,7 +689,7 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete, readOnly = false }: { 
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Tem certeza que deseja excluir este diagrama Bowtie? Esta ação não pode ser desfeita.
+                                    Ao excluir este diagrama Bowtie, a versão atual e TODAS as versões anteriores serão removidas. Esta ação não pode ser desfeita.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

@@ -25,6 +25,7 @@ import { Slider } from '@/components/ui/slider';
 import { UserAutocomplete } from '@/components/ui/user-autocomplete';
 import { useAuthUser } from '@/hooks/use-auth';
 import { ProtectedRoute } from '@/components/auth/protected-route';
+import { useHideDocumentScrollbar } from '@/hooks/use-hide-document-scrollbar';
 
 const actionFormSchema = z.object({
   controlId: z.string().min(1, 'ID do controle é obrigatório'),
@@ -46,6 +47,7 @@ const actionFormSchema = z.object({
 type ActionFormValues = z.infer<typeof actionFormSchema>;
 
 function ActionCaptureContent() {
+  useHideDocumentScrollbar();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [submitting, setSubmitting] = useState(false);

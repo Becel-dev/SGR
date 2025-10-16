@@ -30,11 +30,12 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion";
+import { useHideDocumentScrollbar } from '@/hooks/use-hide-document-scrollbar';
 
 
 import { getTopRiskOptions, getRiskFactorOptions, getTemasMaterialOptions } from '@/lib/form-options';
@@ -111,6 +112,7 @@ const Field = ({ label, children, className }: {label: string, children: React.R
 )
 
 export default function CaptureRiskPage() {
+    useHideDocumentScrollbar();
     const searchParams = useSearchParams();
     const riskId = searchParams ? searchParams.get('id') : null;
     const isEditing = !!riskId;

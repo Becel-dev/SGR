@@ -164,12 +164,42 @@ function ControlsContent() {
     }
   };
   
-  const filteredControls = controls.filter((control: Control) => {
-    const term = debouncedSearchTerm.toLowerCase();
-    return Object.values(control).some(value => 
-      String(value).toLowerCase().includes(term)
-    );
-  });
+
+  // Ordenação
+  const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const filteredControls = controls
+    .filter((control: Control) => {
+      const term = debouncedSearchTerm.toLowerCase();
+      return Object.values(control).some(value => 
+        String(value).toLowerCase().includes(term)
+      );
+    })
+    .sort((a, b) => {
+      if (sortColumn === 'status') {
+        if (a.status < b.status) return sortDirection === 'asc' ? -1 : 1;
+        if (a.status > b.status) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      }
+      if (sortColumn === 'kpi') {
+        const kpiA = getControlKpiStatus(a.id);
+        const kpiB = getControlKpiStatus(b.id);
+        if (kpiA < kpiB) return sortDirection === 'asc' ? -1 : 1;
+        if (kpiA > kpiB) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      }
+      return 0;
+    });
 
   return (
     <Card>
@@ -222,8 +252,18 @@ function ControlsContent() {
                 <TableHead>Nome do Controle</TableHead>
                 <TableHead>Área</TableHead>
                 <TableHead>Dono do Controle</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>KPI</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('status')}>
+                  Status
+                  {sortColumn === 'status' && (
+                    <span>{sortDirection === 'asc' ? ' ▲' : ' ▼'}</span>
+                  )}
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort('kpi')}>
+                  KPI
+                  {sortColumn === 'kpi' && (
+                    <span>{sortDirection === 'asc' ? ' ▲' : ' ▼'}</span>
+                  )}
+                </TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>

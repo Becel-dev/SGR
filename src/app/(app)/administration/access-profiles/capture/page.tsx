@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useHideDocumentScrollbar } from '@/hooks/use-hide-document-scrollbar';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Shield, Save, ArrowLeft, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ const SYSTEM_MODULES = [
 ];
 
 export default function AccessProfileCapturePage() {
+  useHideDocumentScrollbar();
   const searchParams = useSearchParams();
   const profileId = searchParams?.get('id') || null;
   

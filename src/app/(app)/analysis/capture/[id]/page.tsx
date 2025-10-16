@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useHideDocumentScrollbar } from '@/hooks/use-hide-document-scrollbar';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -90,6 +91,8 @@ const analysisSchema = z.object({
 
 export default function RiskAnalysisCapturePage() {
   // NOTE: previous temporary overflow manipulation was removed to avoid global side-effects
+  // Layout fix (local): hide document scrollbar to avoid duplicate scrollbars
+  useHideDocumentScrollbar();
   // Função para deletar análise
   const handleDelete = async () => {
     if (!risk) return;
@@ -486,18 +489,8 @@ export default function RiskAnalysisCapturePage() {
 
   // Ajuste de layout: garantir que o formulário ocupe altura mínima e não "corra para cima"
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit, (formErrors) => {
-        console.error("Falha na validação do formulário. Erros:", formErrors);
-        toast({
-          title: "Erro de Validação",
-          description: "Por favor, verifique os campos do formulário. Há erros ou campos obrigatórios não preenchidos.",
-          variant: "destructive",
-        });
-      })}
-    >
-  <Card className="w-full">
-        <CardHeader>
+    <Card>
+      <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <CardTitle>Análise de Risco</CardTitle>
@@ -558,7 +551,18 @@ export default function RiskAnalysisCapturePage() {
             </div>
           </div>
         </CardHeader>
-  <CardContent className="space-y-8 mt-6 pb-8 w-full">
+  <CardContent className="space-y-6">
+    <form
+      onSubmit={handleSubmit(onSubmit, (formErrors) => {
+        console.error("Falha na validação do formulário. Erros:", formErrors);
+        toast({
+          title: "Erro de Validação",
+          description: "Por favor, verifique os campos do formulário. Há erros ou campos obrigatórios não preenchidos.",
+          variant: "destructive",
+        });
+      })}
+      className="space-y-6"
+    >
             {/* --- Section: Identificação e Contexto --- */}
             <section className="space-y-4 p-4 border rounded-md">
                 <h3 className="font-semibold text-lg text-primary">Identificação e Contexto</h3>
@@ -760,65 +764,67 @@ export default function RiskAnalysisCapturePage() {
                     <Controller name="urlDoCC" control={control} render={({ field }) => (<div><Label>URL do CC</Label><Input {...field} placeholder="https://..." />{errors.urlDoCC && <p className="text-red-500 text-sm mt-1">{errors.urlDoCC.message}</p>}</div>)} />
                 </div>
             </section>
-        </CardContent>
-  <CardFooter className="flex flex-wrap justify-end gap-2">
-          <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSaving || isDeleting || isMarkingAsAnalyzed}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-          {risk && 'status' in risk && risk.status !== 'Novo' && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
+
+            {/* Botões do formulário */}
+            <div className="flex flex-wrap justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSaving || isDeleting || isMarkingAsAnalyzed}>
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Voltar
+                </Button>
+
+                {risk && 'status' in risk && risk.status === 'Em Análise' && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button 
+                        type="button" 
+                        variant="destructive" 
+                        disabled={isSaving || isDeleting || isMarkingAsAnalyzed || !permissions.delete?.allowed || permissions.loading}
+                      >
+                        {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                        Excluir Análise
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta ação não pode ser desfeita. Isso excluirá permanentemente a análise de risco, e o risco voltará ao status 'Novo' na lista de análise.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+
+                {risk && 'status' in risk && risk.status === 'Em Análise' && (
+                  <PermissionButton
+                    module="analise" 
+                    action="edit"
+                    type="button"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={handleMarkAsAnalyzed}
+                    disabled={isSaving || isDeleting || isMarkingAsAnalyzed}
+                  >
+                    {isMarkingAsAnalyzed ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                    Marcar como Analisado
+                  </PermissionButton>
+                )}
+
                 <PermissionButton 
                   module="analise" 
-                  action="delete" 
-                  type="button" 
-                  variant="destructive" 
+                  action="edit" 
+                  type="submit" 
                   disabled={isSaving || isDeleting || isMarkingAsAnalyzed}
                 >
-                  {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
-                  Excluir Análise
+                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                  Salvar Análise
                 </PermissionButton>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Esta ação não pode ser desfeita. Isso excluirá permanentemente a análise de risco, e o risco voltará ao status 'Novo' na lista de análise.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          {/* Botão Marcar como Analisado também no rodapé */}
-          {risk && 'status' in risk && risk.status === 'Em Análise' && (
-            <PermissionButton
-              module="analise" 
-              action="edit"
-              type="button"
-              className="bg-green-600 hover:bg-green-700 text-white"
-              onClick={handleMarkAsAnalyzed}
-              disabled={isSaving || isDeleting || isMarkingAsAnalyzed}
-            >
-              {isMarkingAsAnalyzed ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-              Marcar como Analisado
-            </PermissionButton>
-          )}
-          <PermissionButton 
-            module="analise" 
-            action="edit" 
-            type="submit" 
-            disabled={isSaving || isDeleting || isMarkingAsAnalyzed}
-          >
-            {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-            Salvar Análise
-          </PermissionButton>
-        </CardFooter>
+            </div>
+        </form>
+        </CardContent>
       </Card>
-    </form>
   );
 }

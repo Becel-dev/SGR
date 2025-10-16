@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useHideDocumentScrollbar } from '@/hooks/use-hide-document-scrollbar';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Users, Save, ArrowLeft, Search, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 
 export default function AccessControlCapturePage() {
+  useHideDocumentScrollbar();
   const searchParams = useSearchParams();
   const controlId = searchParams?.get('id') || null;
   
