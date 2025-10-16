@@ -209,117 +209,115 @@ export default function PainelPage() {
         </p>
       </div>
 
-      {/* Indicadores Compactos - Grid único */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Indicadores</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {/* Riscos */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <TrendingUp className="h-4 w-4" />
-                Riscos
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Novos</span>
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{stats.risks.novo}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Em Análise</span>
-                  <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">{stats.risks.emAnalise}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Analisados</span>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{stats.risks.analisado}</Badge>
-                </div>
-              </div>
+      {/* Indicadores - Cards separados para cada grupo */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        {/* Riscos */}
+        <Card className="shadow-lg border bg-gradient-to-br from-blue-50 to-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <TrendingUp className="h-6 w-6 text-blue-600" /> Riscos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">Novos</span>
+              <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 font-bold text-lg">{stats.risks.novo}</Badge>
             </div>
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">Em Análise</span>
+              <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300 font-bold text-lg">{stats.risks.emAnalise}</Badge>
+            </div>
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">Analisados</span>
+              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 font-bold text-lg">{stats.risks.analisado}</Badge>
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Controles */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <Shield className="h-4 w-4" />
-                Controles
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Implementados</span>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{stats.controls.implementado}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Não Impl.</span>
-                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">{stats.controls.naoImplementado}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">C/ Pendência</span>
-                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">{stats.controls.implementadoPendencia}</Badge>
-                </div>
-              </div>
+        {/* Controles */}
+        <Card className="shadow-lg border bg-gradient-to-br from-green-50 to-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Shield className="h-6 w-6 text-green-600" /> Controles
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">Implementados</span>
+              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 font-bold text-lg">{stats.controls.implementado}</Badge>
             </div>
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">Não Impl.</span>
+              <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300 font-bold text-lg">{stats.controls.naoImplementado}</Badge>
+            </div>
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">C/ Pendência</span>
+              <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 font-bold text-lg">{stats.controls.implementadoPendencia}</Badge>
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* KPIs */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <GanttChartSquare className="h-4 w-4" />
-                KPIs
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">OK</span>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{stats.kpis.ok}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">NOK</span>
-                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">{stats.kpis.nok}</Badge>
-                </div>
-              </div>
+        {/* KPIs */}
+        <Card className="shadow-lg border bg-gradient-to-br from-yellow-50 to-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <GanttChartSquare className="h-6 w-6 text-yellow-600" /> KPIs
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">OK</span>
+              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 font-bold text-lg">{stats.kpis.ok}</Badge>
             </div>
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">NOK</span>
+              <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300 font-bold text-lg">{stats.kpis.nok}</Badge>
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Ações */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <FileText className="h-4 w-4" />
-                Ações
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Pendentes</span>
-                  <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">{stats.actions.pendente}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Em Andamento</span>
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{stats.actions.emAndamento}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Vencidas</span>
-                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">{stats.actions.vencida}</Badge>
-                </div>
-              </div>
+        {/* Ações */}
+        <Card className="shadow-lg border bg-gradient-to-br from-orange-50 to-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <FileText className="h-6 w-6 text-orange-600" /> Ações
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">Pendentes</span>
+              <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300 font-bold text-lg">{stats.actions.pendente}</Badge>
             </div>
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">Em Andamento</span>
+              <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-300 font-bold text-lg">{stats.actions.emAndamento}</Badge>
+            </div>
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">Vencidas</span>
+              <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300 font-bold text-lg">{stats.actions.vencida}</Badge>
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Bowtie */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <GitFork className="h-4 w-4" />
-                Bowtie
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Em Aprovação</span>
-                  <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">{stats.bowties.emAprovacao}</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Aprovados</span>
-                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">{stats.bowties.aprovado}</Badge>
-                </div>
-              </div>
+        {/* Bowtie */}
+        <Card className="shadow-lg border bg-gradient-to-br from-purple-50 to-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <GitFork className="h-6 w-6 text-purple-600" /> Bowtie
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">Em Aprovação</span>
+              <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300 font-bold text-lg">{stats.bowties.emAprovacao}</Badge>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="flex items-center justify-between text-base">
+              <span className="text-muted-foreground">Aprovados</span>
+              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 font-bold text-lg">{stats.bowties.aprovado}</Badge>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Relatório em Árvore - Destaque Principal */}
       <Card className="border-2">
