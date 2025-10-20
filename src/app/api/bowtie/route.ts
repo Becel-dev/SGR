@@ -8,6 +8,10 @@ import { BowtieData } from '../../../lib/types';
 export async function GET() {
   try {
     const bowties = await getAllBowties();
+    console.log(`📋 GET /api/bowtie - Returning ${bowties.length} bowties`);
+    bowties.forEach((b, i) => {
+      console.log(`  ${i + 1}. id="${b.id}", riskId="${b.riskId}", version=${b.version}`);
+    });
     return NextResponse.json(bowties);
   } catch (error) {
     console.error('Error getting bowties:', error);

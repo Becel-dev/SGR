@@ -63,11 +63,29 @@ const kpiStatusVariantMap: { [key: string]: "default" | "secondary" | "destructi
     'NOK': 'destructive',
 };
 
-// Função local mantida por compatibilidade, mas agora usa formatDateCached internamente
+// Função local para formatar data sem hora (compatibilidade)
 const formatDate = (value: unknown) => {
     if (!value) return '-';
     return formatDateCached(value as string);
 }
+
+// Função para formatar data COM hora
+const formatDateTime = (value: string | Date | undefined) => {
+    if (!value) return '-';
+    try {
+        const date = typeof value === 'string' ? new Date(value) : value;
+        return date.toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    } catch {
+        return String(value);
+    }
+};
 
 
 export default function ControlDetailPage() {
@@ -280,9 +298,9 @@ function ControlDetailContent() {
         </Section>
 
         <Section title="Metadados de Cadastro" icon={Calendar}>
-             <DetailItem label="Data de Criação" value={formatDate(control.criadoEm)} />
+             <DetailItem label="Data de Criação" value={formatDateTime(control.criadoEm)} />
              <DetailItem label="Criado Por" value={control.criadoPor} />
-             <DetailItem label="Data de Modificação" value={formatDate(control.modificadoEm)} />
+             <DetailItem label="Data de Modificação" value={formatDateTime(control.modificadoEm)} />
              <DetailItem label="Modificado Por" value={control.modificadoPor} />
              <DetailItem label="E-mails para KPI" value={control.preenchimentoKPI} className="sm:col-span-4" />
         </Section>

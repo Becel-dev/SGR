@@ -24,6 +24,7 @@ import {
   Permission,
   PERMISSION_MESSAGES
 } from '@/lib/permissions';
+import { isSuperAdmin } from '@/lib/config';
 
 export type PermissionCheckResult = {
   allowed: boolean;
@@ -43,39 +44,36 @@ export function usePermission(module: SystemModule, action: Permission): Permiss
 
   useEffect(() => {
     const loadUserPermissions = async () => {
-      // CORREÇÃO: Se não há usuário, MANTÉM loading = true
-      // O usuário pode estar carregando do NextAuth
+      // Se não há usuário, MANTÉM loading = true
       if (!user?.email) {
-        console.log('🔐 usePermission: Aguardando usuário carregar...');
-        // NÃO setLoading(false) aqui!
-        // Só marca que tentou verificar
         if (!userChecked) {
           setUserChecked(true);
         }
         return;
       }
 
-      console.log('🔐 usePermission: Carregando permissões para', user.email);
       setLoading(true);
       setUserChecked(true);
 
+      // SUPER ADMIN BYPASS - verifica antes de buscar perfil
+      if (isSuperAdmin(user.email)) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        // Buscar controle de acesso do usuário (vínculo userId -> profileId)
-        console.log('🔐 usePermission: Buscando access control...');
+        // Buscar controle de acesso do usuário
         const accessControlResponse = await fetch(`/api/access-control?userId=${user.email}`);
         
         if (!accessControlResponse.ok) {
-          console.error('❌ usePermission: Erro ao buscar controle de acesso');
           setLoading(false);
           return;
         }
 
         const accessControlData = await accessControlResponse.json();
-        console.log('🔐 usePermission: Access control recebido:', accessControlData);
         
         // Se não houver controle de acesso, usuário não tem perfil
         if (!accessControlData.accessControl) {
-          console.log('⚠️ usePermission: Usuário sem access control');
           setLoading(false);
           return;
         }
@@ -84,27 +82,23 @@ export function usePermission(module: SystemModule, action: Permission): Permiss
 
         // Verificar se o controle de acesso está ativo
         if (!isAccessControlActive(accessControlData.accessControl)) {
-          console.log('⚠️ usePermission: Access control inativo ou expirado');
           setLoading(false);
           return;
         }
 
         // Buscar o perfil de acesso
-        console.log('🔐 usePermission: Buscando perfil', accessControlData.accessControl.profileId);
         const profileResponse = await fetch(`/api/access-profiles/${accessControlData.accessControl.profileId}`);
         
         if (!profileResponse.ok) {
-          console.error('❌ usePermission: Erro ao buscar perfil de acesso');
           setLoading(false);
           return;
         }
 
         const profileData = await profileResponse.json();
-        console.log('✅ usePermission: Perfil carregado:', profileData.profile.name);
         setUserProfile(profileData.profile);
         
       } catch (error) {
-        console.error('❌ usePermission: Erro ao carregar permissões:', error);
+        console.error('Erro ao carregar permissões:', error);
       } finally {
         setLoading(false);
       }
@@ -113,21 +107,27 @@ export function usePermission(module: SystemModule, action: Permission): Permiss
     loadUserPermissions();
   }, [user?.email]);
 
-  // SEMPRE mostrar loading se usuário não está disponível ainda
-  // Isso garante que não redirecionamos antes do NextAuth carregar a sessão
+  // Se usuário não está disponível ainda
   if (!user?.email) {
-    console.log('⏳ usePermission: Usuário ainda não disponível, mantendo loading...');
     return {
       allowed: false,
-      loading: true, // SEMPRE true até usuário estar disponível
+      loading: true,
     };
   }
 
-  // Se ainda está carregando as permissões (após usuário disponível)
+  // Se ainda está carregando as permissões
   if (loading) {
     return {
       allowed: false,
       loading: true,
+    };
+  }
+
+  // SUPER ADMIN TEM ACESSO TOTAL
+  if (isSuperAdmin(user.email)) {
+    return {
+      allowed: true,
+      loading: false,
     };
   }
 
@@ -176,8 +176,8 @@ export function usePermission(module: SystemModule, action: Permission): Permiss
     };
   }
 
-  // Verificar permissão
-  const allowed = hasPermission(userProfile, module, action);
+  // Verificar permissão (passa o email do usuário para verificar super admin)
+  const allowed = hasPermission(userProfile, module, action, user.email);
 
   return {
     allowed,
@@ -238,6 +238,12 @@ export function useUserPermissions() {
         return;
       }
 
+      // SUPER ADMIN BYPASS
+      if (isSuperAdmin(user.email)) {
+        setLoading(false);
+        return;
+      }
+
       try {
         // Buscar controle de acesso do usuário
         const accessControlResponse = await fetch(`/api/access-control?userId=${user.email}`);
@@ -272,7 +278,7 @@ export function useUserPermissions() {
         setPermissions(allPermissions);
         
       } catch (error) {
-        console.error('Erro ao carregar permissões:', error);
+        console.error('Erro ao carregar permissões do usuário:', error);
       } finally {
         setLoading(false);
       }
@@ -286,7 +292,7 @@ export function useUserPermissions() {
     userProfile,
     accessControl,
     isActive: accessControl ? isAccessControlActive(accessControl) : false,
-    isAdmin: isAdmin(userProfile),
+    isAdmin: user?.email ? (isSuperAdmin(user.email) || isAdmin(userProfile)) : false,
     loading,
   };
 }

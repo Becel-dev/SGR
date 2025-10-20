@@ -19,6 +19,7 @@ import {
   Permission,
   PERMISSION_MESSAGES
 } from '@/lib/permissions';
+import { isSuperAdmin } from '@/lib/config';
 
 export type PermissionResult = {
   allowed: boolean;
@@ -68,33 +69,33 @@ export function usePermissions(checks: PermissionCheck[]): PermissionsCheckResul
   useEffect(() => {
     const loadUserPermissions = async () => {
       if (!user?.email) {
-        console.log('🔐 usePermissions: Aguardando usuário carregar...');
         if (!userChecked) {
           setUserChecked(true);
         }
         return;
       }
 
-      console.log('🔐 usePermissions: Carregando permissões para', user.email);
       setLoading(true);
       setUserChecked(true);
 
+      // SUPER ADMIN BYPASS - verifica antes de buscar perfil
+      if (isSuperAdmin(user.email)) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        // Buscar controle de acesso do usuário (vínculo userId -> profileId)
-        console.log('🔐 usePermissions: Buscando access control...');
+        // Buscar controle de acesso do usuário
         const accessControlResponse = await fetch(`/api/access-control?userId=${user.email}`);
         
         if (!accessControlResponse.ok) {
-          console.error('❌ usePermissions: Erro ao buscar controle de acesso');
           setLoading(false);
           return;
         }
 
         const accessControlData = await accessControlResponse.json();
-        console.log('🔐 usePermissions: Access control recebido:', accessControlData);
         
         if (!accessControlData.accessControl) {
-          console.log('⚠️ usePermissions: Usuário sem access control');
           setLoading(false);
           return;
         }
@@ -102,27 +103,23 @@ export function usePermissions(checks: PermissionCheck[]): PermissionsCheckResul
         setAccessControl(accessControlData.accessControl);
 
         if (!isAccessControlActive(accessControlData.accessControl)) {
-          console.log('⚠️ usePermissions: Access control inativo ou expirado');
           setLoading(false);
           return;
         }
 
         // Buscar o perfil de acesso
-        console.log('🔐 usePermissions: Buscando perfil', accessControlData.accessControl.profileId);
         const profileResponse = await fetch(`/api/access-profiles/${accessControlData.accessControl.profileId}`);
         
         if (!profileResponse.ok) {
-          console.error('❌ usePermissions: Erro ao buscar perfil de acesso');
           setLoading(false);
           return;
         }
 
         const profileData = await profileResponse.json();
-        console.log('✅ usePermissions: Perfil carregado:', profileData.profile.name);
         setUserProfile(profileData.profile);
         
       } catch (error) {
-        console.error('❌ usePermissions: Erro ao carregar permissões:', error);
+        console.error('Erro ao carregar permissões:', error);
       } finally {
         setLoading(false);
       }
@@ -141,6 +138,16 @@ export function usePermissions(checks: PermissionCheck[]): PermissionsCheckResul
         loadingResult[key] = { allowed: false, message: 'Carregando...' };
       });
       return loadingResult;
+    }
+
+    // SUPER ADMIN TEM ACESSO TOTAL
+    if (isSuperAdmin(user.email)) {
+      const superAdminResult: PermissionsCheckResult = { loading: false };
+      checks.forEach(check => {
+        const key = check.key || check.action;
+        superAdminResult[key] = { allowed: true };
+      });
+      return superAdminResult;
     }
 
     // Se não houver controle de acesso
@@ -200,7 +207,8 @@ export function usePermissions(checks: PermissionCheck[]): PermissionsCheckResul
     
     checks.forEach(check => {
       const key = check.key || check.action;
-      const allowed = hasPermission(userProfile, check.module, check.action);
+      // Passa o email do usuário para verificar super admin
+      const allowed = hasPermission(userProfile, check.module, check.action, user.email);
       
       permissions[key] = {
         allowed,
@@ -208,7 +216,6 @@ export function usePermissions(checks: PermissionCheck[]): PermissionsCheckResul
       };
     });
 
-    console.log('✅ usePermissions: Resultado calculado:', permissions);
     return permissions;
 
   }, [user?.email, loading, userProfile, accessControl, checks]);

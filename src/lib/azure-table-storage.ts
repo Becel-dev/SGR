@@ -3,10 +3,12 @@
 'use server';
 
 import { TableClient, TableEntity, AzureNamedKeyCredential } from "@azure/data-tables";
-// Removido mockData: integração 100% Azure
+import { getEnvironmentConfig } from './config';
 import type { IdentifiedRisk, RiskAnalysis, Control, Kpi, AssociatedRisk, BowtieData, TopRisk, RiskFactor, TemaMaterial, CategoriaControle, EscalationConfig, Action, AccessProfile, UserAccessControl } from './types';
 
-const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
+// Usa a connection string apropriada baseada no ambiente
+const config = getEnvironmentConfig();
+const connectionString = config.azureStorageConnectionString;
 const identifiedRisksTableName = "identifiedrisks";
 const riskAnalysisTableName = "riskanalysis"; // Nova tabela
 const controlsTableName = "controls";
@@ -310,10 +312,13 @@ export async function addOrUpdateControl(controlData: Control): Promise<Control>
         }
         if (!control.criadoEm) {
             control.criadoEm = now;
-            control.criadoPor = "Sistema"; // Substituir pelo usuário logado
         }
-        control.modificadoEm = now;
-        control.modificadoPor = "Sistema"; // Substituir pelo usuário logado
+        if (!control.criadoPor) {
+            control.criadoPor = "Sistema (sistema@sgr.com)";
+        }
+        // Sempre atualiza a data de modificação, mas respeita o modificadoPor se vier preenchido
+        control.modificadoEm = control.modificadoEm || now;
+        control.modificadoPor = control.modificadoPor || "Sistema (sistema@sgr.com)";
 
         console.log("Tentando salvar controle:", control);
         console.log("Campo categoria:", control.categoria, "Tipo:", typeof control.categoria);
@@ -706,8 +711,9 @@ export async function addOrUpdateRiskAnalysis(analysisData: RiskAnalysis): Promi
         const analysisToSave: RiskAnalysis = {
             ...analysisData,
             status: statusToSave,
-            updatedAt: new Date().toISOString(),
-            updatedBy: "Sistema", // Adicionar o usuário logado aqui posteriormente
+            // Mantém os valores de auditoria se já vieram preenchidos
+            updatedAt: analysisData.updatedAt || new Date().toISOString(),
+            updatedBy: analysisData.updatedBy || "Sistema (sistema@sgr.com)",
         };
 
         const entity = toRiskAnalysisTableEntity(analysisToSave);
@@ -838,21 +844,50 @@ export async function getBowtieVersions(riskId: string): Promise<BowtieData[]> {
 export async function getBowtieById(id: string): Promise<BowtieData | undefined> {
     const client = getClient(bowtieTableName);
     try {
+        console.log(`🔍 getBowtieById - Searching for id: "${id}"`);
+        console.log(`🔍 Pattern to match: "${id}_v" (starts with)`);
+        
         // Busca por partitionKey OU rowKey que contenha o id
         let latest: BowtieData | undefined = undefined;
+        let matchCount = 0;
+        let entityCount = 0;
+        
         const entities = client.listEntities<TableEntity<any>>();
         for await (const entity of entities) {
+            entityCount++;
+            console.log(`🔎 Entity ${entityCount}: PK="${entity.partitionKey}", RK="${entity.rowKey}"`);
+            
             // Match partitionKey or rowKey pattern
-            if (entity.partitionKey === id || (entity.rowKey && entity.rowKey.startsWith(id + '_v'))) {
+            const pkMatch = entity.partitionKey === id;
+            const rkMatch = entity.rowKey && (
+                entity.rowKey === id ||                    // Exact match (formato sem versão)
+                entity.rowKey.startsWith(id + '_v')        // Formato com versão: id_vX
+            );
+            
+            console.log(`   PK match: ${pkMatch}, RK match: ${rkMatch}`);
+            
+            if (pkMatch || rkMatch) {
+                matchCount++;
                 const bowtie = fromBowtieTableEntity(entity);
+                console.log(`✅ Match ${matchCount}: PK="${entity.partitionKey}", RK="${entity.rowKey}", version=${bowtie.version}`);
+                
                 if (!latest || bowtie.version > latest.version) {
                     latest = bowtie;
                 }
             }
         }
+        
+        console.log(`📊 Total entities scanned: ${entityCount}, Matches found: ${matchCount}`);
+        
+        if (matchCount === 0) {
+            console.log(`❌ getBowtieById - No matches found for id: "${id}"`);
+        } else {
+            console.log(`✅ getBowtieById - Returning latest version ${latest?.version} (${matchCount} total matches)`);
+        }
+        
         return latest;
     } catch (error) {
-        console.error(`Erro ao buscar Bowtie com id ${id}:`, error);
+        console.error(`❌ Erro ao buscar Bowtie com id ${id}:`, error);
         return undefined;
     }
 }

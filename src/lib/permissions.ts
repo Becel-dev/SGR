@@ -6,6 +6,7 @@
  */
 
 import { AccessProfile, ModulePermission, UserAccessControl } from './types';
+import { isSuperAdmin } from './config';
 
 // Módulos do sistema
 export type SystemModule = 
@@ -31,8 +32,14 @@ export type Permission = 'view' | 'create' | 'edit' | 'delete' | 'export';
 export function hasPermission(
   userProfile: AccessProfile | null,
   module: SystemModule,
-  permission: Permission
+  permission: Permission,
+  userEmail?: string | null
 ): boolean {
+  // Super Admin tem acesso total a tudo
+  if (userEmail && isSuperAdmin(userEmail)) {
+    return true;
+  }
+
   // Se não houver perfil, não tem permissão
   if (!userProfile) {
     return false;
@@ -62,9 +69,10 @@ export function hasPermission(
  */
 export function canView(
   userProfile: AccessProfile | null,
-  module: SystemModule
+  module: SystemModule,
+  userEmail?: string | null
 ): boolean {
-  return hasPermission(userProfile, module, 'view');
+  return hasPermission(userProfile, module, 'view', userEmail);
 }
 
 /**
@@ -72,9 +80,10 @@ export function canView(
  */
 export function canCreate(
   userProfile: AccessProfile | null,
-  module: SystemModule
+  module: SystemModule,
+  userEmail?: string | null
 ): boolean {
-  return hasPermission(userProfile, module, 'create');
+  return hasPermission(userProfile, module, 'create', userEmail);
 }
 
 /**
@@ -82,9 +91,10 @@ export function canCreate(
  */
 export function canEdit(
   userProfile: AccessProfile | null,
-  module: SystemModule
+  module: SystemModule,
+  userEmail?: string | null
 ): boolean {
-  return hasPermission(userProfile, module, 'edit');
+  return hasPermission(userProfile, module, 'edit', userEmail);
 }
 
 /**
@@ -92,9 +102,10 @@ export function canEdit(
  */
 export function canDelete(
   userProfile: AccessProfile | null,
-  module: SystemModule
+  module: SystemModule,
+  userEmail?: string | null
 ): boolean {
-  return hasPermission(userProfile, module, 'delete');
+  return hasPermission(userProfile, module, 'delete', userEmail);
 }
 
 /**
@@ -102,9 +113,10 @@ export function canDelete(
  */
 export function canExport(
   userProfile: AccessProfile | null,
-  module: SystemModule
+  module: SystemModule,
+  userEmail?: string | null
 ): boolean {
-  return hasPermission(userProfile, module, 'export');
+  return hasPermission(userProfile, module, 'export', userEmail);
 }
 
 /**

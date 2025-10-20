@@ -219,6 +219,9 @@ function BowtieContent() {
   };
 
   const handleDeleteDiagram = async (diagramId: string) => {
+    console.log('🗑️ Deleting bowtie with ID:', diagramId);
+    console.log('📊 Current diagrams:', bowtieDiagrams.map(d => ({ id: d.id, riskId: d.riskId, version: d.version })));
+    
     const originalDiagrams = [...bowtieDiagrams];
     setBowtieDiagrams(prev => prev.filter(d => d.id !== diagramId));
     setSelectedDiagram(null);
@@ -239,6 +242,9 @@ function BowtieContent() {
             }
             throw new Error(errorMsg);
         }
+
+        // Recarregar a lista do servidor para garantir sincronização
+        await fetchData();
 
         toast({
             title: "Sucesso",

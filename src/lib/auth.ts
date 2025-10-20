@@ -24,48 +24,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         },
       },
     }),
-    // Provider de teste para ambiente local
-    Credentials({
-      id: 'test-credentials',
-      name: 'Teste Local',
-      credentials: {
-        email: { label: 'Email', type: 'email', placeholder: 'teste@exemplo.com' },
-      },
-      async authorize(credentials) {
-        // Apenas para testes locais - NÃO usar em produção!
-        if (process.env.NODE_ENV !== 'production') {
+    // Provider de desenvolvimento (apenas ambiente local)
+    ...(process.env.NODE_ENV === 'development' ? [
+      Credentials({
+        id: 'dev-credentials',
+        name: 'Desenvolvimento Local',
+        credentials: {
+          email: { label: 'Email', type: 'email', placeholder: 'seu.email@exemplo.com' },
+          name: { label: 'Nome', type: 'text', placeholder: 'Seu Nome' },
+        },
+        async authorize(credentials) {
           const email = credentials?.email as string;
+          const name = credentials?.name as string;
           
-          // Lista de usuários de teste pré-definidos
-          const testUsers = [
-            { email: 'pedro@teste.com', name: 'Pedro Teste' },
-            { email: 'maria@teste.com', name: 'Maria Silva' },
-            { email: 'joao@teste.com', name: 'João Santos' },
-            { email: 'ana@teste.com', name: 'Ana Costa' },
-          ];
-          
-          // Buscar usuário na lista
-          const user = testUsers.find(u => u.email === email);
-          
-          if (user) {
-            return {
-              id: `test-${user.email}`,
-              email: user.email,
-              name: user.name,
-            };
+          if (!email) {
+            return null;
           }
           
-          // Se não encontrar, aceitar qualquer email para testes
           return {
-            id: 'test-user-custom',
-            email: email || 'pedro@teste.com',
-            name: email ? email.split('@')[0] : 'Pedro Teste',
+            id: `dev-${email}`,
+            email: email,
+            name: name || email.split('@')[0],
           };
-        }
-        
-        return null;
-      },
-    }),
+        },
+      })
+    ] : []),
   ],
   callbacks: {
     async jwt({ token, account, profile, user }: any) {

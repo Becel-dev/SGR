@@ -7,38 +7,12 @@ import { Separator } from '@/components/ui/separator';
 import { Shield, FlaskConical, User } from 'lucide-react';
 
 export default function SignInPage() {
-  const isDevEnvironment = process.env.NODE_ENV !== 'production';
+  const isDevEnvironment = process.env.NODE_ENV === 'development';
 
-  const testUsers = [
-    { 
-      email: 'pedro@teste.com', 
-      name: 'Pedro Teste',
-      description: '👨‍💼 Usuário base para setup inicial',
-      color: 'blue'
-    },
-    { 
-      email: 'maria@teste.com', 
-      name: 'Maria Silva',
-      description: '👁️ Perfil Visualizador (somente leitura)',
-      color: 'purple'
-    },
-    { 
-      email: 'joao@teste.com', 
-      name: 'João Santos',
-      description: '⚙️ Gestor de Riscos (criar/editar)',
-      color: 'green'
-    },
-    { 
-      email: 'ana@teste.com', 
-      name: 'Ana Costa',
-      description: '👑 Administrador (acesso total)',
-      color: 'orange'
-    },
-  ];
-
-  const handleTestLogin = (email: string) => {
-    signIn('test-credentials', { 
+  const handleDevLogin = (email: string, name: string) => {
+    signIn('dev-credentials', { 
       email,
+      name,
       callbackUrl: '/' 
     });
   };
@@ -79,33 +53,44 @@ export default function SignInPage() {
                 </span>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <p className="text-sm font-medium text-center text-orange-900 flex items-center justify-center gap-2">
                   <FlaskConical className="h-4 w-4" />
-                  Usuários de Teste
+                  Login de Desenvolvimento
                 </p>
                 
-                {testUsers.map((user) => (
+                <div className="space-y-2">
+                  <input
+                    type="email"
+                    id="dev-email"
+                    placeholder="seu.email@exemplo.com"
+                    className="w-full px-3 py-2 border border-orange-200 rounded-md text-sm"
+                  />
+                  <input
+                    type="text"
+                    id="dev-name"
+                    placeholder="Seu Nome"
+                    className="w-full px-3 py-2 border border-orange-200 rounded-md text-sm"
+                  />
                   <Button
-                    key={user.email}
-                    onClick={() => handleTestLogin(user.email)}
+                    onClick={() => {
+                      const email = (document.getElementById('dev-email') as HTMLInputElement).value;
+                      const name = (document.getElementById('dev-name') as HTMLInputElement).value;
+                      if (email) {
+                        handleDevLogin(email, name || email.split('@')[0]);
+                      }
+                    }}
                     variant="outline"
-                    className="w-full justify-start text-left h-auto py-3 px-4 border-orange-200 bg-orange-50 hover:bg-orange-100"
+                    className="w-full border-orange-200 bg-orange-50 hover:bg-orange-100"
                   >
-                    <div className="flex items-start gap-3 w-full">
-                      <User className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-orange-900">{user.name}</div>
-                        <div className="text-xs text-orange-700">{user.email}</div>
-                        <div className="text-xs text-orange-600 mt-1">{user.description}</div>
-                      </div>
-                    </div>
+                    <User className="h-4 w-4 mr-2" />
+                    Entrar como Desenvolvedor
                   </Button>
-                ))}
+                </div>
               </div>
 
               <p className="text-xs text-center text-muted-foreground mt-4">
-                💡 Use usuários de teste para validar diferentes níveis de permissão
+                💡 Para desenvolvimento local apenas. Configure perfis de acesso no sistema após o login.
               </p>
             </>
           )}

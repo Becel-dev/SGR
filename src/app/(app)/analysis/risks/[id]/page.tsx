@@ -1,27 +1,15 @@
 
 'use client'
 
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { controlsData, initialBowtieData, risksData } from "@/lib/mock-data";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { notFound, useParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Siren, DollarSign, Target, Shield, Activity, BarChart3, Briefcase, Users, CircleHelp, ClipboardList, TrendingUp, PlusCircle, ArrowRight, GitFork, Trash2 } from "lucide-react";
+import { ArrowLeft, Siren, Shield, Activity, BarChart3, Briefcase, CircleHelp, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import type { Control, Risk } from "@/lib/types";
+import type { RiskAnalysis } from "@/lib/types";
 import { useEffect, useState } from "react";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const riskLevelVariantMap: { [key: string]: "default" | "secondary" | "destructive" | "outline" } = {
     'Crítico': 'destructive',
@@ -47,7 +35,25 @@ const controlStatusVariantMap: { [key: string]: "default" | "secondary" | "destr
     'Não Implementado': 'destructive',
 };
 
-const DetailItem = ({ label, value, className, isBadge = false }: { label: string, value: React.ReactNode, className?: string, isBadge?: boolean }) => {
+// Formata data ISO para formato brasileiro com hora
+const formatDateTime = (isoString: string | undefined) => {
+    if (!isoString) return '';
+    try {
+        const date = new Date(isoString);
+        return date.toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    } catch {
+        return isoString;
+    }
+};
+
+const DetailItem = ({ label, value, className, isBadge = false, isDateTime = false }: { label: string, value: React.ReactNode, className?: string, isBadge?: boolean, isDateTime?: boolean }) => {
     if (!value && value !== 0 && value !== '') return null;
 
     let displayValue: React.ReactNode = value;
@@ -57,6 +63,8 @@ const DetailItem = ({ label, value, className, isBadge = false }: { label: strin
         const badgeVariant = (riskLevelVariantMap[value] || statusVariantMap[value] || 'default');
         displayValue = <Badge variant={badgeVariant}>{value}</Badge>;
         ValueWrapper = 'div'; // Use div for badge to avoid p-in-p error
+    } else if (isDateTime && typeof value === 'string') {
+        displayValue = formatDateTime(value);
     }
 
     return (
@@ -81,42 +89,62 @@ const Section = ({ title, children, icon: Icon }: { title: string, children: Rea
 
 export default function RiskDetailPage() {
     const params = useParams();
-    const { id } = params;
-    const [risk, setRisk] = useState<Risk | undefined>(undefined);
-    const [relatedControls, setRelatedControls] = useState<Control[]>([]);
+    const id = params?.id as string | undefined;
+    const [risk, setRisk] = useState<RiskAnalysis | undefined>(undefined);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (id) {
-            const foundRisk = risksData.find(r => r.id === id);
-            setRisk(foundRisk);
-             if(foundRisk) {
-                const foundControls = controlsData.filter(c => 
-                    c.associatedRisks.some(ar => ar.riskId === foundRisk.id)
-                );
-                setRelatedControls(foundControls);
+        const fetchRisk = async () => {
+            if (!id) return;
+            
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await fetch(`/api/analysis/risks/${id}`);
+                
+                if (response.status === 404) {
+                    setRisk(undefined);
+                    return;
+                }
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar risco');
+                }
+                
+                const data = await response.json();
+                setRisk(data);
+            } catch (err) {
+                console.error('Erro ao carregar risco:', err);
+                setError(err instanceof Error ? err.message : 'Erro desconhecido');
+            } finally {
+                setLoading(false);
             }
-        }
-        setLoading(false);
+        };
+
+        fetchRisk();
     }, [id]);
 
-    const handleDelete = () => {
-        // Lógica de exclusão aqui
-        console.log(`Risco ${risk?.id} excluído.`);
-        // Idealmente, redirecionar o usuário após a exclusão
-        // router.push('/risks');
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        );
     }
 
-
-    if (loading) {
-        return <div>Carregando...</div>;
+    if (error) {
+        return (
+            <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        );
     }
 
     if (!risk) {
         return notFound();
     }
-    
-    const hasBowtie = risk.bowtieRealizado === 'Realizado' || risk.bowtieRealizado === 'Sim';
 
     return (
         <Card>
@@ -128,11 +156,11 @@ export default function RiskDetailPage() {
                             Análise de Risco: {risk.id}
                         </CardTitle>
                         <CardDescription>
-                            {risk.risco}
+                            {risk.riskName}
                         </CardDescription>
                     </div>
                     <Button variant="outline" asChild>
-                        <Link href="/risks">
+                        <Link href="/analysis/risks">
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Voltar para Lista
                         </Link>
@@ -142,25 +170,31 @@ export default function RiskDetailPage() {
             <CardContent className="space-y-6">
                 <Section title="Identificação e Contexto" icon={Briefcase}>
                     <DetailItem label="ID" value={risk.id} />
-                    <DetailItem label="Risco" value={risk.risco} className="sm:col-span-3"/>
+                    <DetailItem label="Risco" value={risk.riskName} className="sm:col-span-3"/>
                     <DetailItem label="Gerência" value={risk.gerencia} />
-                    <DetailItem label="TopRisk Associado" value={risk.topRiskAssociado} className="sm:col-span-3"/>
-                    <DetailItem label="Fator de Risco" value={risk.fatorDeRisco} className="sm:col-span-4"/>
+                    <DetailItem label="TopRisk Associado" value={risk.topRisk} className="sm:col-span-3"/>
+                    <DetailItem label="Fator de Risco" value={risk.riskFactor} className="sm:col-span-4"/>
+                    <DetailItem label="Dono do Risco" value={risk.donoRisco} />
                     <DetailItem label="Taxonomia" value={risk.taxonomia} />
-                    <DetailItem label="Contexto" value={risk.contexto} className="sm:col-span-3"/>
+                    <DetailItem label="Causa Provável" value={risk.probableCause} className="sm:col-span-3"/>
+                    <DetailItem label="Cenário de Risco" value={risk.riskScenario} className="sm:col-span-3"/>
+                    <DetailItem label="Consequência Esperada" value={risk.expectedConsequence} className="sm:col-span-3"/>
+                    <DetailItem label="Controles Atuais" value={risk.currentControls} className="sm:col-span-3"/>
                     <DetailItem label="Observação" value={risk.observacao} className="sm:col-span-4"/>
                 </Section>
                 
                 <Section title="Análise e Classificação" icon={BarChart3}>
-                    <DetailItem label="IMP" value={risk.imp} />
-                    <DetailItem label="ORG" value={risk.org} />
-                    <DetailItem label="PROB" value={risk.prob} />
-                    <DetailItem label="CTRL" value={risk.ctrl} />
-                    <DetailItem label="TEMPO" value={risk.tempo} />
-                    <DetailItem label="FACIL" value={risk.facil} />
+                    <DetailItem label="IMP (Impacto Corporativo)" value={risk.corporateImpact} />
+                    <DetailItem label="ORG (Relevância Organizacional)" value={risk.organizationalRelevance} />
+                    <DetailItem label="PROB (Probabilidade)" value={risk.contextualizedProbability} />
+                    <DetailItem label="CTRL (Capacidade Controles)" value={risk.currentControlCapacity} />
+                    <DetailItem label="TEMPO (Contenção)" value={risk.containmentTime} />
+                    <DetailItem label="FACIL (Viabilidade Técnica)" value={risk.technicalFeasibility} />
                     <DetailItem label="IER" value={risk.ier} />
                     <DetailItem label="Origem" value={risk.origem} />
                     <DetailItem label="Tipo IER" value={risk.tipoIER} />
+                    <DetailItem label="Papel do Risco" value={risk.riskRole} />
+                    <DetailItem label="Tipo de Apontamento" value={risk.pointingType} />
                     <DetailItem label="X" value={risk.x} />
                     <DetailItem label="Y" value={risk.y} />
                     <DetailItem label="Englobador" value={risk.englobador} />
@@ -178,10 +212,10 @@ export default function RiskDetailPage() {
                     <DetailItem label="Responsável pelo Bowtie" value={risk.responsavelBowtie} />
                     <DetailItem label="Horizonte Tempo" value={risk.horizonteTempo} />
                     <DetailItem label="Data Alteração Curadoria" value={risk.dataAlteracaoCuradoria} />
-                    <DetailItem label="Criado em" value={risk.criado} />
-                    <DetailItem label="Criado por" value={risk.criadoPor} />
-                    <DetailItem label="Modificado em" value={risk.modificado} />
-                    <DetailItem label="Modificado por" value={risk.modificadoPor} />
+                    <DetailItem label="Criado em" value={risk.createdAt} isDateTime />
+                    <DetailItem label="Criado por" value={risk.createdBy} />
+                    <DetailItem label="Modificado em" value={risk.updatedAt} isDateTime />
+                    <DetailItem label="Modificado por" value={risk.updatedBy} />
                 </Section>
 
                 <Section title="Controles e Bowtie" icon={CircleHelp}>
@@ -189,97 +223,8 @@ export default function RiskDetailPage() {
                     <DetailItem label="Possui CC" value={risk.possuiCC} />
                     <DetailItem label="URL do CC" value={risk.urlDoCC} />
                 </Section>
-                
-                {relatedControls.length > 0 && (
-                    <div className="space-y-4 rounded-lg border p-4">
-                        <h3 className="font-semibold text-lg flex items-center gap-2">
-                            <Shield className="h-5 w-5 text-primary" />
-                            Controles Relacionados
-                        </h3>
-                         <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                <TableRow>
-                                    <TableHead>ID</TableHead>
-                                    <TableHead>Nome do Controle</TableHead>
-                                    <TableHead>Dono</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Ações</TableHead>
-                                </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                {relatedControls.map(control => (
-                                    <TableRow key={control.id}>
-                                    <TableCell className="font-mono">{control.id}</TableCell>
-                                    <TableCell className="font-medium">{control.nomeControle}</TableCell>
-                                    <TableCell>{control.donoControle}</TableCell>
-                                    <TableCell>
-                                        <Badge variant={controlStatusVariantMap[control.status] || 'default'}>{control.status}</Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Button variant="ghost" size="icon" asChild>
-                                        <Link href={`/controls/${control.id}`}>
-                                            <ArrowRight className="h-4 w-4" />
-                                            <span className="sr-only">Ver Detalhes do Controle</span>
-                                        </Link>
-                                        </Button>
-                                    </TableCell>
-                                    </TableRow>
-                                ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </div>
-                )}
 
             </CardContent>
-            <CardFooter className="flex justify-between flex-wrap gap-4">
-                <div className="flex gap-2 flex-wrap">
-                     <Button asChild>
-                        <Link href={`/controls/capture?riskId=${risk.id}`}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Adicionar Controle
-                        </Link>
-                    </Button>
-                    {hasBowtie ? (
-                        <Button asChild variant="outline">
-                            <Link href={`/bowtie?riskId=${risk.id}`}>
-                                <GitFork className="mr-2 h-4 w-4" />
-                                Ver Bowtie
-                            </Link>
-                        </Button>
-                    ) : (
-                         <Button asChild variant="outline">
-                            <Link href={`/bowtie?riskId=${risk.id}&create=true`}>
-                                <GitFork className="mr-2 h-4 w-4" />
-                                Criar Bowtie
-                            </Link>
-                        </Button>
-                    )}
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive-outline"><Trash2 className="mr-2 h-4 w-4" />Excluir Risco</Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Tem certeza que deseja excluir o registro?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Esta ação não pode ser desfeita. Isso excluirá permanentemente o risco "{risk.risco}".
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Não</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDelete}>Sim</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                    <Button asChild>
-                        <Link href={`/risks/capture?id=${risk.id}`}>Editar Risco</Link>
-                    </Button>
-                </div>
-            </CardFooter>
         </Card>
     );
 }

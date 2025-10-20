@@ -2,70 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { getAllUserAccessControls } from '@/lib/azure-table-storage';
 import type { UserAccessControl } from '@/lib/types';
-
-// Mock data para ambiente de desenvolvimento
-const MOCK_ACCESS_CONTROLS: Record<string, UserAccessControl> = {
-  'pedro@teste.com': {
-    id: 'mock-ac-pedro',
-    userId: 'pedro@teste.com',
-    userName: 'Pedro Teste',
-    userEmail: 'pedro@teste.com',
-    profileId: 'mock-profile-admin',
-    profileName: 'Administrador (Mock)',
-    startDate: new Date('2024-01-01').toISOString(),
-    endDate: new Date('2026-12-31').toISOString(),
-    isActive: true,
-    createdAt: new Date('2024-01-01').toISOString(),
-    updatedAt: new Date('2024-01-01').toISOString(),
-    createdBy: 'system',
-    updatedBy: 'system',
-  },
-  'maria@teste.com': {
-    id: 'mock-ac-maria',
-    userId: 'maria@teste.com',
-    userName: 'Maria Silva',
-    userEmail: 'maria@teste.com',
-    profileId: 'mock-profile-viewer',
-    profileName: 'Visualizador (Mock)',
-    startDate: new Date('2024-01-01').toISOString(),
-    endDate: new Date('2026-12-31').toISOString(),
-    isActive: true,
-    createdAt: new Date('2024-01-01').toISOString(),
-    updatedAt: new Date('2024-01-01').toISOString(),
-    createdBy: 'system',
-    updatedBy: 'system',
-  },
-  'joao@teste.com': {
-    id: 'mock-ac-joao',
-    userId: 'joao@teste.com',
-    userName: 'João Santos',
-    userEmail: 'joao@teste.com',
-    profileId: 'mock-profile-manager',
-    profileName: 'Gestor de Riscos (Mock)',
-    startDate: new Date('2024-01-01').toISOString(),
-    endDate: new Date('2026-12-31').toISOString(),
-    isActive: true,
-    createdAt: new Date('2024-01-01').toISOString(),
-    updatedAt: new Date('2024-01-01').toISOString(),
-    createdBy: 'system',
-    updatedBy: 'system',
-  },
-  'ana@teste.com': {
-    id: 'mock-ac-ana',
-    userId: 'ana@teste.com',
-    userName: 'Ana Costa',
-    userEmail: 'ana@teste.com',
-    profileId: 'mock-profile-admin-full',
-    profileName: 'Super Administrador (Mock)',
-    startDate: new Date('2024-01-01').toISOString(),
-    endDate: new Date('2026-12-31').toISOString(),
-    isActive: true,
-    createdAt: new Date('2024-01-01').toISOString(),
-    updatedAt: new Date('2024-01-01').toISOString(),
-    createdBy: 'system',
-    updatedBy: 'system',
-  },
-};
+import { isSuperAdmin } from '@/lib/config';
 
 /**
  * GET /api/access-control?userId=email@example.com
@@ -99,14 +36,13 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 Buscando controle de acesso para usuário:', userId);
 
-    // Em desenvolvimento, se for usuário de teste, retornar mock
-    const isDevEnvironment = process.env.NODE_ENV !== 'production';
-    const isTestUser = userId.endsWith('@teste.com');
-    
-    if (isDevEnvironment && isTestUser && MOCK_ACCESS_CONTROLS[userId]) {
-      console.log('🧪 Usando dados mock para usuário de teste:', userId);
+    // Super Admin bypass - não precisa de controle de acesso no banco
+    if (isSuperAdmin(userId)) {
+      console.log('👑 Super Admin detectado - bypass de permissões ativado');
+      // Super Admin não precisa de controle de acesso, o sistema vai dar bypass nas permissões
       return NextResponse.json({
-        accessControl: MOCK_ACCESS_CONTROLS[userId],
+        accessControl: null,
+        isSuperAdmin: true,
       });
     }
 
