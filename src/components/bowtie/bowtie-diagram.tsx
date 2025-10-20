@@ -444,82 +444,72 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete, readOnly = false }: { 
         
         setIsExporting(true);
         try {
-            console.log('Iniciando exportação PDF...');
+            console.log('Iniciando exportação PNG em alta resolução...');
             
             // Importa dinamicamente para evitar problemas de SSR
-            console.log('Importando bibliotecas...');
+            console.log('Importando html2canvas...');
             const html2canvas = (await import('html2canvas')).default;
-            const { jsPDF } = await import('jspdf');
-            console.log('Bibliotecas importadas com sucesso');
+            console.log('Biblioteca importada com sucesso');
             
             // Aguarda um pouco para garantir que os botões foram ocultados via CSS
             await new Promise(resolve => setTimeout(resolve, 100));
             
-            // Captura o elemento do diagrama
-            console.log('Capturando diagrama...');
+            // Captura o elemento do diagrama em ALTA RESOLUÇÃO
+            console.log('Capturando diagrama em alta resolução...');
+            
+            // Adiciona padding extra temporariamente para evitar corte
+            const originalPadding = diagramRef.current.style.padding;
+            diagramRef.current.style.padding = '40px'; // Padding extra
+            
             const canvas = await html2canvas(diagramRef.current, {
-                scale: 2, // Qualidade maior
+                scale: 3, // Alta qualidade (3x a resolução normal)
                 useCORS: true,
                 logging: false,
-                backgroundColor: '#ffffff', // Fundo branco para PDF
+                backgroundColor: '#f9fafb', // Fundo cinza claro (bg-gray-50)
                 allowTaint: true,
                 imageTimeout: 15000,
                 width: diagramRef.current.scrollWidth,
                 height: diagramRef.current.scrollHeight,
-            });
-            console.log('Diagrama capturado:', canvas.width, 'x', canvas.height);
-            
-            // Cria PDF em paisagem (landscape) A4
-            console.log('Criando PDF...');
-            const pdf = new jsPDF({
-                orientation: 'landscape',
-                unit: 'mm',
-                format: 'a4',
+                windowWidth: diagramRef.current.scrollWidth,
+                windowHeight: diagramRef.current.scrollHeight,
+                x: 0,
+                y: 0,
             });
             
-            // Dimensões da página A4 landscape
-            const pdfWidth = 297; // mm
-            const pdfHeight = 210; // mm
+            // Restaura padding original
+            diagramRef.current.style.padding = originalPadding;
             
-            // Calcula dimensões mantendo aspect ratio e cabendo na página
-            const canvasAspectRatio = canvas.width / canvas.height;
-            const pdfAspectRatio = pdfWidth / pdfHeight;
+            console.log('Diagrama capturado:', canvas.width, 'x', canvas.height, 'pixels');
             
-            let finalWidth: number;
-            let finalHeight: number;
-            let xOffset = 0;
-            let yOffset = 0;
-            
-            if (canvasAspectRatio > pdfAspectRatio) {
-                // Imagem mais larga - limita pela largura
-                finalWidth = pdfWidth - 20; // Margem de 10mm de cada lado
-                finalHeight = finalWidth / canvasAspectRatio;
-                xOffset = 10;
-                yOffset = (pdfHeight - finalHeight) / 2;
-            } else {
-                // Imagem mais alta - limita pela altura
-                finalHeight = pdfHeight - 20; // Margem de 10mm em cima e embaixo
-                finalWidth = finalHeight * canvasAspectRatio;
-                yOffset = 10;
-                xOffset = (pdfWidth - finalWidth) / 2;
-            }
-            
-            const imgData = canvas.toDataURL('image/png');
-            console.log('Imagem convertida para base64');
-            
-            console.log('Adicionando imagem ao PDF...');
-            pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight);
-            
-            // Adiciona metadados
-            const fileName = `Bowtie_${localData.riskId}_${new Date().toISOString().split('T')[0]}.pdf`;
-            console.log('Salvando PDF:', fileName);
-            pdf.save(fileName);
-            console.log('PDF exportado com sucesso!');
+            // Converte canvas para PNG de alta qualidade
+            console.log('Convertendo para PNG...');
+            canvas.toBlob((blob) => {
+                if (!blob) {
+                    throw new Error('Falha ao gerar imagem PNG');
+                }
+                
+                // Cria link para download
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                const fileName = `Bowtie_${localData.riskId}_${new Date().toISOString().split('T')[0]}.png`;
+                
+                link.href = url;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Libera memória
+                URL.revokeObjectURL(url);
+                
+                console.log('PNG exportado com sucesso:', fileName);
+                console.log('Resolução:', canvas.width, 'x', canvas.height, 'pixels');
+            }, 'image/png', 1.0); // Qualidade máxima (1.0)
             
         } catch (error) {
-            console.error('Erro detalhado ao exportar PDF:', error);
+            console.error('Erro detalhado ao exportar PNG:', error);
             const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-            alert(`Erro ao gerar PDF: ${errorMessage}\n\nVerifique o console para mais detalhes.`);
+            alert(`Erro ao gerar PNG: ${errorMessage}\n\nVerifique o console para mais detalhes.`);
         } finally {
             setIsExporting(false);
         }
@@ -640,12 +630,15 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete, readOnly = false }: { 
 
 
     return (
-        <div className="w-full overflow-x-auto">
+        <div className={cn("w-full", isExporting ? "overflow-visible" : "overflow-x-auto")}>
             <div ref={diagramRef} className={cn("bg-gray-50 p-8 rounded-lg min-w-max", isExporting && "scale-75 origin-top-left")}>
                 <style>
                     {isExporting ? `
                         .export-hidden {
                             display: none !important;
+                        }
+                        * {
+                            overflow: visible !important;
                         }
                     ` : ''}
                 </style>
@@ -659,12 +652,12 @@ export const BowtieDiagram = ({ data, onUpdate, onDelete, readOnly = false }: { 
                         {isExporting ? (
                             <>
                                 <span className="animate-spin mr-2">⏳</span>
-                                Gerando PDF...
+                                Gerando PNG...
                             </>
                         ) : (
                             <>
                                 <Download className="mr-2 h-4 w-4" />
-                                Exportar PDF
+                                Exportar PNG
                             </>
                         )}
                     </Button>
